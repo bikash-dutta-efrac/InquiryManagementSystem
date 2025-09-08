@@ -50,16 +50,15 @@ export default function GraphicalAnalysis({ data = [] }) {
     registeredCount,
     notRegisteredCount,
     registeredFromQuot,
-    monthsSorted,
-    monthCounts,
-    monthValuesAfter,
-    monthQuotCounts,
     bdCats,
     bdInqVals,
     bdQuotVals,
     bdRegVals,
     clientCats,
     clientVals,
+    daysSorted,
+    dailyQuotCounts,
+    dailyRegCounts,
   } = useMemo(() => {
     const distinctInquiries = new Set(data.map((d) => d.inqNo).filter(Boolean));
     const distinctQuotations = new Set(
@@ -76,29 +75,27 @@ export default function GraphicalAnalysis({ data = [] }) {
       data.filter((d) => d.quotNo && d.regisNo).map((d) => d.quotNo)
     ).size;
 
-    // --- Monthly ---
-    const monthMap = {};
-    const monthValMap = {};
-    const monthQuotMap = {};
+    // --- Daily Quotation vs Registration ---
+    const dailyQuotMap = {};
+    const dailyRegMap = {};
     data.forEach((d) => {
-      const dt = new Date(d.inqDate);
-      if (!Number.isFinite(dt.getTime())) return;
-      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(
-        2,
-        "0"
-      )}`;
-      monthMap[key] = (monthMap[key] || 0) + 1;
-      monthValMap[key] =
-        (monthValMap[key] || 0) + toNumber(d.quotValAfterDis);
+      const quotDt = d.quotDate ? new Date(d.quotDate) : null;
+      const regDt = d.regisDate ? new Date(d.regisDate) : null;
 
-      if (d.quotNo) {
-        monthQuotMap[key] = (monthQuotMap[key] || 0) + 1;
+      if (quotDt && Number.isFinite(quotDt.getTime())) {
+        const key = quotDt.toISOString().slice(0, 10); // YYYY-MM-DD
+        dailyQuotMap[key] = (dailyQuotMap[key] || 0) + 1;
+      }
+      if (regDt && Number.isFinite(regDt.getTime())) {
+        const key = regDt.toISOString().slice(0, 10);
+        dailyRegMap[key] = (dailyRegMap[key] || 0) + 1;
       }
     });
-    const monthsSorted = Object.keys(monthMap).sort();
-    const monthCounts = monthsSorted.map((m) => monthMap[m]);
-    const monthValuesAfter = monthsSorted.map((m) => monthValMap[m]);
-    const monthQuotCounts = monthsSorted.map((m) => monthQuotMap[m] || 0);
+    const daysSorted = Array.from(
+      new Set([...Object.keys(dailyQuotMap), ...Object.keys(dailyRegMap)])
+    ).sort();
+    const dailyQuotCounts = daysSorted.map((d) => dailyQuotMap[d] || 0);
+    const dailyRegCounts = daysSorted.map((d) => dailyRegMap[d] || 0);
 
     // --- BD aggregation ---
     const bdInqMap = {};
@@ -152,16 +149,15 @@ export default function GraphicalAnalysis({ data = [] }) {
       registeredCount,
       notRegisteredCount,
       registeredFromQuot,
-      monthsSorted,
-      monthCounts,
-      monthValuesAfter,
-      monthQuotCounts,
       bdCats,
       bdInqVals,
       bdQuotVals,
       bdRegVals,
       clientCats,
       clientVals,
+      daysSorted,
+      dailyQuotCounts,
+      dailyRegCounts,
     };
   }, [data]);
 
@@ -247,7 +243,7 @@ export default function GraphicalAnalysis({ data = [] }) {
       {/* Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartCard
-          title="Monthly Trend"
+          title="Quotation vs Registration Trend"
           icon={<TrendingUp className="w-4 h-4" />}
           gradient="from-purple-600 to-fuchsia-700"
           onExpand={() => setExpandedChart("month")}
@@ -256,29 +252,14 @@ export default function GraphicalAnalysis({ data = [] }) {
             xAxis={[
               {
                 scaleType: "point",
-                data: monthsSorted,
+                data: daysSorted,
                 tickLabelStyle: { angle: -20, fontSize: 10 },
               },
             ]}
             series={[
-              { data: monthCounts, label: "Inquiries", color: "#1d4ed8" },
-              {
-                data: monthQuotCounts,
-                label: "Quotations",
-                color: "#16a34a",
-              },
-              {
-                data: monthValuesAfter,
-                label: "Quotation Value (After)",
-                color: "#9333ea",
-                yAxisKey: "rightAxis",
-              },
+              { data: dailyQuotCounts, label: "Quotations", color: "#1d4ed8" },
+              { data: dailyRegCounts, label: "Registrations", color: "#16a34a" },
             ]}
-            rightAxis={[{ id: "rightAxis" }]}
-            tooltip={{
-              valueFormatter: (v, { seriesId }) =>
-                seriesId === "Quotation Value (After)" ? fmtINR(v) : v,
-            }}
             width={colW}
             height={smallH}
           />
@@ -342,14 +323,13 @@ export default function GraphicalAnalysis({ data = [] }) {
           bdInqVals,
           bdQuotVals,
           bdRegVals,
-          monthsSorted,
-          monthCounts,
-          monthValuesAfter,
-          monthQuotCounts,
           clientCats,
           clientVals,
           totalQuotations,
           registeredFromQuot,
+          daysSorted,
+          dailyQuotCounts,
+          dailyRegCounts,
         }}
       />
     </div>
@@ -359,21 +339,9 @@ export default function GraphicalAnalysis({ data = [] }) {
 function ExpandModal({
   type,
   onClose,
-  totalInquiries,
-  registeredCount,
-  notRegisteredCount,
-  bdCats,
-  bdInqVals,
-  bdQuotVals,
-  bdRegVals,
-  monthsSorted,
-  monthCounts,
-  monthValuesAfter,
-  monthQuotCounts,
-  clientCats,
-  clientVals,
-  totalQuotations,
-  registeredFromQuot,
+  daysSorted,
+  dailyQuotCounts,
+  dailyRegCounts,
 }) {
   const gradients = {
     pie: "from-blue-600 to-indigo-700",
@@ -407,7 +375,7 @@ function ExpandModal({
                 {type === "pie" && "Registered vs Not Registered"}
                 {type === "bd" &&
                   "Inquiries / Quotations / Registrations by BD"}
-                {type === "month" && "Monthly Trend"}
+                {type === "month" && "Quotation vs Registration Trend"}
                 {type === "clients" && "Top Clients"}
                 {type === "execution" && "Quotation Execution"}
               </h2>
@@ -427,45 +395,30 @@ function ExpandModal({
                     xAxis={[
                       {
                         scaleType: "point",
-                        data: monthsSorted,
+                        data: daysSorted,
                         tickLabelStyle: { angle: -20 },
                       },
                     ]}
                     series={[
                       {
-                        data: monthCounts,
-                        label: "Inquiries",
-                        color: "#1d4ed8",
-                        type: "bar",
-                      },
-                      {
-                        data: monthQuotCounts,
+                        data: dailyQuotCounts,
                         label: "Quotations",
-                        color: "#16a34a",
-                        type: "line",
+                        color: "#1d4ed8",
                       },
                       {
-                        data: monthValuesAfter,
-                        label: "Quotation Value (After)",
-                        color: "#9333ea",
-                        yAxisKey: "rightAxis",
-                        type: "line",
+                        data: dailyRegCounts,
+                        label: "Registrations",
+                        color: "#16a34a",
                       },
                     ]}
-                    rightAxis={[{ id: "rightAxis" }]}
-                    tooltip={{
-                      valueFormatter: (v, { seriesId }) =>
-                        seriesId === "Quotation Value (After)" ? fmtINR(v) : v,
-                    }}
                     width={850}
                     height={380}
                   />
                   <ul className="space-y-2 text-gray-700">
-                    {monthsSorted.map((m, i) => (
-                      <li key={m}>
-                        📅 <strong>{m}</strong>: {monthCounts[i]} inquiries,{" "}
-                        {monthQuotCounts[i]} quotations,{" "}
-                        {fmtINR(monthValuesAfter[i])} quotation value
+                    {daysSorted.map((d, i) => (
+                      <li key={d}>
+                        📅 <strong>{d}</strong>: {dailyQuotCounts[i]} quotations,{" "}
+                        {dailyRegCounts[i]} registrations
                       </li>
                     ))}
                   </ul>
@@ -500,3 +453,4 @@ function ChartCard({ title, icon, children, gradient, onExpand }) {
     </div>
   );
 }
+

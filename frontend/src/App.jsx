@@ -44,7 +44,8 @@ export default function App() {
       )
     ).toString();
 
-    const res = await fetch(`http://localhost:5075/api/inquiries?${params}`);
+    // const res = await fetch(`http://localhost:5075/api/inquiries?${params}`);
+    const res = await fetch(`http://192.168.3.183:5075/api/inquiries?${params}`);
     const data = await res.json();
 
     const sorted = [...data].sort(

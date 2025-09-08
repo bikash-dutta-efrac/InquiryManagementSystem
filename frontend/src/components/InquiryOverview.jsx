@@ -157,7 +157,7 @@ export default function InquiryOverview({ data = [], onCardClick }) {
 
       <KpiCard
         title="Total Registered Value"
-        value={`₹ ${totalRegisteredValue.toLocaleString()}`}
+        value={`₹ ${Math.round(totalRegisteredValue)}`}
         icon={<Wallet className="w-5 h-5" />}
         gradient="from-purple-600 via-fuchsia-700 to-pink-700"
         chip="Registration"

@@ -50,8 +50,8 @@ export default function InquiryList({ data = [] }) {
     return pages;
   };
 
-  // ✅ Export to Excel
-  const exportToExcel = () => {
+  // ✅ Export to CSV
+  const exportToCSV = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       data.map((inq) => ({
         InquiryNo: inq.inqNo ?? "-",
@@ -62,30 +62,28 @@ export default function InquiryList({ data = [] }) {
         QuoteDate: inq.quotDate
           ? new Date(inq.quotDate).toLocaleDateString()
           : "-",
-        "Quota Before Discount": inq.quotaValBeforeDis ?? "-",
-        "Quota After Discount": inq.quotaValAfterDis ?? "-",
+        "Quota Before Discount": Math.round(inq.quotaValBeforeDis) ?? "-",
+        "Quota After Discount": Math.round(inq.quotaValAfterDis) ?? "-",
         "Quote Ageing": inq.quoteAgeing ?? "-",
         "% Discount": inq.percOfDis ?? "-",
         RegisNo: inq.regisNo ?? "-",
         RegisDate: inq.regisDate
           ? new Date(inq.regisDate).toLocaleDateString()
           : "-",
-        RegisVal: inq.regisVal ?? "-",
+        RegisVal: Math.round(inq.regisVal) ?? "-",
         BD: inq.bdName ?? "-",
         Client: inq.clientName ?? "-",
         Status: inq.regisNo ? "Registered" : "Not Registered",
       }))
     );
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Inquiries");
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
+    // Convert sheet to CSV
+    const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+
+    // Save as .csv
     saveAs(
-      new Blob([excelBuffer], { type: "application/octet-stream" }),
-      "inquiries.xlsx"
+      new Blob([csvOutput], { type: "text/csv;charset=utf-8;" }),
+      "inquiries.csv"
     );
   };
 
@@ -116,14 +114,14 @@ export default function InquiryList({ data = [] }) {
       inq.inqDate ? new Date(inq.inqDate).toLocaleDateString() : "-",
       inq.quotNo ?? "-",
       inq.quotDate ? new Date(inq.quotDate).toLocaleDateString() : "-",
-      inq.quotValBeforeDis ?? "-",
-      inq.quotValAfterDis ?? "-",
+      Math.round(inq.quotValBeforeDis) ?? "-",
+      Math.round(inq.quotValAfterDis) ?? "-",
       inq.quotAgeing ?? "-",
       inq.quotStatus ?? "-",
       inq.percOfDis ?? "-",
       inq.regisNo ?? "-",
       inq.regisDate ? new Date(inq.regisDate).toLocaleDateString() : "-",
-      inq.regisVal ?? "-",
+      Math.round(inq.regisVal) ?? "-",
       inq.bdName ?? "-",
       inq.clientName ?? "-",
       inq.regisNo ? "Registered" : "Not Registered",
@@ -206,11 +204,11 @@ export default function InquiryList({ data = [] }) {
           {/* Export buttons */}
           <div className="flex justify-end gap-3 mb-4">
             <button
-              onClick={exportToExcel}
+              onClick={exportToCSV}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full shadow hover:bg-green-700 transition"
             >
               <FileSpreadsheet className="w-5 h-5" />
-              <span className="hidden sm:inline">Export Excel</span>
+              <span className="hidden sm:inline">Export CSV</span>
             </button>
 
             <button
@@ -230,20 +228,48 @@ export default function InquiryList({ data = [] }) {
             <table className="min-w-max table-auto border-collapse">
               <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
                 <tr>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Inquiry No</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Inquiry Date</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Quotation No</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Quotation Date</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Quotation Value (Before Discount)</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Quotation Value (After Discount)</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Quotation Status</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Quotation Ageing</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Discount (%)</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Registration No</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Registration Date</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Registration Value</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">BD Name</th>
-                  <th className="border text-sm px-3 py-2 whitespace-nowrap">Client Name</th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Inquiry No
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Inquiry Date
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Quotation No
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Quotation Date
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Quotation Value (Before Discount)
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Quotation Value (After Discount)
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Quotation Status
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Quotation Ageing
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Discount (%)
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Registration No
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Registration Date
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Registration Value
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    BD Name
+                  </th>
+                  <th className="border text-sm px-3 py-2 whitespace-nowrap">
+                    Client Name
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -254,32 +280,54 @@ export default function InquiryList({ data = [] }) {
                       idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                     } hover:bg-blue-50 transition`}
                   >
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.inqNo ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.inqNo ?? "-"}
+                    </td>
                     <td className="border text-sm px-3 py-2 whitespace-nowrap">
                       {inq.inqDate
                         ? new Date(inq.inqDate).toLocaleDateString()
                         : "-"}
                     </td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.quotNo ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.quotNo ?? "-"}
+                    </td>
                     <td className="border text-sm px-3 py-2 whitespace-nowrap">
                       {inq.quotDate
                         ? new Date(inq.quotDate).toLocaleDateString()
                         : "-"}
                     </td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.quotValBeforeDis ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.quotValAfterDis ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.quotStatus ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.quotAgeing ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.percOfDis ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.regisNo ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {Math.round(inq.quotValBeforeDis) ?? "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {Math.round(inq.quotValAfterDis) ?? "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.quotStatus ?? "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.quotAgeing ?? "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.percOfDis ?? "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.regisNo ?? "-"}
+                    </td>
                     <td className="border text-sm px-3 py-2 whitespace-nowrap">
                       {inq.regisDate
                         ? new Date(inq.regisDate).toLocaleDateString()
                         : "-"}
                     </td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.regisVal ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.bdName ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 whitespace-nowrap">{inq.clientName ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {Math.round(inq.regisVal) ?? "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.bdName ?? "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 whitespace-nowrap">
+                      {inq.clientName ?? "-"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -293,3 +341,4 @@ export default function InquiryList({ data = [] }) {
     </div>
   );
 }
+

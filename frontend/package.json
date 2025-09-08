@@ -21,6 +21,7 @@
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.542.0",
     "react": "^19.1.1",
+    "react-csv": "^2.2.2",
     "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.12",
     "xlsx": "^0.18.5"
