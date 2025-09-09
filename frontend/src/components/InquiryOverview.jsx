@@ -5,13 +5,11 @@ import {
   Wallet,
   ClipboardList,
   ThumbsUp,
-  Clock,
-  Ban,
 } from "lucide-react";
 
 function KpiCard({ title, value, sub, chip, icon, gradient }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/30 bg-white/80 backdrop-blur-md shadow-lg hover:shadow-xl transition min-h-[140px] max-h-[160px]">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/30 bg-white/80 backdrop-blur-md shadow-lg hover:shadow-xl transition min-h-[160px] max-h-[160px]">
       <div
         className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-95`}
       />
@@ -35,7 +33,7 @@ function KpiCard({ title, value, sub, chip, icon, gradient }) {
   );
 }
 
-export default function InquiryOverview({ data = [], onCardClick }) {
+export default function InquiryOverview({ data = [], queryType, onCardClick }) {
   const dedupeBy = (arr, key) => [...new Map(arr.map(x => [x[key], x])).values()];
 
   const totalInquiries   = new Set(data.map(d => d.inqNo).filter(Boolean)).size;
@@ -44,9 +42,6 @@ export default function InquiryOverview({ data = [], onCardClick }) {
   const registration = new Set(
     data.filter(d => d.regisNo).filter(Boolean)
   );
-
-  const registered     = registration.size;
-  const notRegistered  = data.length - registered;
 
   const totalRegisteredValue = dedupeBy(
     data.filter(d => d.regisNo), 'regisNo'
@@ -89,35 +84,43 @@ export default function InquiryOverview({ data = [], onCardClick }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-      <div onClick={() => onCardClick("inquiries")} className="cursor-pointer">
-        <KpiCard
-          title="Total Inquiries"
-          value={totalInquiries}
-          icon={<FileText className="w-5 h-5" />}
-          gradient="from-blue-600 via-blue-700 to-indigo-700"
-          chip="Inquiries"
-        />
-      </div>
+      {queryType === "inqDate" && (
+        <>
+          <div onClick={() => onCardClick("inquiries")} className="cursor-pointer">
+            <KpiCard
+              title="Total Inquiries"
+              value={totalInquiries}
+              icon={<FileText className="w-5 h-5" />}
+              gradient="from-blue-600 via-blue-700 to-indigo-700"
+              chip="Inquiries"
+            />
+          </div>
+        </>
+      )}
 
-      <div onClick={() => onCardClick("quotations")} className="cursor-pointer">
-        <KpiCard
-          title="Total Quotations"
-          value={quotations}
-          sub={
-            <div className="space-y-1">
-              <div>
-                Avg Value: ₹{" "}
-                {avgQuotationValue.toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                })}
-              </div>
+      {queryType === "inqDate" || "quotDate" && (
+        <>
+            <div onClick={() => onCardClick("quotations")} className="cursor-pointer">
+              <KpiCard
+                title="Total Quotations"
+                value={quotations}
+                sub={
+                  <div className="space-y-1">
+                    <div>
+                      Avg Value: ₹{" "}
+                      {avgQuotationValue.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
+                    </div>
+                  </div>
+                }
+                icon={<ClipboardList className="w-5 h-5" />}
+                gradient="from-cyan-600 via-sky-700 to-blue-700"
+                chip="Quotations"
+              />
             </div>
-          }
-          icon={<ClipboardList className="w-5 h-5" />}
-          gradient="from-cyan-600 via-sky-700 to-blue-700"
-          chip="Quotations"
-        />
-      </div>
+        </>
+      )}
 
       <div
         onClick={() => onCardClick("approved")}
@@ -132,18 +135,22 @@ export default function InquiryOverview({ data = [], onCardClick }) {
         />
       </div>
 
-      <div
-        onClick={() => onCardClick("unapproved")}
-        className="cursor-pointer"
-      >
-        <KpiCard
-          title="Unapproved Quotations"
-          value={totalQuotations - registeredFromQuot}
-          icon={<XCircle className="w-5 h-5" />}
-          gradient="from-red-600 via-rose-700 to-pink-700"
-          chip="Quotations"
-        />
-      </div>
+      {queryType !== "regisDate" && (
+        <>
+          <div
+            onClick={() => onCardClick("unapproved")}
+            className="cursor-pointer"
+          >
+            <KpiCard
+              title="Unapproved Quotations"
+              value={totalQuotations - registeredFromQuot}
+              icon={<XCircle className="w-5 h-5" />}
+              gradient="from-red-600 via-rose-700 to-pink-700"
+              chip="Quotations"
+            />
+          </div>
+        </>
+      )}
 
       <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
         <KpiCard
@@ -155,13 +162,15 @@ export default function InquiryOverview({ data = [], onCardClick }) {
         />
       </div>
 
-      <KpiCard
-        title="Total Registered Value"
-        value={`₹ ${Math.round(totalRegisteredValue)}`}
-        icon={<Wallet className="w-5 h-5" />}
-        gradient="from-purple-600 via-fuchsia-700 to-pink-700"
-        chip="Registration"
-      />
+      <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
+        <KpiCard
+          title="Total Registered Value"
+          value={`₹ ${Math.round(totalRegisteredValue)}`}
+          icon={<Wallet className="w-5 h-5" />}
+          gradient="from-purple-600 via-fuchsia-700 to-pink-700"
+          chip="Registration"
+        />
+      </div>
     </div>
   );
 }

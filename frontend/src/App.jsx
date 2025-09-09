@@ -1,18 +1,18 @@
-import { useEffect, useState } from "react";
+import { useState, useRef } from "react";
 import Filters from "./components/Filters";
 import InquiryList from "./components/InquiryList";
 import InquiryOverview from "./components/InquiryOverview";
 import GraphicalAnalysis from "./components/GraphicalAnalysis";
 import SubInquiryList from "./components/SubInquiryList";
 import { BarChart3, List } from "lucide-react";
+import useFilters from "./hooks/useFilters";
 
 export default function App() {
-  const [inquiries, setInquiries] = useState([]);
   const [view, setView] = useState("list");
-  const [loading, setLoading] = useState(false);
   const [subView, setSubView] = useState(null);
+  var [queryType, setQueryType] = useState("inqDate")
 
-  // ✅ Calculate defaults
+  // ✅ Defaults
   const today = new Date();
   const lastMonth = new Date();
   lastMonth.setMonth(today.getMonth() - 1);
@@ -28,42 +28,16 @@ export default function App() {
     },
     month: (today.getMonth() + 1).toString(),
     year: today.getFullYear().toString(),
+    verticals: [],
     bdNames: [],
     clientNames: [],
     sortOrder: "newest",
-    dateField: "inqDate", // NEW default filter by Inquiry Date
+    dateField: "inqDate",
   };
 
-  // 🔄 Fetch inquiries from API
-  const fetchInquiries = async (filters = {}) => {
-    setLoading(true);
-
-    const params = new URLSearchParams(
-      Object.fromEntries(
-        Object.entries(filters).filter(([_, v]) => v !== "" && v !== null)
-      )
-    ).toString();
-
-    // const res = await fetch(`http://localhost:5075/api/inquiries?${params}`);
-    const res = await fetch(`http://192.168.3.183:5075/api/inquiries?${params}`);
-    const data = await res.json();
-
-    const sorted = [...data].sort(
-      (a, b) => new Date(b.inqDate) - new Date(a.inqDate)
-    );
-
-    setInquiries(sorted);
-    setLoading(false);
-  };
-
-  // ✅ Load *last month → today* on mount
-  useEffect(() => {
-    fetchInquiries({
-      fromDate: defaultFilters.range.start,
-      toDate: defaultFilters.range.end,
-      dateField: defaultFilters.dateField,
-    });
-  }, []);
+  // ✅ Use custom hook
+  const { inquiries, loading, fetchInquiries, setInquiries } =
+    useFilters(defaultFilters);
 
   // 🔍 Handle filter change
   const handleFilterChange = ({
@@ -71,17 +45,21 @@ export default function App() {
     range,
     month,
     year,
+    verticals,
     bdNames,
     clientNames,
     sortOrder,
     dateField,
   }) => {
+
     let filters = {};
 
-    // ✅ Pass selected dateField
     if (dateField) {
       filters.dateField = dateField;
     }
+
+    queryType = setQueryType(dateField);
+
 
     if (filterType === "range" && range?.start && range?.end) {
       const startDate = new Date(range.start);
@@ -101,17 +79,17 @@ export default function App() {
         return;
       }
     } else if (filterType === "month" && year) {
-      filters.year = year;
-      if (month) filters.month = month;
+      // ✅ ensure numeric month/year for API
+      filters.year = Number(year);
+      if (month) filters.month = Number(month);
     }
 
-    if (bdNames?.length === 1) {
-      filters.bdName = bdNames[0];
-    }
-    if (clientNames?.length === 1) {
-      filters.clientName = clientNames[0];
-    }
+    // ✅ send arrays (multi-select supported by your backend)
+    if (bdNames?.length) filters.bdNames = bdNames;
+    if (clientNames?.length) filters.clientNames = clientNames;
+    if(verticals?.length) filters.verticals = verticals;
 
+    // ✅ Only fetch if something actually changed
     fetchInquiries(filters).then(() => {
       if (sortOrder) {
         setInquiries((prev) =>
@@ -134,14 +112,9 @@ export default function App() {
       dateField: defaultFilters.dateField,
     });
 
-  // 🔗 Handle card clicks (overview → sub list)
-  const handleCardClick = (type) => {
-    setSubView(type);
-  };
-
+  const handleCardClick = (type) => setSubView(type);
   const handleBack = () => setSubView(null);
 
-  // 🗂️ Filter sub-view data
   const filterSubData = () => {
     switch (subView) {
       case "inquiries":
@@ -231,7 +204,7 @@ export default function App() {
         ) : (
           <>
             <div className="max-w-7xl mx-auto mb-8 px-2">
-              <InquiryOverview data={inquiries} onCardClick={handleCardClick} />
+              <InquiryOverview data={inquiries} queryType={queryType} onCardClick={handleCardClick} />
             </div>
 
             <div className="max-w-7xl mx-auto px-2">
@@ -247,3 +220,4 @@ export default function App() {
     </div>
   );
 }
+

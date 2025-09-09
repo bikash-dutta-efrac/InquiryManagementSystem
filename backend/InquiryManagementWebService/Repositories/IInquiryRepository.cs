@@ -4,6 +4,9 @@ namespace InquiryManagementWebService.Repositories
 {
     public interface IInquiryRepository
     {
-        Task<IEnumerable<Inquiry>> GetAsync(DateTime? fromDate, DateTime? toDate, int? year, int? month, string? bdName, string? clientName, string? dateField);
+        Task<IEnumerable<Inquiry>> GetInquiriesAsync(InquiryRequest request);
+        Task<IEnumerable<string>> GetBDNamesAsync(InquiryRequest request);
+        Task<IEnumerable<string>> GetVerticalsAsync(InquiryRequest request);
+        Task<IEnumerable<string>> GetClientNamesAsync(InquiryRequest request);
     }
 }

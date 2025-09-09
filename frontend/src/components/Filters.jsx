@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
@@ -6,8 +6,10 @@ import {
   Calendar,
   Users,
   User,
+  ZapIcon,
   X,
 } from "lucide-react";
+import { getBDNames, getClientNames, getVerticals } from "../services/api.js";
 
 export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   const today = new Date();
@@ -25,14 +27,20 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   const [range, setRange] = useState(defaultRange);
   const [month, setMonth] = useState(defaultMonth);
   const [year, setYear] = useState(defaultYear);
+  const [verticals, setVerticals] = useState([]);
   const [bdNames, setBdNames] = useState([]);
   const [clientNames, setClientNames] = useState([]);
   const [sortOrder, setSortOrder] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
-
   const [dateField, setDateField] = useState("inqDate");
 
-  // --- Filtering preview ---
+  // Options fetched from API
+  const [verticalOptions, setVerticalOptions] = useState([]);
+  const [bdOptions, setBdOptions] = useState([]);
+  const [clientOptions, setClientOptions] = useState([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
+  // Preview of filtered dataset (unchanged logic)
   const filteredData = useMemo(() => {
     let list = [...data];
 
@@ -49,10 +57,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     if (filterType === "month" && month && year) {
       list = list.filter((inq) => {
         const d = new Date(inq[dateField]);
-        return (
-          d.getMonth() + 1 === Number(month) &&
-          d.getFullYear() === Number(year)
-        );
+        return d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year);
       });
     }
 
@@ -67,15 +72,103 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     return list;
   }, [data, filterType, range, month, year, bdNames, clientNames, dateField]);
 
-  const bdSuggestions = useMemo(
-    () => [...new Set(data.map((inq) => inq.bdName).filter(Boolean))],
-    [data]
-  );
+  // Build request body for names endpoints
+  const buildSearchRequest = () => {
+    const base = { dateField };
 
-  const clientSuggestions = useMemo(
-    () => [...new Set(filteredData.map((inq) => inq.clientName).filter(Boolean))],
-    [filteredData]
-  );
+    if (filterType === "range" && range.start && range.end) {
+      return { ...base, fromDate: range.start, toDate: range.end };
+    }
+
+    if (filterType === "month" && year) {
+      const req = { ...base, year: Number(year) };
+      if (month) req.month = Number(month);
+      return req;
+    }
+
+    return base;
+  };
+
+  // Fetch verticals
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchVerticals = async () => {
+      setLoadingOptions(true);
+      try {
+        const body = { ...buildSearchRequest(), bdNames, clientNames };
+        const options = await getVerticals(body);
+        if (!cancelled) {
+          setVerticalOptions(Array.isArray(options) ? options : []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch verticals: ", e);
+        if (!cancelled) setVerticalOptions([]);
+      } finally {
+        if (!cancelled) setLoadingOptions(false);
+      }
+    };
+
+    fetchVerticals();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterType, range.start, range.end, month, year, dateField]);
+
+  // Fetch BD names
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchBDs = async () => {
+      setLoadingOptions(true);
+      try {
+        const body = { ...buildSearchRequest(), clientNames, verticals };
+        const options = await getBDNames(body);
+        if (!cancelled) {
+          setBdOptions(Array.isArray(options) ? options : []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch BD names", e);
+        if (!cancelled) setBdOptions([]);
+      } finally {
+        if (!cancelled) setLoadingOptions(false);
+      }
+    };
+
+    fetchBDs();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterType, range.start, range.end, month, year, dateField]);
+
+  // Fetch Client names (depends on BD selection)
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchClients = async () => {
+      setLoadingOptions(true);
+      try {
+        const body = { ...buildSearchRequest(), bdNames, verticals };
+        const options = await getClientNames(body);
+        if (!cancelled) {
+          setClientOptions(Array.isArray(options) ? options : []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch Client names", e);
+        if (!cancelled) setClientOptions([]);
+      } finally {
+        if (!cancelled) setLoadingOptions(false);
+      }
+    };
+
+    fetchClients();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterType, range.start, range.end, month, year, dateField, bdNames]);
 
   const emit = (next = {}) => {
     const payload = {
@@ -83,6 +176,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
       range,
       month,
       year,
+      verticals,
       bdNames,
       clientNames,
       sortOrder,
@@ -196,6 +290,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
             setRange(defaultRange);
             setMonth(defaultMonth);
             setYear(defaultYear);
+            setVerticals([])
             setBdNames([]);
             setClientNames([]);
             setSortOrder("newest");
@@ -218,7 +313,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
       </div>
 
       {/* Filter Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Date Range */}
         {filterType === "range" && (
           <>
@@ -316,10 +411,60 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
           </>
         )}
 
+        {/* Vericals */}
+        <div className="flex flex-col bg-white border rounded-xl shadow p-3">
+          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+            <ZapIcon className="w-4 h-4" />
+            Verticals {loadingOptions && <span className="text-xs text-gray-400">(loading…)</span>}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {verticals.map((name) => (
+              <span
+                key={name}
+                className="flex items-center gap-1 bg-blue-600 text-white px-2 py-1 rounded-md text-xs"
+              >
+                {name}
+                <button
+                  onClick={() => {
+                    const updated = verticals.filter((n) => n !== name);
+                    setVerticals(updated);
+                    emit({ verticals: updated });
+                  }}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            <div className="relative flex-1">
+              <select
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value && !verticals.includes(value)) {
+                    const updated = [...verticals, value];
+                    setVerticals(updated);
+                    emit({ verticals: updated });
+                  }
+                  e.target.value = "";
+                }}
+                className="appearance-none bg-transparent text-sm outline-none w-full pr-6"
+              >
+                <option value="">Select Verticals</option>
+                {verticalOptions.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
         {/* BD Names */}
         <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1">
-            BD Names
+          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+            <Users className="w-4 h-4" />
+            BD Names {loadingOptions && <span className="text-xs text-gray-400">(loading…)</span>}
           </label>
           <div className="flex flex-wrap gap-2">
             {bdNames.map((name) => (
@@ -339,32 +484,36 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                 </button>
               </span>
             ))}
-            <select
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value && !bdNames.includes(value)) {
-                  const updated = [...bdNames, value];
-                  setBdNames(updated);
-                  emit({ bdNames: updated });
-                }
-                e.target.value = "";
-              }}
-              className="flex-1 bg-transparent text-sm outline-none"
-            >
-              <option value="">Select BD</option>
-              {bdSuggestions.map((bd) => (
-                <option key={bd} value={bd}>
-                  {bd}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex-1">
+              <select
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value && !bdNames.includes(value)) {
+                    const updated = [...bdNames, value];
+                    setBdNames(updated);
+                    emit({ bdNames: updated });
+                  }
+                  e.target.value = "";
+                }}
+                className="appearance-none bg-transparent text-sm outline-none w-full pr-6"
+              >
+                <option value="">Select BD</option>
+                {bdOptions.map((bd) => (
+                  <option key={bd} value={bd}>
+                    {bd}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
         </div>
 
         {/* Client Names */}
         <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1">
-            Client Names
+          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+            <User className="w-4 h-4" />
+            Client Names {loadingOptions && <span className="text-xs text-gray-400">(loading…)</span>}
           </label>
           <div className="flex flex-wrap gap-2">
             {clientNames.map((c) => (
@@ -384,30 +533,31 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                 </button>
               </span>
             ))}
-            <select
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value && !clientNames.includes(value)) {
-                  const updated = [...clientNames, value];
-                  setClientNames(updated);
-                  emit({ clientNames: updated });
-                }
-                e.target.value = "";
-              }}
-              className="flex-1 bg-transparent text-sm outline-none"
-            >
-              <option value="">Select Client</option>
-              {clientSuggestions.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex-1">
+              <select
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value && !clientNames.includes(value)) {
+                    const updated = [...clientNames, value];
+                    setClientNames(updated);
+                    emit({ clientNames: updated });
+                  }
+                  e.target.value = "";
+                }}
+                className="appearance-none bg-transparent text-sm outline-none w-full pr-6"
+              >
+                <option value="">Select Client</option>
+                {clientOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
         </div>
       </div>
     </fieldset>
   );
 }
-
-

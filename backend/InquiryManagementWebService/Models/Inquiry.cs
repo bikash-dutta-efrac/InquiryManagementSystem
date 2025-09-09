@@ -20,5 +20,4 @@
         public string ClientName { get; set; }
 
     }
-
 }

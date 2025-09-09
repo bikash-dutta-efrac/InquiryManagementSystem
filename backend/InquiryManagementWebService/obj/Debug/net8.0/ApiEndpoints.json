@@ -3,44 +3,62 @@
     "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
     "Method": "GetInquiriesAsync",
     "RelativePath": "api/inquiries",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "fromDate",
-        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.InquiryRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
+    "Method": "GetBDNamesAsync",
+    "RelativePath": "api/inquiries/bdnames",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Name": "toDate",
-        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.InquiryRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
+    "Method": "GetClientNamesAsync",
+    "RelativePath": "api/inquiries/clientnames",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Name": "year",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.InquiryRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
+    "Method": "GetVerticalsAsync",
+    "RelativePath": "api/inquiries/verticals",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Name": "month",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "bdName",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "clientName",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "dateField",
-        "Type": "System.String",
-        "IsRequired": false
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.InquiryRequest",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
