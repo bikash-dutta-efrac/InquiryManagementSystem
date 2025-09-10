@@ -13,17 +13,15 @@ import { getBDNames, getClientNames, getVerticals } from "../services/api.js";
 
 export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   const today = new Date();
-  const lastMonth = new Date();
-  lastMonth.setMonth(today.getMonth() - 1);
 
   const defaultRange = {
-    start: lastMonth.toISOString().split("T")[0],
+    start: today.toISOString().split("T")[0],
     end: today.toISOString().split("T")[0],
   };
   const defaultMonth = (today.getMonth() + 1).toString();
   const defaultYear = today.getFullYear().toString();
 
-  const [filterType, setFilterType] = useState("month");
+  const [filterType, setFilterType] = useState("range");
   const [range, setRange] = useState(defaultRange);
   const [month, setMonth] = useState(defaultMonth);
   const [year, setYear] = useState(defaultYear);

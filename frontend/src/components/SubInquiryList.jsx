@@ -125,26 +125,26 @@ export default function SubInquiryList({ title, data = [], onBack }) {
                   idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                 } hover:bg-blue-50 transition`}
               >
-                <td className="border text-sm px-3 py-2">{inq.inqNo ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">
+                <td className="border text-sm px-3 py-2 text-left">{inq.inqNo ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">
                   {inq.inqDate ? new Date(inq.inqDate).toLocaleDateString() : "-"}
                 </td>
-                <td className="border text-sm px-3 py-2">{inq.quotNo ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">
+                <td className="border text-sm px-3 py-2 text-left">{inq.quotNo ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">
                   {inq.quotDate ? new Date(inq.quotDate).toLocaleDateString() : "-"}
                 </td>
-                <td className="border text-sm px-3 py-2">{inq.quotValBeforeDis ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">{inq.quotValAfterDis ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">{inq.quotStatus ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">{inq.quotAgeing ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">{inq.percOfDis ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">{inq.regisNo ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">
+                <td className="border text-sm px-3 py-2 text-left">{inq.quotValBeforeDis ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.quotValAfterDis ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.quotStatus ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.quotAgeing ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.percOfDis ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.regisNo ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">
                   {inq.regisDate ? new Date(inq.regisDate).toLocaleDateString() : "-"}
                 </td>
-                <td className="border text-sm px-3 py-2">{inq.regisVal ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">{inq.bdName ?? "-"}</td>
-                <td className="border text-sm px-3 py-2">{inq.clientName ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.regisVal ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.bdName ?? "-"}</td>
+                <td className="border text-sm px-3 py-2 text-left">{inq.clientName ?? "-"}</td>
               </tr>
             ))}
           </tbody>

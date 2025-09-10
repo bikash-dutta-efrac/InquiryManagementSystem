@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState} from "react";
 import Filters from "./components/Filters";
 import InquiryList from "./components/InquiryList";
 import InquiryOverview from "./components/InquiryOverview";
@@ -14,8 +14,6 @@ export default function App() {
 
   // ✅ Defaults
   const today = new Date();
-  const lastMonth = new Date();
-  lastMonth.setMonth(today.getMonth() - 1);
 
   const minDate = new Date();
   minDate.setFullYear(today.getFullYear() - 20);
@@ -23,7 +21,7 @@ export default function App() {
   const defaultFilters = {
     filterType: "range",
     range: {
-      start: lastMonth.toISOString().split("T")[0],
+      start: today.toISOString().split("T")[0],
       end: today.toISOString().split("T")[0],
     },
     month: (today.getMonth() + 1).toString(),
@@ -209,7 +207,7 @@ export default function App() {
 
             <div className="max-w-7xl mx-auto px-2">
               {view === "list" ? (
-                <InquiryList data={inquiries} />
+                <InquiryList data={inquiries} queryType={queryType} />
               ) : (
                 <GraphicalAnalysis data={inquiries} />
               )}

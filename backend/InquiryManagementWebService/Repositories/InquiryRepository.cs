@@ -39,6 +39,7 @@ namespace InquiryManagementWebService.Repositories
         r1.TRN2TESTRATE,
         r2.TRN1DATE,
         r2.TRN1CANCEL,
+        SUBSTRING(i.QUOTNO, 11, 3) AS Vertical,
         ROW_NUMBER() OVER (PARTITION BY i.QUOTNO ORDER BY r2.TRN1DATE, r1.TRN2REFNO) AS RegRank
     FROM OQUOTMST i
     INNER JOIN OCUSTMST c 
@@ -60,7 +61,7 @@ namespace InquiryManagementWebService.Repositories
         )
         AND (
             @Verticals IS NULL 
-            OR SUBSTRING(r2.TRN1REFNO, 7, 3) IN (SELECT Value FROM dbo.SplitStrings(@Verticals, ','))
+            OR SUBSTRING(i.QUOTNO, 11, 3) IN (SELECT Value FROM dbo.SplitStrings(@Verticals, ','))
         )
         AND (
             (@DateField = 'inqDate' AND (@FromDate IS NULL OR i.QUOTENQDATE >= @FromDate) AND (@ToDate IS NULL OR i.QUOTENQDATE <= @ToDate))
@@ -133,6 +134,7 @@ SELECT
     MIN(q.BDName) AS BDName,
     MIN(q.QUOTPARTYCD) AS ClientId,
     MIN(q.ClientName) AS ClientName,
+    MIN(q.Vertical) AS Vertical,
     MAX(
         CASE 
             WHEN q.TRN2REFNO IS NOT NULL THEN NULL
