@@ -192,12 +192,12 @@ export default function App() {
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-4 text-gray-700 font-medium">
-              Loading inquiries...
+              Loading data...
             </p>
           </div>
         ) : subView ? (
           <div className="max-w-7xl mx-auto px-2">
-            <SubInquiryList {...filterSubData()} onBack={handleBack} />
+            <SubInquiryList {...filterSubData()} queryType={subView} onBack={handleBack} />
           </div>
         ) : (
           <>
@@ -209,7 +209,7 @@ export default function App() {
               {view === "list" ? (
                 <InquiryList data={inquiries} queryType={queryType} />
               ) : (
-                <GraphicalAnalysis data={inquiries} />
+                <GraphicalAnalysis data={inquiries} queryType={queryType} />
               )}
             </div>
           </>

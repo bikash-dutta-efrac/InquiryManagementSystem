@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function SubInquiryList({ title, data = [], onBack }) {
+export default function SubInquiryList({ title, data = [], onBack, queryType }) {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 30;
 
@@ -98,18 +98,26 @@ export default function SubInquiryList({ title, data = [], onBack }) {
 
       {/* Table */}
       <div className="overflow-x-auto bg-white border rounded-lg shadow-lg">
-        <table className="min-w-max table-auto border-collapse">
+        <table className="min-w-full table-auto border-collapse">
           <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
             <tr>
-              <th className="border text-sm px-3 py-2">Inquiry No</th>
-              <th className="border text-sm px-3 py-2">Inquiry Date</th>
-              <th className="border text-sm px-3 py-2">Quotation No</th>
-              <th className="border text-sm px-3 py-2">Quotation Date</th>
-              <th className="border text-sm px-3 py-2">Quotation Value (Before Discount)</th>
-              <th className="border text-sm px-3 py-2">Quotation Value (After Discount)</th>
-              <th className="border text-sm px-3 py-2">Quotation Status</th>
-              <th className="border text-sm px-3 py-2">Quotation Ageing</th>
-              <th className="border text-sm px-3 py-2">Discount (%)</th>
+              {queryType === "inquiries" && (
+                <>
+                  <th className="border text-sm px-3 py-2">Inquiry No</th>
+                  <th className="border text-sm px-3 py-2">Inquiry Date</th>
+                </>
+              )}
+              {queryType !== "registrations" && (
+                <>
+                  <th className="border text-sm px-3 py-2">Quotation No</th>
+                  <th className="border text-sm px-3 py-2">Quotation Date</th>
+                  <th className="border text-sm px-3 py-2">Quotation Value (Before Discount)</th>
+                  <th className="border text-sm px-3 py-2">Quotation Value (After Discount)</th>
+                  <th className="border text-sm px-3 py-2">Quotation Status</th>
+                  <th className="border text-sm px-3 py-2">Quotation Ageing</th>
+                  <th className="border text-sm px-3 py-2">Discount (%)</th>
+                </>
+              )}
               <th className="border text-sm px-3 py-2">Registration No</th>
               <th className="border text-sm px-3 py-2">Registration Date</th>
               <th className="border text-sm px-3 py-2">Registration Value</th>
@@ -125,19 +133,27 @@ export default function SubInquiryList({ title, data = [], onBack }) {
                   idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                 } hover:bg-blue-50 transition`}
               >
-                <td className="border text-sm px-3 py-2 text-left">{inq.inqNo ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">
-                  {inq.inqDate ? new Date(inq.inqDate).toLocaleDateString() : "-"}
-                </td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.quotNo ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">
-                  {inq.quotDate ? new Date(inq.quotDate).toLocaleDateString() : "-"}
-                </td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.quotValBeforeDis ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.quotValAfterDis ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.quotStatus ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.quotAgeing ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.percOfDis ?? "-"}</td>
+                {queryType === "inquiries" && (
+                  <>
+                    <td className="border text-sm px-3 py-2 text-left">{inq.inqNo ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 text-left">
+                      {inq.inqDate ? new Date(inq.inqDate).toLocaleDateString() : "-"}
+                    </td>
+                  </>
+                )}
+                {queryType !== "registrations" && (
+                  <>
+                    <td className="border text-sm px-3 py-2 text-left">{inq.quotNo ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 text-left">
+                      {inq.quotDate ? new Date(inq.quotDate).toLocaleDateString() : "-"}
+                    </td>
+                    <td className="border text-sm px-3 py-2 text-left">{inq.quotValBeforeDis ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 text-left">{inq.quotValAfterDis ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 text-left">{inq.quotStatus ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 text-left">{inq.quotAgeing ?? "-"}</td>
+                    <td className="border text-sm px-3 py-2 text-left">{inq.percOfDis ?? "-"}</td>
+                  </>
+                )}
                 <td className="border text-sm px-3 py-2 text-left">{inq.regisNo ?? "-"}</td>
                 <td className="border text-sm px-3 py-2 text-left">
                   {inq.regisDate ? new Date(inq.regisDate).toLocaleDateString() : "-"}
@@ -156,3 +172,4 @@ export default function SubInquiryList({ title, data = [], onBack }) {
     </div>
   );
 }
+

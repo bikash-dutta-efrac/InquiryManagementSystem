@@ -93,7 +93,7 @@ SELECT
          ELSE MIN(q.QUOTAMT - ISNULL(q.QUOTDISCOUNTAXAMT,0)) END AS QuotValAfterDis,
     CASE 
         WHEN MAX(q.TRN2REFNO) IS NOT NULL THEN 'Approved'
-        ELSE 'Unapproved'
+        ELSE 'Not Approved'
     END AS QuotStatus,
     CAST(
         CASE 

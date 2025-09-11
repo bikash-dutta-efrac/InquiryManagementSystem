@@ -223,64 +223,58 @@ export default function InquiryList({ data = [], queryType }) {
           {/* 🔝 Top Pagination */}
           <Pagination />
 
-          {/* Table */}
           <div className="overflow-x-auto bg-white border rounded-lg shadow-lg">
             <table className="w-full table-auto border-collapse">
               <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
                 <tr>
+                  {/* Inquiry Columns */}
                   {queryType === "inqDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Inquiry No
-                    </th>
+                    <>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Inquiry No
+                      </th>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Inquiry Date
+                      </th>
+                    </>
                   )}
-                  {queryType === "inqDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Inquiry Date
-                    </th>
-                  )}
+
+                  {/* Quotation Columns */}
                   {queryType !== "regisDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Quotation No
-                    </th>
+                    <>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Quotation No
+                      </th>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Quotation Date
+                      </th>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Quotation Value
+                        <br />
+                        (Before Discount)
+                      </th>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Quotation Value
+                        <br />
+                        (After Discount)
+                      </th>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Quotation Status
+                      </th>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Quotation
+                        <br />
+                        Ageing
+                      </th>
+                      <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
+                        Discount
+                        <br />
+                        (%)
+                      </th>
+                    </>
                   )}
-                  {queryType !== "regisDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Quotation Date
-                    </th>
-                  )}
-                  {queryType !== "regisDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Quotation Value
-                      <br />
-                      (Before Discount)
-                    </th>
-                  )}
-                  {queryType !== "regisDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Quotation Value
-                      <br />
-                      (After Discount)
-                    </th>
-                  )}
-                  {queryType !== "regisDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Quotation Status
-                    </th>
-                  )}
-                  {queryType !== "regisDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Quotation
-                      <br />
-                      Ageing
-                    </th>
-                  )}
-                  {queryType !== "regisDate" && (
-                    <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
-                      Discount
-                      <br />
-                      (%)
-                    </th>
-                  )}
+
+                  {/* Registration + Always Visible */}
                   <th className="border text-sm px-3 py-2 whitespace-nowrap w-auto">
                     Registration No
                   </th>
@@ -311,55 +305,50 @@ export default function InquiryList({ data = [], queryType }) {
                       idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                     } hover:bg-blue-50 transition`}
                   >
+                    {/* Inquiry Columns */}
                     {queryType === "inqDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {inq.inqNo ?? "-"}
-                      </td>
+                      <>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {inq.inqNo ?? "-"}
+                        </td>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {inq.inqDate
+                            ? new Date(inq.inqDate).toLocaleDateString()
+                            : "-"}
+                        </td>
+                      </>
                     )}
-                    {queryType === "inqDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {inq.inqDate
-                          ? new Date(inq.inqDate).toLocaleDateString()
-                          : "-"}
-                      </td>
-                    )}
+
+                    {/* Quotation Columns */}
                     {queryType !== "regisDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {inq.quotNo ?? "-"}
-                      </td>
+                      <>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {inq.quotNo ?? "-"}
+                        </td>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {inq.quotDate
+                            ? new Date(inq.quotDate).toLocaleDateString()
+                            : "-"}
+                        </td>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {Math.round(inq.quotValBeforeDis) ?? "-"}
+                        </td>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {Math.round(inq.quotValAfterDis) ?? "-"}
+                        </td>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {inq.quotStatus ?? "-"}
+                        </td>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {inq.quotAgeing ?? "-"}
+                        </td>
+                        <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
+                          {inq.percOfDis ?? "-"}
+                        </td>
+                      </>
                     )}
-                    {queryType !== "regisDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {inq.quotDate
-                          ? new Date(inq.quotDate).toLocaleDateString()
-                          : "-"}
-                      </td>
-                    )}
-                    {queryType !== "regisDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {Math.round(inq.quotValBeforeDis) ?? "-"}
-                      </td>
-                    )}
-                    {queryType !== "regisDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {Math.round(inq.quotValAfterDis) ?? "-"}
-                      </td>
-                    )}
-                    {queryType !== "regisDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {inq.quotStatus ?? "-"}
-                      </td>
-                    )}
-                    {queryType !== "regisDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {inq.quotAgeing ?? "-"}
-                      </td>
-                    )}
-                    {queryType !== "regisDate" && (
-                      <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
-                        {inq.percOfDis ?? "-"}
-                      </td>
-                    )}
+
+                    {/* Registration + Always Visible */}
                     <td className="border text-sm px-3 py-2 whitespace-nowrap text-left w-auto">
                       {inq.regisNo ?? "-"}
                     </td>
@@ -382,6 +371,7 @@ export default function InquiryList({ data = [], queryType }) {
               </tbody>
             </table>
           </div>
+
           {/* 🔻 Bottom Pagination */}
           <Pagination />
         </div>
