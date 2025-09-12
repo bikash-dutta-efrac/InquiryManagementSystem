@@ -11,7 +11,10 @@ function buildRequestBody(filters = {}) {
     verticals: filters.verticals || [],
     bdNames: filters.bdNames || [],
     clientNames: filters.clientNames || [],
-    dateField: filters.dateField || "inqDate"
+    dateField: filters.dateField || "inqDate",
+    excludeVerticals: filters.excludeVerticals,
+    excludeBDs: filters.excludeBds,
+    excludeClients: filters.excludeClients,
   };
 }
 

@@ -179,6 +179,15 @@
               "type": "string"
             },
             "nullable": true
+          },
+          "excludeBDs": {
+            "type": "boolean"
+          },
+          "excludeClients": {
+            "type": "boolean"
+          },
+          "excludeVerticals": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

@@ -79,7 +79,6 @@ function KpiCard2({ summary, type, gradientFrom, gradientTo }) {
 
   if (!items.length) return null;
 
-  //from-cyan-900 via-blue-900 to-indigo-900
 
   return (
     <div className="relative rounded-2xl border border-white/30 bg-white/10 shadow-xl">
@@ -261,9 +260,6 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
     0
   );
 
-  // const avgQuotationValue =
-  //   totalQuotations > 0 ? totalQuotationValue / totalQuotations : 0;
-
   const distinctQuotations = dedupeBy(data, "quotNo");
   const quotations = distinctQuotations.length;
   const registeredFromQuot = new Set(
@@ -389,97 +385,80 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
   const dailyRegisValues = dailyDates.map((d) => regValMap[d] || 0);
 
   return (
-    <div className="space-y-8">
-      {queryType !== "regisDate" && (
-        <div
-          className={`grid gap-6 items-stretch ${
-            queryType === "inqDate" ? "lg:grid-cols-6" : "lg:grid-cols-5"
-          }`}
-        >
-          {queryType === "inqDate" && (
-            <div
-              onClick={() => onCardClick("inquiries")}
-              className="cursor-pointer"
-            >
-              <KpiCard1
-                title="Total Inquiries"
-                value={totalInquiries}
-                icon={<FileText className="w-5 h-5" />}
-                gradient="from-blue-600 via-blue-700 to-indigo-700"
-                chip="Inquiries"
-              />
-            </div>
-          )}
-
-          <div
-            onClick={() => onCardClick("quotations")}
-            className="cursor-pointer"
-          >
+  <div className="space-y-8">
+    {/* KPI Cards (non-regisDate view) */}
+    {queryType !== "regisDate" && (
+      <div
+        className={`grid gap-4 sm:gap-6 items-stretch
+          grid-cols-1 sm:grid-cols-2 md:grid-cols-3 
+          ${queryType === "inqDate" ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}
+      >
+        {queryType === "inqDate" && (
+          <div onClick={() => onCardClick("inquiries")} className="cursor-pointer">
             <KpiCard1
-              title="Total Quotations"
-              value={quotations}
-              icon={<ClipboardList className="w-5 h-5" />}
-              gradient="from-cyan-600 via-sky-700 to-blue-700"
-              chip="Quotations"
+              title="Total Inquiries"
+              value={totalInquiries}
+              icon={<FileText className="w-5 h-5" />}
+              gradient="from-blue-600 via-blue-700 to-indigo-700"
+              chip="Inquiries"
             />
           </div>
+        )}
 
-          <div
-            onClick={() => onCardClick("registrations")}
-            className="cursor-pointer"
-          >
-            <KpiCard1
-              title="Approved Quotations"
-              value={registeredFromQuot}
-              icon={<CheckCircle className="w-5 h-5" />}
-              gradient="from-green-600 via-emerald-700 to-teal-700"
-              chip="Quotations"
-            />
-          </div>
-
-          <div
-            onClick={() => onCardClick("registrations")}
-            className="cursor-pointer"
-          >
-            <KpiCard1
-              title="Unapproved Quotations"
-              value={totalQuotations - registeredFromQuot}
-              icon={<XCircle className="w-5 h-5" />}
-              gradient="from-red-600 via-rose-700 to-pink-700"
-              chip="Quotations"
-            />
-          </div>
-
-          <div
-            onClick={() => onCardClick("registrations")}
-            className="cursor-pointer"
-          >
-            <KpiCard1
-              title="Total Registrations"
-              value={data.length}
-              icon={<ThumbsUp className="w-5 h-5" />}
-              gradient="from-amber-600 via-yellow-700 to-orange-700"
-              chip="Registration"
-            />
-          </div>
-
-          <div
-            onClick={() => onCardClick("registrations")}
-            className="cursor-pointer"
-          >
-            <KpiCard1
-              title="Total Registered Value"
-              value={`₹ ${formatAmount(totalRegisteredValue)}`}
-              icon={<Wallet className="w-5 h-5" />}
-              gradient="from-purple-600 via-fuchsia-700 to-pink-700"
-              chip="Registration"
-            />
-          </div>
+        <div onClick={() => onCardClick("quotations")} className="cursor-pointer">
+          <KpiCard1
+            title="Total Quotations"
+            value={quotations}
+            icon={<ClipboardList className="w-5 h-5" />}
+            gradient="from-cyan-600 via-sky-700 to-blue-700"
+            chip="Quotations"
+          />
         </div>
-      )}
 
-      {/* KPI Cards + Chart (regisDate view) */}
-      {queryType === "regisDate" && (
+        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
+          <KpiCard1
+            title="Approved Quotations"
+            value={registeredFromQuot}
+            icon={<CheckCircle className="w-5 h-5" />}
+            gradient="from-green-600 via-emerald-700 to-teal-700"
+            chip="Quotations"
+          />
+        </div>
+
+        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
+          <KpiCard1
+            title="Unapproved Quotations"
+            value={totalQuotations - registeredFromQuot}
+            icon={<XCircle className="w-5 h-5" />}
+            gradient="from-red-600 via-rose-700 to-pink-700"
+            chip="Quotations"
+          />
+        </div>
+
+        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
+          <KpiCard1
+            title="Total Registrations"
+            value={data.length}
+            icon={<ThumbsUp className="w-5 h-5" />}
+            gradient="from-amber-600 via-yellow-700 to-orange-700"
+            chip="Registration"
+          />
+        </div>
+
+        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
+          <KpiCard1
+            title="Total Registered Value"
+            value={`₹ ${formatAmount(totalRegisteredValue)}`}
+            icon={<Wallet className="w-5 h-5" />}
+            gradient="from-purple-600 via-fuchsia-700 to-pink-700"
+            chip="Registration"
+          />
+        </div>
+      </div>
+    )}
+
+    {/* KPI Cards + Chart (regisDate view) */}
+    {queryType === "regisDate" && (
         <div className="grid gap-6 items-stretch lg:grid-cols-[250px_250px_1fr]">
           {/* KPI Card 1 */}
           <div
@@ -532,7 +511,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
                     ),
                     label: "Registered Value",
                     color: "#8b5cf6",
-                    tooltipFormatter: (val) => `₹ ${formatAmount(val)}`,
+                    valueFormatter: (val) => `₹ ${formatAmount(val)}`,
                   },
                 ]}
                 showLegend={false}
@@ -544,37 +523,39 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
         </div>
       )}
 
-      {/* Summaries */}
-      <KpiCard2
-        summary={summaryByBd}
-        type={"bd"}
-        gradientFrom={"from-blue-900"}
-        gradientTo={"to-indigo-900"}
-      />
-      <KpiCard2
-        summary={summaryByClient}
-        type={"client"}
-        gradientFrom={"from-emerald-600"}
-        gradientTo={"to-emerald-900"}
-      />
-      <KpiCard2
-        summary={summaryByVertical}
-        type={"vertical"}
-        gradientFrom={"from-slate-900"}
-        gradientTo={"to-slate-700"}
-      />
 
-      {/* Expanded Modal (conditionally rendered) */}
-      {expandedChart && (
-        <ExpandModal
-          title="Daily Registration Trend"
-          onClose={() => setExpandedChart(null)}
-          dailyDates={dailyDates}
-          dailyRegisValues={dailyRegisValues}
-        />
-      )}
-    </div>
-  );
+    {/* Summaries */}
+    <KpiCard2
+      summary={summaryByBd}
+      type={"bd"}
+      gradientFrom={"from-blue-900"}
+      gradientTo={"to-indigo-900"}
+    />
+    <KpiCard2
+      summary={summaryByClient}
+      type={"client"}
+      gradientFrom={"from-emerald-600"}
+      gradientTo={"to-emerald-900"}
+    />
+    <KpiCard2
+      summary={summaryByVertical}
+      type={"vertical"}
+      gradientFrom={"from-slate-900"}
+      gradientTo={"to-slate-700"}
+    />
+
+    {/* Expanded Modal */}
+    {expandedChart && (
+      <ExpandModal
+        title="Daily Registration Trend"
+        onClose={() => setExpandedChart(null)}
+        dailyDates={dailyDates}
+        dailyRegisValues={dailyRegisValues}
+      />
+    )}
+  </div>
+);
+
 }
 
 function ChartCard({ title, icon, children, gradient, onExpand }) {
@@ -611,54 +592,64 @@ function ExpandModal({ title, onClose, dailyDates, dailyRegisValues }) {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6"
+        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
         <motion.div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl relative flex flex-col overflow-hidden"
-          initial={{ scale: 0.9, y: 40 }}
+          style={{ maxHeight: "95vh" }}
+          initial={{ scale: 0.95, y: 30 }}
           animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 40 }}
+          exit={{ scale: 0.95, y: 30 }}
         >
           {/* Header */}
-          <div className="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-600 to-fuchsia-700 text-white sticky top-0 z-10">
-            <h2 className="text-lg font-bold">{title}</h2>
+          <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-fuchsia-700 text-white sticky top-0 z-10">
+            <h2 className="text-base sm:text-lg font-bold">{title}</h2>
             <button
               onClick={onClose}
-              className="bg-white/20 hover:bg-white/30 rounded-full px-3 py-1 text-sm"
+              className="bg-white/20 hover:bg-white/30 rounded-full px-2 sm:px-3 py-1 text-xs sm:text-sm"
             >
               ✕ Close
             </button>
           </div>
 
           {/* Chart Content */}
-          <div className="overflow-y-auto px-6 py-4 space-y-6">
-            <LineChart
-              xAxis={[
-                {
-                  scaleType: "point",
-                  data: dailyDates,
-                  tickLabelStyle: { angle: 0, fontSize: 10 },
-                },
-              ]}
-              series={[
-                {
-                  data: dailyRegisValues.map((val) =>
-                    parseFloat(val.toFixed(2))
-                  ),
-                  label: "Registered Value",
-                  color: "#8b5cf6",
-                  tooltipFormatter: (val) => `₹ ${formatAmount(val)}`, // formatted in tooltip
-                },
-              ]}
-              width={1200}
-              height={400}
-            />
+          <div className="overflow-y-auto px-3 sm:px-6 py-4">
+            <div className="overflow-x-auto">
+              <LineChart
+                xAxis={[
+                  {
+                    scaleType: "point",
+                    data: dailyDates,
+                    tickLabelStyle: { angle: 0, fontSize: 9 },
+                  },
+                ]}
+                series={[
+                  {
+                    data: dailyRegisValues.map((val) =>
+                      parseFloat(val.toFixed(2))
+                    ),
+                    label: "Registered Value",
+                    color: "#8b5cf6",
+                    valueFormatter: (val) => `₹ ${formatAmount(val)}`,
+                  },
+                ]}
+                width={undefined} // fills parent div
+                height={
+                  window.innerWidth < 640
+                    ? 260 // phone
+                    : window.innerWidth < 1024
+                    ? 350 // tablet
+                    : 450 // desktop
+                }
+              />
+            </div>
           </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
 }
+

@@ -29,6 +29,9 @@ export default function App() {
     verticals: [],
     bdNames: [],
     clientNames: [],
+    excludeVerticals: false,
+    excludeBDs: false,
+    excludeClients: false,
     sortOrder: "newest",
     dateField: "inqDate",
   };
@@ -46,6 +49,9 @@ export default function App() {
     verticals,
     bdNames,
     clientNames,
+    excludeVerticals,
+    excludeBds,
+    excludeClients,
     sortOrder,
     dateField,
   }) => {
@@ -86,6 +92,12 @@ export default function App() {
     if (bdNames?.length) filters.bdNames = bdNames;
     if (clientNames?.length) filters.clientNames = clientNames;
     if(verticals?.length) filters.verticals = verticals;
+
+    filters.excludeVerticals = excludeVerticals,
+    filters.excludeBds = excludeBds,
+    filters.excludeClients = excludeClients,
+
+    // console.log(filters);
 
     // ✅ Only fetch if something actually changed
     fetchInquiries(filters).then(() => {

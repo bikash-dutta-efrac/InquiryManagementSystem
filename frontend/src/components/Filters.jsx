@@ -32,13 +32,17 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   const [sortOpen, setSortOpen] = useState(false);
   const [dateField, setDateField] = useState("inqDate");
 
+  // exclude toggles
+  const [excludeVerticals, setExcludeVerticals] = useState(false);
+  const [excludeBds, setExcludeBds] = useState(false);
+  const [excludeClients, setExcludeClients] = useState(false);
+
   // Options fetched from API
   const [verticalOptions, setVerticalOptions] = useState([]);
   const [bdOptions, setBdOptions] = useState([]);
   const [clientOptions, setClientOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
-  // Preview of filtered dataset (unchanged logic)
   const filteredData = useMemo(() => {
     let list = [...data];
 
@@ -55,22 +59,52 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     if (filterType === "month" && month && year) {
       list = list.filter((inq) => {
         const d = new Date(inq[dateField]);
-        return d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year);
+        return (
+          d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year)
+        );
       });
     }
 
     if (bdNames.length > 0) {
-      list = list.filter((inq) => bdNames.includes(inq.bdName));
+      list = list.filter((inq) =>
+        excludeBds
+          ? !bdNames.includes(inq.bdName)
+          : bdNames.includes(inq.bdName)
+      );
     }
 
     if (clientNames.length > 0) {
-      list = list.filter((inq) => clientNames.includes(inq.clientName));
+      list = list.filter((inq) =>
+        excludeClients
+          ? !clientNames.includes(inq.clientName)
+          : clientNames.includes(inq.clientName)
+      );
+    }
+
+    if (verticals.length > 0) {
+      list = list.filter((inq) =>
+        excludeVerticals
+          ? !verticals.includes(inq.vertical)
+          : verticals.includes(inq.vertical)
+      );
     }
 
     return list;
-  }, [data, filterType, range, month, year, bdNames, clientNames, dateField]);
+  }, [
+    data,
+    filterType,
+    range,
+    month,
+    year,
+    bdNames,
+    clientNames,
+    verticals,
+    dateField,
+    excludeBds,
+    excludeClients,
+    excludeVerticals,
+  ]);
 
-  // Build request body for names endpoints
   const buildSearchRequest = () => {
     const base = { dateField };
 
@@ -87,87 +121,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     return base;
   };
 
-  // Fetch verticals
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchVerticals = async () => {
-      setLoadingOptions(true);
-      try {
-        const body = { ...buildSearchRequest(), bdNames, clientNames };
-        const options = await getVerticals(body);
-        if (!cancelled) {
-          setVerticalOptions(Array.isArray(options) ? options : []);
-        }
-      } catch (e) {
-        console.error("Failed to fetch verticals: ", e);
-        if (!cancelled) setVerticalOptions([]);
-      } finally {
-        if (!cancelled) setLoadingOptions(false);
-      }
-    };
-
-    fetchVerticals();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterType, range.start, range.end, month, year, dateField]);
-
-  // Fetch BD names
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchBDs = async () => {
-      setLoadingOptions(true);
-      try {
-        const body = { ...buildSearchRequest(), clientNames, verticals };
-        const options = await getBDNames(body);
-        if (!cancelled) {
-          setBdOptions(Array.isArray(options) ? options : []);
-        }
-      } catch (e) {
-        console.error("Failed to fetch BD names", e);
-        if (!cancelled) setBdOptions([]);
-      } finally {
-        if (!cancelled) setLoadingOptions(false);
-      }
-    };
-
-    fetchBDs();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterType, range.start, range.end, month, year, dateField]);
-
-  // Fetch Client names (depends on BD selection)
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchClients = async () => {
-      setLoadingOptions(true);
-      try {
-        const body = { ...buildSearchRequest(), bdNames, verticals };
-        const options = await getClientNames(body);
-        if (!cancelled) {
-          setClientOptions(Array.isArray(options) ? options : []);
-        }
-      } catch (e) {
-        console.error("Failed to fetch Client names", e);
-        if (!cancelled) setClientOptions([]);
-      } finally {
-        if (!cancelled) setLoadingOptions(false);
-      }
-    };
-
-    fetchClients();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterType, range.start, range.end, month, year, dateField, bdNames]);
-
+  // emit helper -> notify parent of current filter state
   const emit = (next = {}) => {
     const payload = {
       filterType,
@@ -179,6 +133,9 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
       clientNames,
       sortOrder,
       dateField,
+      excludeVerticals,
+      excludeBds,
+      excludeClients,
       ...next,
     };
     onChange?.(payload);
@@ -189,6 +146,161 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     setSortOpen(false);
     emit({ sortOrder: order });
   };
+
+
+  const ExcludeToggle = ({ name, enabled, onChange }) => {
+    const handleClick = () => {
+      onChange(!enabled);
+    };
+
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-pressed={enabled}
+        className={`ml-auto text-[10px] px-1 py-0.5 rounded-full border transition flex items-center gap-2 ${
+          enabled
+            ? "bg-red-500 text-white border-red-500"
+            : "bg-blue-500 text-white border-blue-500"
+        }`}
+      >
+        <span className="px-1">{enabled ? "Exclude" : "Include"}</span>
+      </button>
+    );
+  };
+
+  // Fetch verticals
+  useEffect(() => {
+    let cancelled = false;
+    const fetchVerticals = async () => {
+      setLoadingOptions(true);
+      try {
+        const body = {
+          ...buildSearchRequest(),
+          bdNames,
+          clientNames,
+          excludeBds,
+          excludeClients,
+          excludeVerticals,
+        };
+        const options = await getVerticals(body);
+        if (!cancelled) {
+          setVerticalOptions(Array.isArray(options) ? options : []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch verticals: ", e);
+        if (!cancelled) setVerticalOptions([]);
+      } finally {
+        if (!cancelled) setLoadingOptions(false);
+      }
+    };
+    fetchVerticals();
+    return () => {
+      cancelled = true;
+    };
+    // include exclude flags so options change when toggles change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    filterType,
+    range.start,
+    range.end,
+    month,
+    year,
+    dateField,
+    bdNames,
+    clientNames,
+    excludeBds,
+    excludeClients,
+    excludeVerticals,
+  ]);
+
+  // Fetch BD names
+  useEffect(() => {
+    let cancelled = false;
+    const fetchBDs = async () => {
+      setLoadingOptions(true);
+      try {
+        const body = {
+          ...buildSearchRequest(),
+          clientNames,
+          verticals,
+          excludeBds,
+          excludeClients,
+          excludeVerticals,
+        };
+        const options = await getBDNames(body);
+        if (!cancelled) {
+          setBdOptions(Array.isArray(options) ? options : []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch BD names", e);
+        if (!cancelled) setBdOptions([]);
+      } finally {
+        if (!cancelled) setLoadingOptions(false);
+      }
+    };
+    fetchBDs();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    filterType,
+    range.start,
+    range.end,
+    month,
+    year,
+    dateField,
+    clientNames,
+    verticals,
+    excludeBds,
+    excludeClients,
+    excludeVerticals,
+  ]);
+
+  // Fetch Client names
+  useEffect(() => {
+    let cancelled = false;
+    const fetchClients = async () => {
+      setLoadingOptions(true);
+      try {
+        const body = {
+          ...buildSearchRequest(),
+          bdNames,
+          verticals,
+          excludeBds,
+          excludeClients,
+          excludeVerticals,
+        };
+        const options = await getClientNames(body);
+        if (!cancelled) {
+          setClientOptions(Array.isArray(options) ? options : []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch Client names", e);
+        if (!cancelled) setClientOptions([]);
+      } finally {
+        if (!cancelled) setLoadingOptions(false);
+      }
+    };
+    fetchClients();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    filterType,
+    range.start,
+    range.end,
+    month,
+    year,
+    dateField,
+    bdNames,
+    verticals,
+    excludeBds,
+    excludeClients,
+    excludeVerticals,
+  ]);
 
   return (
     <fieldset
@@ -288,11 +400,14 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
             setRange(defaultRange);
             setMonth(defaultMonth);
             setYear(defaultYear);
-            setVerticals([])
+            setVerticals([]);
             setBdNames([]);
             setClientNames([]);
             setSortOrder("newest");
             setDateField("inqDate");
+            setExcludeVerticals(false);
+            setExcludeBds(false);
+            setExcludeClients(false);
             onResetAll?.();
             emit({
               range: defaultRange,
@@ -300,8 +415,12 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
               year: defaultYear,
               bdNames: [],
               clientNames: [],
+              verticals: [],
               sortOrder: "newest",
               dateField: "inqDate",
+              excludeVerticals: false,
+              excludeBds: false,
+              excludeClients: false,
             });
           }}
           className="text-sm px-4 py-2 bg-black text-white rounded-lg shadow hover:bg-gray-700 transition"
@@ -359,9 +478,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
         {filterType === "month" && (
           <>
             <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-              <label className="text-xs font-medium text-gray-600 mb-1">
-                Month
-              </label>
+              <label className="text-xs font-medium text-gray-600 mb-1">Month</label>
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 text-gray-500 mr-2" />
                 <select
@@ -374,9 +491,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                 >
                   {Array.from({ length: 12 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>
-                      {new Date(0, i).toLocaleString("default", {
-                        month: "long",
-                      })}
+                      {new Date(0, i).toLocaleString("default", { month: "long" })}
                     </option>
                   ))}
                 </select>
@@ -384,9 +499,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
             </div>
 
             <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-              <label className="text-xs font-medium text-gray-600 mb-1">
-                Year
-              </label>
+              <label className="text-xs font-medium text-gray-600 mb-1">Year</label>
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 text-gray-500 mr-2" />
                 <input
@@ -409,17 +522,28 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
           </>
         )}
 
-        {/* Vericals */}
+        {/* Verticals */}
         <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-2">
             <ZapIcon className="w-4 h-4" />
-            Verticals {loadingOptions && <span className="text-xs text-gray-400">(loading…)</span>}
+            <span>Verticals</span>
+            {loadingOptions && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>}
+            <ExcludeToggle
+              enabled={excludeVerticals}
+              onChange={(val) => {
+                setExcludeVerticals(val);
+                // emit handled by ExcludeToggle already, but emit again to be safe
+                emit({ excludeVerticals: val });
+              }}
+            />
           </label>
           <div className="flex flex-wrap gap-2">
             {verticals.map((name) => (
               <span
                 key={name}
-                className="flex items-center gap-1 bg-blue-600 text-white px-2 py-1 rounded-md text-xs"
+                className={`text-[11px] px-2 py-0.5 rounded-md border font-medium transition flex items-center gap-2 ${
+                  excludeVerticals ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50" : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
+                }`}
               >
                 {name}
                 <button
@@ -460,15 +584,25 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
 
         {/* BD Names */}
         <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-2">
             <Users className="w-4 h-4" />
-            BD Names {loadingOptions && <span className="text-xs text-gray-400">(loading…)</span>}
+            <span>BD Names</span>
+            {loadingOptions && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>}
+            <ExcludeToggle
+              enabled={excludeBds}
+              onChange={(val) => {
+                setExcludeBds(val);
+                emit({ excludeBds: val });
+              }}
+            />
           </label>
           <div className="flex flex-wrap gap-2">
             {bdNames.map((name) => (
               <span
                 key={name}
-                className="flex items-center gap-1 bg-blue-600 text-white px-2 py-1 rounded-md text-xs"
+                className={`text-[11px] px-2 py-0.5 rounded-md border font-medium transition flex items-center gap-2 ${
+                  excludeBds ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50" : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
+                }`}
               >
                 {name}
                 <button
@@ -509,15 +643,25 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
 
         {/* Client Names */}
         <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-2">
             <User className="w-4 h-4" />
-            Client Names {loadingOptions && <span className="text-xs text-gray-400">(loading…)</span>}
+            <span>Client Names</span>
+            {loadingOptions && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>}
+            <ExcludeToggle
+              enabled={excludeClients}
+              onChange={(val) => {
+                setExcludeClients(val);
+                emit({ excludeClients: val });
+              }}
+            />
           </label>
           <div className="flex flex-wrap gap-2">
             {clientNames.map((c) => (
               <span
                 key={c}
-                className="flex items-center gap-1 bg-blue-600 text-white px-2 py-1 rounded-md text-xs"
+                className={`text-[11px] px-2 py-0.5 rounded-md border font-medium transition flex items-center gap-2 ${
+                  excludeClients ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50" : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
+                }`}
               >
                 {c}
                 <button

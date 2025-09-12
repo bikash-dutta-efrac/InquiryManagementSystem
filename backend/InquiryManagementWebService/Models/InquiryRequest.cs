@@ -10,6 +10,9 @@
         public List<string>? Verticals { get; set; }
         public List<string>? BdNames { get; set; }
         public List<string>? ClientNames { get; set; }
+        public bool ExcludeBDs { get; set; }
+        public bool ExcludeClients { get; set; }
+        public bool ExcludeVerticals { get; set; }
     }
 
 }
