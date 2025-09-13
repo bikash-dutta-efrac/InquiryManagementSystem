@@ -79,7 +79,6 @@ function KpiCard2({ summary, type, gradientFrom, gradientTo }) {
 
   if (!items.length) return null;
 
-
   return (
     <div className="relative rounded-2xl border border-white/30 bg-white/10 shadow-xl">
       {/* Background Gradient */}
@@ -297,7 +296,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
     );
 
     setSummaryByVertical(sortedSummary);
-  }, []);
+  }, [data]);
 
   useEffect(() => {
     const summary = data.reduce((acc, item) => {
@@ -330,7 +329,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
     );
 
     setSummaryByBd(sortedSummary);
-  }, []);
+  }, [data]);
 
   useEffect(() => {
     const summary = data.reduce((acc, item) => {
@@ -363,7 +362,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
     );
 
     setSummaryByClient(sortedSummary);
-  }, []);
+  }, [data]);
 
   // Maps to store counts and total registration values
   const regCountMap = {};
@@ -381,84 +380,102 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
 
   const dailyDates = Array.from(new Set([...Object.keys(regCountMap)])).sort();
 
-  const dailyRegistrations = dailyDates.map((d) => regCountMap[d] || 0);
+  // const dailyRegistrations = dailyDates.map((d) => regCountMap[d] || 0);
   const dailyRegisValues = dailyDates.map((d) => regValMap[d] || 0);
 
   return (
-  <div className="space-y-8">
-    {/* KPI Cards (non-regisDate view) */}
-    {queryType !== "regisDate" && (
-      <div
-        className={`grid gap-4 sm:gap-6 items-stretch
+    <div className="space-y-8">
+      {/* KPI Cards (non-regisDate view) */}
+      {queryType !== "regisDate" && (
+        <div
+          className={`grid gap-4 sm:gap-6 items-stretch
           grid-cols-1 sm:grid-cols-2 md:grid-cols-3 
           ${queryType === "inqDate" ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}
-      >
-        {queryType === "inqDate" && (
-          <div onClick={() => onCardClick("inquiries")} className="cursor-pointer">
+        >
+          {queryType === "inqDate" && (
+            <div
+              onClick={() => onCardClick("inquiries")}
+              className="cursor-pointer"
+            >
+              <KpiCard1
+                title="Total Inquiries"
+                value={totalInquiries}
+                icon={<FileText className="w-5 h-5" />}
+                gradient="from-blue-600 via-blue-700 to-indigo-700"
+                chip="Inquiries"
+              />
+            </div>
+          )}
+
+          <div
+            onClick={() => onCardClick("quotations")}
+            className="cursor-pointer"
+          >
             <KpiCard1
-              title="Total Inquiries"
-              value={totalInquiries}
-              icon={<FileText className="w-5 h-5" />}
-              gradient="from-blue-600 via-blue-700 to-indigo-700"
-              chip="Inquiries"
+              title="Total Quotations"
+              value={quotations}
+              icon={<ClipboardList className="w-5 h-5" />}
+              gradient="from-cyan-600 via-sky-700 to-blue-700"
+              chip="Quotations"
             />
           </div>
-        )}
 
-        <div onClick={() => onCardClick("quotations")} className="cursor-pointer">
-          <KpiCard1
-            title="Total Quotations"
-            value={quotations}
-            icon={<ClipboardList className="w-5 h-5" />}
-            gradient="from-cyan-600 via-sky-700 to-blue-700"
-            chip="Quotations"
-          />
+          <div
+            onClick={() => onCardClick("registrations")}
+            className="cursor-pointer"
+          >
+            <KpiCard1
+              title="Approved Quotations"
+              value={registeredFromQuot}
+              icon={<CheckCircle className="w-5 h-5" />}
+              gradient="from-green-600 via-emerald-700 to-teal-700"
+              chip="Quotations"
+            />
+          </div>
+
+          <div
+            onClick={() => onCardClick("registrations")}
+            className="cursor-pointer"
+          >
+            <KpiCard1
+              title="Unapproved Quotations"
+              value={totalQuotations - registeredFromQuot}
+              icon={<XCircle className="w-5 h-5" />}
+              gradient="from-red-600 via-rose-700 to-pink-700"
+              chip="Quotations"
+            />
+          </div>
+
+          <div
+            onClick={() => onCardClick("registrations")}
+            className="cursor-pointer"
+          >
+            <KpiCard1
+              title="Total Registrations"
+              value={data.length}
+              icon={<ThumbsUp className="w-5 h-5" />}
+              gradient="from-amber-600 via-yellow-700 to-orange-700"
+              chip="Registration"
+            />
+          </div>
+
+          <div
+            onClick={() => onCardClick("registrations")}
+            className="cursor-pointer"
+          >
+            <KpiCard1
+              title="Total Registered Value"
+              value={`₹ ${formatAmount(totalRegisteredValue)}`}
+              icon={<Wallet className="w-5 h-5" />}
+              gradient="from-purple-600 via-fuchsia-700 to-pink-700"
+              chip="Registration"
+            />
+          </div>
         </div>
+      )}
 
-        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
-          <KpiCard1
-            title="Approved Quotations"
-            value={registeredFromQuot}
-            icon={<CheckCircle className="w-5 h-5" />}
-            gradient="from-green-600 via-emerald-700 to-teal-700"
-            chip="Quotations"
-          />
-        </div>
-
-        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
-          <KpiCard1
-            title="Unapproved Quotations"
-            value={totalQuotations - registeredFromQuot}
-            icon={<XCircle className="w-5 h-5" />}
-            gradient="from-red-600 via-rose-700 to-pink-700"
-            chip="Quotations"
-          />
-        </div>
-
-        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
-          <KpiCard1
-            title="Total Registrations"
-            value={data.length}
-            icon={<ThumbsUp className="w-5 h-5" />}
-            gradient="from-amber-600 via-yellow-700 to-orange-700"
-            chip="Registration"
-          />
-        </div>
-
-        <div onClick={() => onCardClick("registrations")} className="cursor-pointer">
-          <KpiCard1
-            title="Total Registered Value"
-            value={`₹ ${formatAmount(totalRegisteredValue)}`}
-            icon={<Wallet className="w-5 h-5" />}
-            gradient="from-purple-600 via-fuchsia-700 to-pink-700"
-            chip="Registration"
-          />
-        </div>
-      </div>
-    )}
-
-    {/* KPI Cards + Chart (regisDate view) */}
-    {queryType === "regisDate" && (
+      {/* KPI Cards + Chart (regisDate view) */}
+      {queryType === "regisDate" && (
         <div className="grid gap-6 items-stretch lg:grid-cols-[250px_250px_1fr]">
           {/* KPI Card 1 */}
           <div
@@ -501,7 +518,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
                   {
                     scaleType: "point",
                     data: dailyDates,
-                    tickLabelStyle: { angle: 0, fontSize: 8 },
+                    tickLabelStyle: { angle: 0, fontSize: 0 },
                   },
                 ]}
                 series={[
@@ -523,39 +540,37 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
         </div>
       )}
 
-
-    {/* Summaries */}
-    <KpiCard2
-      summary={summaryByBd}
-      type={"bd"}
-      gradientFrom={"from-blue-900"}
-      gradientTo={"to-indigo-900"}
-    />
-    <KpiCard2
-      summary={summaryByClient}
-      type={"client"}
-      gradientFrom={"from-emerald-600"}
-      gradientTo={"to-emerald-900"}
-    />
-    <KpiCard2
-      summary={summaryByVertical}
-      type={"vertical"}
-      gradientFrom={"from-slate-900"}
-      gradientTo={"to-slate-700"}
-    />
-
-    {/* Expanded Modal */}
-    {expandedChart && (
-      <ExpandModal
-        title="Daily Registration Trend"
-        onClose={() => setExpandedChart(null)}
-        dailyDates={dailyDates}
-        dailyRegisValues={dailyRegisValues}
+      {/* Summaries */}
+      <KpiCard2
+        summary={summaryByBd}
+        type={"bd"}
+        gradientFrom={"from-blue-900"}
+        gradientTo={"to-indigo-900"}
       />
-    )}
-  </div>
-);
+      <KpiCard2
+        summary={summaryByClient}
+        type={"client"}
+        gradientFrom={"from-emerald-600"}
+        gradientTo={"to-emerald-900"}
+      />
+      <KpiCard2
+        summary={summaryByVertical}
+        type={"vertical"}
+        gradientFrom={"from-slate-900"}
+        gradientTo={"to-slate-700"}
+      />
 
+      {/* Expanded Modal */}
+      {expandedChart && (
+        <ExpandModal
+          title="Daily Registration Trend"
+          onClose={() => setExpandedChart(null)}
+          dailyDates={dailyDates}
+          dailyRegisValues={dailyRegisValues}
+        />
+      )}
+    </div>
+  );
 }
 
 function ChartCard({ title, icon, children, gradient, onExpand }) {
@@ -623,7 +638,7 @@ function ExpandModal({ title, onClose, dailyDates, dailyRegisValues }) {
                   {
                     scaleType: "point",
                     data: dailyDates,
-                    tickLabelStyle: { angle: 0, fontSize: 9 },
+                    tickLabelStyle: { angle: 0, fontSize: 0 },
                   },
                 ]}
                 series={[
@@ -652,4 +667,3 @@ function ExpandModal({ title, onClose, dailyDates, dailyRegisValues }) {
     </AnimatePresence>
   );
 }
-

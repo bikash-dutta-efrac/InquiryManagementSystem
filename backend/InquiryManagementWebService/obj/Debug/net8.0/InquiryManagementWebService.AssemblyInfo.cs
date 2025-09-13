@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InquiryManagementWebService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c2712ba164dfe85c037c6a492fbfc2b6bd9fd898")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1246f90077de9039ddf76e937aebb975b887d7bc")]
 [assembly: System.Reflection.AssemblyProductAttribute("InquiryManagementWebService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InquiryManagementWebService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
