@@ -1,26 +1,33 @@
 import { useEffect, useState, useCallback } from "react";
-import { getInquiries, getBDNames, getClientNames } from "../services/api.js";
+import { getInquiries, getProjections, getBDNames, getClientNames } from "../services/api.js";
 
-export default function useInquiries(defaultFilters) {
+export default function useFilters(defaultFilters) {
   const [inquiries, setInquiries] = useState([]);
   const [bdNames, setBdNames] = useState([]);
   const [clientNames, setClientNames] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch inquiries with applied filters
-  const fetchInquiries = useCallback(async (filters = {}) => {
+  // Fetch data based on dateField
+  const fetchData = useCallback(async (filters = {}) => {
     setLoading(true);
     try {
-      const data = await getInquiries(filters);
+      let data;
+      if (filters.dateField === 'projDate') {
+        data = await getProjections(filters);
+      } else {
+        data = await getInquiries(filters);
+      }
 
-      // Default sort by inqDate descending
-      const sorted = [...data].sort(
-        (a, b) => new Date(b.inqDate) - new Date(a.inqDate)
-      );
+      // Default sort for inquiries
+      if (filters.dateField === 'inqDate') {
+        data = [...data].sort((a, b) => new Date(b.inqDate) - new Date(a.inqDate));
+      }
 
-      setInquiries(sorted);
+      setInquiries(data);
     } catch (err) {
-      console.error("Failed to fetch inquiries:", err);
+      console.error(`Failed to fetch data for ${filters.dateField}:`, err);
+      setInquiries([]);
+      throw err; // Propagate error for the caller to handle
     } finally {
       setLoading(false);
     }
@@ -48,7 +55,11 @@ export default function useInquiries(defaultFilters) {
     }
   }, []);
 
-  // Initial fetch with defaults
+  // ⭐ IMPORTANT FIX: This useEffect now runs only once on mount.
+  // The 'defaultFilters' object passed from App.jsx is recreated on every render,
+  // causing the useEffect to re-run and trigger the error.
+  // By using an empty dependency array, we ensure the initial fetch logic
+  // runs once and avoids the unstable dependency.
   useEffect(() => {
     if (defaultFilters) {
       const filters = {
@@ -56,27 +67,23 @@ export default function useInquiries(defaultFilters) {
         toDate: defaultFilters.range?.end || null,
         month: defaultFilters.month || null,
         year: defaultFilters.year || null,
-        bdNames: defaultFilters.bdNames || [],
-        clientNames: defaultFilters.clientNames || [],
         dateField: defaultFilters.dateField || "inqDate",
       };
 
-      fetchInquiries(filters);
-      fetchBDNames(filters);
-      fetchClientNames(filters);
+      fetchData(filters);
+      fetchBDNames({ ...defaultFilters, dateField: 'inqDate' });
+      fetchClientNames({ ...defaultFilters, dateField: 'inqDate' });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Empty dependency array ensures it only runs once
 
   return {
     inquiries,
     bdNames,
     clientNames,
     loading,
-    fetchInquiries,
+    fetchInquiries: fetchData,
     fetchBDNames,
     fetchClientNames,
     setInquiries,
   };
 }
-

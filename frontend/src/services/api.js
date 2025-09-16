@@ -13,7 +13,7 @@ function buildRequestBody(filters = {}) {
     clientNames: filters.clientNames || [],
     dateField: filters.dateField || "inqDate",
     excludeVerticals: filters.excludeVerticals,
-    excludeBDs: filters.excludeBds,
+    excludeBDs: filters.excludeBDs,
     excludeClients: filters.excludeClients,
   };
 }
@@ -22,6 +22,15 @@ function buildRequestBody(filters = {}) {
 export async function getInquiries(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries`, body, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return response.data;
+}
+
+// ⭐ NEW Projections endpoint
+export async function getProjections(filters = {}) {
+  const body = buildRequestBody(filters);
+  const response = await axios.post(`${API_BASE_URL}/projections`, body, {
     headers: { "Content-Type": "application/json" },
   });
   return response.data;
@@ -53,4 +62,3 @@ export async function getClientNames(filters = {}) {
   });
   return response.data;
 }
-

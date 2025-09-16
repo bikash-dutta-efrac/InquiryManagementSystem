@@ -11,7 +11,13 @@ import {
 } from "lucide-react";
 import { getBDNames, getClientNames, getVerticals } from "../services/api.js";
 
-export default function Filters({ data = [], onChange, onResetAll, disabled }) {
+export default function Filters({
+  data = [],
+  onChange,
+  onResetAll,
+  disabled,
+  queryType, // New prop to receive the active view from App
+}) {
   const today = new Date();
 
   const defaultRange = {
@@ -30,14 +36,12 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   const [clientNames, setClientNames] = useState([]);
   const [sortOrder, setSortOrder] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
-  const [dateField, setDateField] = useState("inqDate");
+  // dateField is no longer needed as local state, it's a prop now
 
-  // exclude toggles
   const [excludeVerticals, setExcludeVerticals] = useState(false);
   const [excludeBds, setExcludeBds] = useState(false);
   const [excludeClients, setExcludeClients] = useState(false);
 
-  // Options fetched from API
   const [verticalOptions, setVerticalOptions] = useState([]);
   const [bdOptions, setBdOptions] = useState([]);
   const [clientOptions, setClientOptions] = useState([]);
@@ -51,14 +55,14 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
       const endDate = new Date(range.end);
       list = list.filter(
         (inq) =>
-          new Date(inq[dateField]) >= startDate &&
-          new Date(inq[dateField]) <= endDate
+          new Date(inq[queryType]) >= startDate &&
+          new Date(inq[queryType]) <= endDate
       );
     }
 
     if (filterType === "month" && month && year) {
       list = list.filter((inq) => {
-        const d = new Date(inq[dateField]);
+        const d = new Date(inq[queryType]);
         return (
           d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year)
         );
@@ -99,14 +103,14 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     bdNames,
     clientNames,
     verticals,
-    dateField,
+    queryType,
     excludeBds,
     excludeClients,
     excludeVerticals,
   ]);
 
   const buildSearchRequest = () => {
-    const base = { dateField };
+    const base = { dateField: queryType }; // Use prop instead of state
 
     if (filterType === "range" && range.start && range.end) {
       return { ...base, fromDate: range.start, toDate: range.end };
@@ -121,7 +125,6 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     return base;
   };
 
-  // emit helper -> notify parent of current filter state
   const emit = (next = {}) => {
     const payload = {
       filterType,
@@ -132,7 +135,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
       bdNames,
       clientNames,
       sortOrder,
-      dateField,
+      dateField: queryType,
       excludeVerticals,
       excludeBds,
       excludeClients,
@@ -146,7 +149,6 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     setSortOpen(false);
     emit({ sortOrder: order });
   };
-
 
   const ExcludeToggle = ({ name, enabled, onChange }) => {
     const handleClick = () => {
@@ -169,7 +171,6 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     );
   };
 
-  // Fetch verticals
   useEffect(() => {
     let cancelled = false;
     const fetchVerticals = async () => {
@@ -198,15 +199,13 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     return () => {
       cancelled = true;
     };
-    // include exclude flags so options change when toggles change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     filterType,
     range.start,
     range.end,
     month,
     year,
-    dateField,
+    queryType,
     bdNames,
     clientNames,
     excludeBds,
@@ -214,7 +213,6 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     excludeVerticals,
   ]);
 
-  // Fetch BD names
   useEffect(() => {
     let cancelled = false;
     const fetchBDs = async () => {
@@ -243,14 +241,13 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     filterType,
     range.start,
     range.end,
     month,
     year,
-    dateField,
+    queryType,
     clientNames,
     verticals,
     excludeBds,
@@ -258,7 +255,6 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     excludeVerticals,
   ]);
 
-  // Fetch Client names
   useEffect(() => {
     let cancelled = false;
     const fetchClients = async () => {
@@ -287,14 +283,13 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     filterType,
     range.start,
     range.end,
     month,
     year,
-    dateField,
+    queryType,
     bdNames,
     verticals,
     excludeBds,
@@ -305,14 +300,12 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   return (
     <fieldset
       disabled={disabled}
-      className={`relative bg-white shadow-xl rounded-2xl p-6 mb-8 border border-gray-200 transition ${
+      className={`relative rounded-3xl p-6 mb-8 border border-slate-200 transition bg-gradient-to-br from-white via-white to-blue-50 ${
         disabled ? "opacity-50 pointer-events-none" : ""
       }`}
     >
-      {/* Tabs Row */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        {/* Filter Type Tabs */}
-        <div className="flex gap-2 bg-gray-100 rounded-xl p-1">
+        <div className="flex gap-1 p-1 rounded-2xl bg-gray-100/70 shadow-inner">
           {["range", "month"].map((ft) => (
             <button
               key={ft}
@@ -320,10 +313,10 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                 setFilterType(ft);
                 emit({ filterType: ft });
               }}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition shadow ${
+              className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
                 filterType === ft
-                  ? "bg-gradient-to-r from-blue-600 to-blue-400 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md shadow-blue-300"
+                  : "bg-transparent text-gray-600 hover:bg-white/50"
               }`}
             >
               {ft === "range" ? "Date Range" : "Month & Year"}
@@ -331,40 +324,15 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
           ))}
         </div>
 
-        {/* Date Field Tabs */}
-        <div className="flex gap-2 ml-4 bg-gray-100 rounded-xl p-1">
-          {[
-            { key: "inqDate", label: "Inquiry" },
-            { key: "quotDate", label: "Quotation" },
-            { key: "regisDate", label: "Registration" },
-          ].map((df) => (
-            <button
-              key={df.key}
-              onClick={() => {
-                setDateField(df.key);
-                emit({ dateField: df.key });
-              }}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition shadow ${
-                dateField === df.key
-                  ? "bg-gradient-to-r from-blue-600 to-blue-400 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              {df.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Sort Dropdown */}
         <div className="relative ml-auto">
           <button
             onClick={() => setSortOpen(!sortOpen)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg shadow text-gray-700 hover:bg-gray-100 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 transition-all duration-200"
           >
             {sortOrder === "newest" ? (
-              <ArrowDownWideNarrow className="w-5 h-5" />
+              <ArrowDownWideNarrow className="w-5 h-5 text-gray-500" />
             ) : (
-              <ArrowUpWideNarrow className="w-5 h-5" />
+              <ArrowUpWideNarrow className="w-5 h-5 text-gray-500" />
             )}
             <span className="text-sm font-medium">
               {sortOrder === "newest" ? "Newest First" : "Oldest First"}
@@ -373,19 +341,23 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
           </button>
 
           {sortOpen && (
-            <div className="absolute mt-2 right-0 bg-white border shadow-lg rounded-xl w-40 overflow-hidden z-20">
+            <div className="absolute mt-2 right-0 bg-white border border-gray-200 shadow-xl rounded-xl w-40 overflow-hidden z-20 animate-fade-in-up">
               <button
                 onClick={() => handleSort("newest")}
-                className={`flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 ${
-                  sortOrder === "newest" ? "bg-blue-100 font-medium" : ""
+                className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-200 ${
+                  sortOrder === "newest"
+                    ? "bg-blue-50 text-blue-700 font-medium"
+                    : "hover:bg-gray-100 text-gray-700"
                 }`}
               >
                 <ArrowDownWideNarrow className="w-4 h-4" /> Newest First
               </button>
               <button
                 onClick={() => handleSort("oldest")}
-                className={`flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 ${
-                  sortOrder === "oldest" ? "bg-blue-100 font-medium" : ""
+                className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-200 ${
+                  sortOrder === "oldest"
+                    ? "bg-blue-50 text-blue-700 font-medium"
+                    : "hover:bg-gray-100 text-gray-700"
                 }`}
               >
                 <ArrowUpWideNarrow className="w-4 h-4" /> Oldest First
@@ -394,7 +366,6 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
           )}
         </div>
 
-        {/* Reset */}
         <button
           onClick={() => {
             setRange(defaultRange);
@@ -404,7 +375,6 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
             setBdNames([]);
             setClientNames([]);
             setSortOrder("newest");
-            setDateField("inqDate");
             setExcludeVerticals(false);
             setExcludeBds(false);
             setExcludeClients(false);
@@ -417,29 +387,26 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
               clientNames: [],
               verticals: [],
               sortOrder: "newest",
-              dateField: "inqDate",
               excludeVerticals: false,
               excludeBds: false,
               excludeClients: false,
             });
           }}
-          className="text-sm px-4 py-2 bg-black text-white rounded-lg shadow hover:bg-gray-700 transition"
+          className="text-sm px-4 py-2 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-700 transition-colors duration-200"
         >
           Reset Filters
         </button>
       </div>
 
-      {/* Filter Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Date Range */}
         {filterType === "range" && (
           <>
-            <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-              <label className="text-xs font-medium text-gray-600 mb-1">
+            <div className="flex flex-col bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-3">
+              <label className="text-xs font-medium text-gray-500 mb-1">
                 Start Date
               </label>
               <div className="flex items-center">
-                <Calendar className="w-4 h-4 text-gray-500 mr-2" />
+                <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                 <input
                   type="date"
                   value={range.start}
@@ -448,17 +415,17 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                     setRange(next);
                     emit({ range: next });
                   }}
-                  className="bg-transparent outline-none text-sm w-full"
+                  className="bg-transparent outline-none text-sm w-full font-medium text-gray-800"
                 />
               </div>
             </div>
 
-            <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-              <label className="text-xs font-medium text-gray-600 mb-1">
+            <div className="flex flex-col bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-3">
+              <label className="text-xs font-medium text-gray-500 mb-1">
                 End Date
               </label>
               <div className="flex items-center">
-                <Calendar className="w-4 h-4 text-gray-500 mr-2" />
+                <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                 <input
                   type="date"
                   value={range.end}
@@ -467,41 +434,42 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                     setRange(next);
                     emit({ range: next });
                   }}
-                  className="bg-transparent outline-none text-sm w-full"
+                  className="bg-transparent outline-none text-sm w-full font-medium text-gray-800"
                 />
               </div>
             </div>
           </>
         )}
 
-        {/* Month & Year */}
         {filterType === "month" && (
           <>
-            <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-              <label className="text-xs font-medium text-gray-600 mb-1">Month</label>
+            <div className="flex flex-col bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-3">
+              <label className="text-xs font-medium text-gray-500 mb-1">Month</label>
               <div className="flex items-center">
-                <Calendar className="w-4 h-4 text-gray-500 mr-2" />
+                <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                 <select
                   value={month}
                   onChange={(e) => {
                     setMonth(e.target.value);
                     emit({ month: e.target.value });
                   }}
-                  className="bg-transparent outline-none text-sm w-full"
+                  className="bg-transparent outline-none text-sm w-full font-medium text-gray-800"
                 >
                   {Array.from({ length: 12 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>
-                      {new Date(0, i).toLocaleString("default", { month: "long" })}
+                      {new Date(0, i).toLocaleString("default", {
+                        month: "long",
+                      })}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-              <label className="text-xs font-medium text-gray-600 mb-1">Year</label>
+            <div className="flex flex-col bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-3">
+              <label className="text-xs font-medium text-gray-500 mb-1">Year</label>
               <div className="flex items-center">
-                <Calendar className="w-4 h-4 text-gray-500 mr-2" />
+                <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                 <input
                   type="number"
                   placeholder="Year"
@@ -514,7 +482,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                       emit({ year: val });
                     }
                   }}
-                  className="bg-transparent outline-none text-sm w-full"
+                  className="bg-transparent outline-none text-sm w-full font-medium text-gray-800"
                   max={new Date().getFullYear()}
                 />
               </div>
@@ -522,27 +490,29 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
           </>
         )}
 
-        {/* Verticals */}
-        <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-2">
+        <div className="flex flex-col bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-3">
+          <label className="text-xs font-medium text-gray-500 mb-1 flex items-center gap-2">
             <ZapIcon className="w-4 h-4" />
-            <span>Verticals</span>
-            {loadingOptions && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>}
+            <span className="text-gray-800 font-semibold">Verticals</span>
+            {loadingOptions && (
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+            )}
             <ExcludeToggle
               enabled={excludeVerticals}
               onChange={(val) => {
                 setExcludeVerticals(val);
-                // emit handled by ExcludeToggle already, but emit again to be safe
                 emit({ excludeVerticals: val });
               }}
             />
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-1">
             {verticals.map((name) => (
               <span
                 key={name}
-                className={`text-[11px] px-2 py-0.5 rounded-md border font-medium transition flex items-center gap-2 ${
-                  excludeVerticals ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50" : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
+                className={`text-[11px] px-2 py-0.5 rounded-full border font-medium transition flex items-center gap-2 ${
+                  excludeVerticals
+                    ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50"
+                    : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
                 }`}
               >
                 {name}
@@ -568,7 +538,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   }
                   e.target.value = "";
                 }}
-                className="appearance-none bg-transparent text-sm outline-none w-full pr-6"
+                className="appearance-none bg-transparent text-sm outline-none w-full pr-6 cursor-pointer text-gray-600"
               >
                 <option value="">Select Verticals</option>
                 {verticalOptions.map((v) => (
@@ -577,17 +547,18 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>
 
-        {/* BD Names */}
-        <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-2">
+        <div className="flex flex-col bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-3">
+          <label className="text-xs font-medium text-gray-500 mb-1 flex items-center gap-2">
             <Users className="w-4 h-4" />
-            <span>BD Names</span>
-            {loadingOptions && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>}
+            <span className="text-gray-800 font-semibold">BD Names</span>
+            {loadingOptions && (
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+            )}
             <ExcludeToggle
               enabled={excludeBds}
               onChange={(val) => {
@@ -596,12 +567,14 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
               }}
             />
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-1">
             {bdNames.map((name) => (
               <span
                 key={name}
-                className={`text-[11px] px-2 py-0.5 rounded-md border font-medium transition flex items-center gap-2 ${
-                  excludeBds ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50" : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
+                className={`text-[11px] px-2 py-0.5 rounded-full border font-medium transition flex items-center gap-2 ${
+                  excludeBds
+                    ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50"
+                    : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
                 }`}
               >
                 {name}
@@ -627,7 +600,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   }
                   e.target.value = "";
                 }}
-                className="appearance-none bg-transparent text-sm outline-none w-full pr-6"
+                className="appearance-none bg-transparent text-sm outline-none w-full pr-6 cursor-pointer text-gray-600"
               >
                 <option value="">Select BD</option>
                 {bdOptions.map((bd) => (
@@ -636,17 +609,18 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>
 
-        {/* Client Names */}
-        <div className="flex flex-col bg-white border rounded-xl shadow p-3">
-          <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-2">
+        <div className="flex flex-col bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-3">
+          <label className="text-xs font-medium text-gray-500 mb-1 flex items-center gap-2">
             <User className="w-4 h-4" />
-            <span>Client Names</span>
-            {loadingOptions && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>}
+            <span className="text-gray-800 font-semibold">Client Names</span>
+            {loadingOptions && (
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+            )}
             <ExcludeToggle
               enabled={excludeClients}
               onChange={(val) => {
@@ -655,12 +629,14 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
               }}
             />
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-1">
             {clientNames.map((c) => (
               <span
                 key={c}
-                className={`text-[11px] px-2 py-0.5 rounded-md border font-medium transition flex items-center gap-2 ${
-                  excludeClients ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50" : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
+                className={`text-[11px] px-2 py-0.5 rounded-full border font-medium transition flex items-center gap-2 ${
+                  excludeClients
+                    ? "bg-red-100 text-red-700 border-red-700 hover:bg-red-50"
+                    : "bg-blue-100 text-blue-700 border-blue-700 hover:bg-blue-50"
                 }`}
               >
                 {c}
@@ -686,7 +662,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   }
                   e.target.value = "";
                 }}
-                className="appearance-none bg-transparent text-sm outline-none w-full pr-6"
+                className="appearance-none bg-transparent text-sm outline-none w-full pr-6 cursor-pointer text-gray-600"
               >
                 <option value="">Select Client</option>
                 {clientOptions.map((c) => (
@@ -695,7 +671,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>

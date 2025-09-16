@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { LineChart } from "@mui/x-charts";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaCheckCircle, FaTimesCircle, FaLink } from "react-icons/fa";
+import { IoBarChartSharp, IoPeopleSharp } from "react-icons/io5";
 
 function formatAmount(num) {
   if (num < 100) return num;
@@ -62,158 +64,211 @@ function KpiCard1({ title, value, chip, icon, gradient }) {
   );
 }
 
-function KpiCard2({ summary, type, gradientFrom, gradientTo }) {
+function KpiCard2({ summary, type, gradient }) {
   const items = Object.values(summary || {}).sort((a, b) =>
-    String(a.vertical).localeCompare(String(b.vertical))
+    String(a.vertical ?? "").localeCompare(String(b.vertical ?? ""))
   );
 
   const scrollRef = useRef(null);
   const [centerItems, setCenterItems] = useState(false);
 
   useEffect(() => {
-    const container = scrollRef.current;
-    if (container) {
-      setCenterItems(container.scrollWidth <= container.clientWidth);
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const update = () => {
+      setCenterItems(el.scrollWidth <= el.clientWidth);
+    };
+
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+
+    window.addEventListener("resize", update);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
   }, [items]);
 
   if (!items.length) return null;
 
+  const getTitle = () => {
+    if (type === "vertical") return "Vertical Summary";
+    if (type === "bd") return "BD Summary";
+    if (type === "client") return "Client Summary";
+    if (type === "lab") return "Lab Summary";
+    return "Summary";
+  };
+
+  const IconMapping = {
+    registrations: <IoPeopleSharp />,
+    regValue: <IoBarChartSharp />,
+    approved: <FaCheckCircle />,
+    notApproved: <FaTimesCircle />,
+    assocVerticals: <FaLink />,
+    assocBds: <FaLink />,
+    assocClients: <FaLink />,
+    parameters: <FaLink />,
+  };
+
   return (
-    <div className="relative rounded-2xl border border-white/30 bg-white/10 shadow-xl">
-      {/* Background Gradient */}
+    <div className="relative flex rounded-2xl shadow-xl bg-white group">
+      {/* Sidebar with vertical text */}
       <div
-        className={`absolute inset-0 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-2xl`}
-      />
+        className={`flex items-center justify-center p-4 rounded-r-2xl bg-gradient-to-b ${gradient}`}
+        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+      >
+        <h3 className="font-semibold text-m text-white">{getTitle()}</h3>
+      </div>
 
-      <div>
-        {type === "vertical" && (
-          <h2 className="text-center text-xl font-bold text-white mt-4 drop-shadow">
-            Vertical Summary
-          </h2>
-        )}
-        {type === "bd" && (
-          <h2 className="text-center text-xl font-bold text-white mt-4 drop-shadow">
-            BD Summary
-          </h2>
-        )}
-        {type === "client" && (
-          <h2 className="text-center text-xl font-bold text-white mt-4 drop-shadow">
-            Client Summary
-          </h2>
-        )}
-        <div className="relative">
-          {/* Left fade */}
-          <div
-            className={`absolute rounded-l-2xl h-full w-8 bg-gradient-to-r ${gradientFrom} to-transparent pointer-events-none z-10`}
-          />
-          {/* Right fade */}
-          <div
-            className={`absolute rounded-r-2xl h-full w-8 bg-gradient-to-l ${gradientTo} to-transparent pointer-events-none z-10`}
-          />
-
-          {/* Scroll container */}
-          <div
-            ref={scrollRef}
-            className="overflow-x-auto overflow-y-visible scroll-smooth p-4 scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-blue-900/30"
-            style={{
-              height:
-                type === "vertical"
-                  ? "220px"
-                  : type === "bd"
-                  ? "230px"
-                  : type === "client"
-                  ? "240px"
-                  : "auto",
-            }}
-          >
-            {/* Inner flex container vertically centered */}
-            <div
-              className={`relative flex flex-nowrap gap-4 ${
-                centerItems ? "justify-center" : "justify-start"
-              }`}
-              style={{
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            >
-              {items.map((item, idx) => (
+      {/* Main content area */}
+      <div className="flex-grow-1 min-w-0 bg-white rounded-r-2xl">
+        {/* Scroll container with padding */}
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto overflow-y-hidden scroll-smooth px-6 py-4"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {/* Flex wrapper for the cards */}
+          <div className="flex flex-nowrap gap-4" role="list">
+            {items.map((item, idx) => (
+              <div
+                key={idx}
+                className="relative flex-shrink-0 min-w-[160px] max-w-[160px] h-auto p-4 rounded-xl border border-gray-200
+                          shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out
+                          transform hover:-translate-y-1 bg-white flex flex-col justify-between"
+                role="listitem"
+                tabIndex={0}
+              >
+                {/* Decorative color stripe on left of card */}
                 <div
-                  key={idx}
-                  className="relative min-w-[140px] max-w-[160px] h-auto text-center
-                             bg-white/10 rounded-lg p-3
-                             shadow-md transform hover:scale-105 hover:shadow-xl hover:z-20
-                             transition duration-300"
-                  style={{ backdropFilter: "blur(6px)" }}
-                >
-                  {type === "vertical" && (
-                    <h3 className="text-sm font-semibold text-white mb-2">
-                      {item.vertical}
-                    </h3>
-                  )}
-                  {type === "bd" && (
-                    <h3 className="text-sm font-semibold text-white mb-2 line-clamp-2">
-                      {item.bdName}
-                    </h3>
-                  )}
-                  {type === "client" && (
-                    <h3 className="text-xs font-semibold text-white mb-2 line-clamp-2">
-                      {item.client}
-                    </h3>
-                  )}
-                  <div className="text-xs text-gray-100 space-y-0.5 text-justify">
-                    <p>
-                      Registrations:{" "}
-                      <span className="font-semibold text-white">
-                        {item.totalRegistrations ?? 0}
+                  className="absolute top-0 left-0 w-1.5 h-full rounded-l-xl"
+                  style={{
+                    backgroundColor: type === "bd" ? "#00aeffff" : type === "client" ? "#ff02abff" : type === "vertical" ? "#fda501ff" : type === "lab" ? "#02b96dff" : "",
+                  }}
+                />
+
+                {/* Card Title */}
+                <div className="flex items-center mb-2">
+                  <h3 className="font-semibold text-gray-800 line-clamp-2 text-sm">
+                    {type === "vertical" && (item.vertical ?? "-")}
+                    {type === "bd" && (item.bdName ?? "-")}
+                    {type === "client" && (item.client ?? "-")}
+                    {type === "lab" && (item.lab ?? "-")}
+                  </h3>
+                </div>
+
+                {/* Details Section */}
+                <div className="space-y-1 text-xs text-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-gray-400">
+                        {IconMapping.registrations}
                       </span>
-                    </p>
-                    <p>
-                      Reg Value:{" "}
-                      <span className="font-semibold text-white">
-                        {formatAmount(item.totalRegisVal ?? 0).toLocaleString()}
+                      <span>Registrations</span>
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {item.totalRegistrations ?? 0}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-indigo-500">
+                        {IconMapping.regValue}
                       </span>
-                    </p>
-                    <p>
-                      Approved:{" "}
-                      <span className="font-semibold text-white">
-                        {item.approved ?? 0}
+                      <span>Reg Value</span>
+                    </span>
+                    <span className="font-semibold text-indigo-600">
+                      {formatAmount(item.totalRegisVal ?? 0)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-green-500">
+                        {IconMapping.approved}
                       </span>
-                    </p>
-                    <p>
-                      Not Approved:{" "}
-                      <span className="font-semibold text-white">
-                        {item.unapproved ?? 0}
+                      <span>Approved</span>
+                    </span>
+                    <span className="font-semibold text-green-600">
+                      {item.approved ?? 0}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-red-500">
+                        {IconMapping.notApproved}
                       </span>
-                    </p>
-                    {type !== "vertical" && (
-                      <p>
-                        Assoc. Verticals:{" "}
-                        <span className="font-semibold text-white">
-                          {item.assocVerticals.size ?? 0}
-                        </span>
-                      </p>
-                    )}
-                    {type !== "bd" && (
-                      <p>
-                        Assoc. Bds:{" "}
-                        <span className="font-semibold text-white">
-                          {item.assocBds.size ?? 0}
-                        </span>
-                      </p>
-                    )}
-                    {type !== "client" && (
-                      <p>
-                        Assoc. Clients:{" "}
-                        <span className="font-semibold text-white">
-                          {item.assocClients.size ?? 0}
-                        </span>
-                      </p>
-                    )}
+                      <span>Not Approved</span>
+                    </span>
+                    <span className="font-semibold text-red-600">
+                      {item.unapproved ?? 0}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Associated links / counts */}
+                <div className="mt-3 pt-3 border-t border-gray-100 space-y-1 text-xs text-gray-600">
+                  {type !== "vertical" && type !== "lab" && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-gray-400">
+                        {IconMapping.assocVerticals}
+                      </span>
+                      <p className="line-clamp-1">
+                        <span className="font-semibold">
+                          {item.assocVerticals?.size ?? 0}
+                        </span>{" "}
+                        Vertical(s)
+                      </p>
+                    </div>
+                  )}
+                  {type !== "bd" && type !== "lab" && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-gray-400">
+                        {IconMapping.assocBds}
+                      </span>
+                      <p className="line-clamp-1">
+                        <span className="font-semibold">
+                          {item.assocBds?.size ?? 0}
+                        </span>{" "}
+                        BD(s)
+                      </p>
+                    </div>
+                  )}
+                  {type !== "client" && type !== "lab" && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-gray-400">
+                        {IconMapping.assocClients}
+                      </span>
+                      <p className="line-clamp-1">
+                        <span className="font-semibold">
+                          {item.assocClients?.size ?? 0}
+                        </span>{" "}
+                        Client(s)
+                      </p>
+                    </div>
+                  )}
+                  {type === "lab" && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-gray-400">
+                        {IconMapping.parameters}
+                      </span>
+                      <p className="line-clamp-1">
+                        <span className="font-semibold">
+                          {item.parameters?.size ?? 0}
+                        </span>{" "}
+                        Parameter(s)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -225,6 +280,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
   const [summaryByVertical, setSummaryByVertical] = useState({});
   const [summaryByBd, setSummaryByBd] = useState({});
   const [summaryByClient, setSummaryByClient] = useState({});
+  const [summaryByLab, setSummaryByLab] = useState({});
   const [expandedChart, setExpandedChart] = useState(null);
 
   const chartRef = useRef(null);
@@ -362,6 +418,37 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
     );
 
     setSummaryByClient(sortedSummary);
+  }, [data]);
+
+  useEffect(() => {
+    const summary = data.reduce((acc, item) => {
+      const v = item.lab || "Unknown";
+
+      if (!acc[v]) {
+        acc[v] = {
+          lab: v,
+          totalRegistrations: 0,
+          totalRegisVal: 0,
+          approved: 0,
+          unapproved: 0,
+          parameters: new Set()
+        };
+      }
+
+      acc[v].totalRegistrations += 1;
+      acc[v].totalRegisVal += Number(item.regisVal || 0);
+      if (item.quotStatus === "Approved") acc[v].approved += 1;
+      if (item.quotStatus === "Not Approved") acc[v].unapproved += 1;
+      acc[v].parameters.add(item.parameter);
+
+      return acc;
+    }, {});
+
+    const sortedSummary = Object.values(summary).sort(
+      (a, b) => b.totalRegisVal - a.totalRegisVal
+    );
+
+    setSummaryByLab(sortedSummary);
   }, [data]);
 
   // Maps to store counts and total registration values
@@ -544,20 +631,22 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
       <KpiCard2
         summary={summaryByBd}
         type={"bd"}
-        gradientFrom={"from-blue-900"}
-        gradientTo={"to-indigo-900"}
+        gradient={"bg-linear-to-r from-blue-500 via-cyan-500 to-teal-500"}
       />
       <KpiCard2
         summary={summaryByClient}
         type={"client"}
-        gradientFrom={"from-emerald-600"}
-        gradientTo={"to-emerald-900"}
+        gradient={"bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500"}
       />
       <KpiCard2
         summary={summaryByVertical}
         type={"vertical"}
-        gradientFrom={"from-slate-900"}
-        gradientTo={"to-slate-700"}
+        gradient={"bg-linear-to-r from-red-500 via-orange-500 to-yellow-500"}
+      />
+      <KpiCard2
+        summary={summaryByLab}
+        type={"lab"}
+        gradient={"bg-linear-to-r from-lime-500 via-green-500 to-emerald-500"}
       />
 
       {/* Expanded Modal */}

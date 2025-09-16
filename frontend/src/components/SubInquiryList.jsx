@@ -50,7 +50,7 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
         <button
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
-          className="flex items-center gap-1 px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 transition"
+          className="flex items-center gap-1 px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 transition-all shadow-sm hover:shadow"
         >
           <ChevronLeft className="w-4 h-4" /> Prev
         </button>
@@ -58,9 +58,9 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
           <button
             key={num}
             onClick={() => setCurrentPage(num)}
-            className={`px-3 py-1 rounded-md transition ${
+            className={`px-4 py-2 rounded-full transition-all shadow-sm hover:shadow ${
               num === currentPage
-                ? "bg-blue-600 text-white shadow-md"
+                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-700"
             }`}
           >
@@ -70,7 +70,7 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
         <button
           onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="flex items-center gap-1 px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 transition"
+          className="flex items-center gap-1 px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 transition-all shadow-sm hover:shadow"
         >
           Next <ChevronRight className="w-4 h-4" />
         </button>
@@ -78,18 +78,18 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
     );
 
   return (
-    <div className="bg-white rounded-xl shadow p-6">
+    <div className="bg-white rounded-3xl shadow-xl p-8 animate-fadeIn">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">
-          {title} ({data.length})
+        <h2 className="text-2xl font-bold text-gray-800">
+          {title} <span className="text-blue-600">({data.length})</span>
         </h2>
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+          className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back
+          <ArrowLeft className="w-5 h-5" />
+          <span className="hidden sm:inline">Back</span>
         </button>
       </div>
 
@@ -97,70 +97,126 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
       <Pagination />
 
       {/* Table */}
-      <div className="overflow-x-auto bg-white border rounded-lg shadow-lg">
-        <table className="min-w-full table-auto border-collapse">
-          <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
+      <div className="overflow-x-auto border border-gray-200 rounded-2xl shadow-lg">
+        <table className="w-full table-auto border-collapse">
+          <thead className="bg-linear-to-r from-blue-500 via-cyan-500 to-teal-500 text-white sticky top-0 z-10">
             <tr>
               {queryType === "inquiries" && (
                 <>
-                  <th className="border text-sm px-3 py-2">Inquiry No</th>
-                  <th className="border text-sm px-3 py-2">Inquiry Date</th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Inquiry No
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Inquiry Date
+                  </th>
                 </>
               )}
               {queryType !== "registrations" && (
                 <>
-                  <th className="border text-sm px-3 py-2">Quotation No</th>
-                  <th className="border text-sm px-3 py-2">Quotation Date</th>
-                  <th className="border text-sm px-3 py-2">Quotation Value (Before Discount)</th>
-                  <th className="border text-sm px-3 py-2">Quotation Value (After Discount)</th>
-                  <th className="border text-sm px-3 py-2">Quotation Status</th>
-                  <th className="border text-sm px-3 py-2">Quotation Ageing</th>
-                  <th className="border text-sm px-3 py-2">Discount (%)</th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Quotation No
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Quotation Date
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Quotation Value<br/>(Before Discount)
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Quotation Value<br/>(After Discount)
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Quotation<br/>Status
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Quotation<br/>Ageing
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                    Discount (%)
+                  </th>
                 </>
               )}
-              <th className="border text-sm px-3 py-2">Registration No</th>
-              <th className="border text-sm px-3 py-2">Registration Date</th>
-              <th className="border text-sm px-3 py-2">Registration Value</th>
-              <th className="border text-sm px-3 py-2">BD Name</th>
-              <th className="border text-sm px-3 py-2">Client Name</th>
+              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                Registration No
+              </th>
+              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                Registration<br/>Date
+              </th>
+              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                Registration<br/>Value
+              </th>
+              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                BD Name
+              </th>
+              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                Client Name
+              </th>
             </tr>
           </thead>
           <tbody>
             {paginatedData.map((inq, idx) => (
               <tr
                 key={`${inq.inqNo}-${idx}`}
-                className={`text-center ${
+                className={`${
                   idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                } hover:bg-blue-50 transition`}
+                } border-t border-gray-200 transition-all duration-200 ease-in-out hover:bg-blue-50 hover:shadow-md`}
               >
                 {queryType === "inquiries" && (
                   <>
-                    <td className="border text-sm px-3 py-2 text-left">{inq.inqNo ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 text-left">
-                      {inq.inqDate ? new Date(inq.inqDate).toLocaleDateString() : "-"}
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.inqNo ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.inqDate
+                        ? new Date(inq.inqDate).toLocaleDateString()
+                        : "-"}
                     </td>
                   </>
                 )}
                 {queryType !== "registrations" && (
                   <>
-                    <td className="border text-sm px-3 py-2 text-left">{inq.quotNo ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 text-left">
-                      {inq.quotDate ? new Date(inq.quotDate).toLocaleDateString() : "-"}
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.quotNo ?? "-"}
                     </td>
-                    <td className="border text-sm px-3 py-2 text-left">{inq.quotValBeforeDis ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 text-left">{inq.quotValAfterDis ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 text-left">{inq.quotStatus ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 text-left">{inq.quotAgeing ?? "-"}</td>
-                    <td className="border text-sm px-3 py-2 text-left">{inq.percOfDis ?? "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.quotDate
+                        ? new Date(inq.quotDate).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.quotValBeforeDis ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.quotValAfterDis ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.quotStatus ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.quotAgeing ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                      {inq.percOfDis ?? "-"}
+                    </td>
                   </>
                 )}
-                <td className="border text-sm px-3 py-2 text-left">{inq.regisNo ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">
-                  {inq.regisDate ? new Date(inq.regisDate).toLocaleDateString() : "-"}
+                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                  {inq.regisNo ?? "-"}
                 </td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.regisVal ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.bdName ?? "-"}</td>
-                <td className="border text-sm px-3 py-2 text-left">{inq.clientName ?? "-"}</td>
+                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                  {inq.regisDate
+                    ? new Date(inq.regisDate).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                  {inq.regisVal ?? "-"}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                  {inq.bdName ?? "-"}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                  {inq.clientName ?? "-"}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -172,4 +228,3 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
     </div>
   );
 }
-

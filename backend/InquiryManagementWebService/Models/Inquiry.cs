@@ -19,6 +19,8 @@
         public string BDName { get; set; }
         public string ClientId { get; set; }
         public string ClientName { get; set; }
+        public string Parameter { get; set; }
+        public string Lab { get; set; }
 
     }
 }

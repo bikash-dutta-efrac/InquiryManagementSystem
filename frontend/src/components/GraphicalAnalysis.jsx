@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PieChart,
   BarChart,
@@ -313,7 +313,7 @@ export default function GraphicalAnalysis({ data = [], queryType }) {
   return (
     <div
       ref={wrapRef}
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 items-center" // Added items-center for vertical alignment
+      className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-center" // Added items-center for vertical alignment
     >
       {/* Existing Charts */}
       {queryType !== "regisDate" && (
@@ -687,12 +687,15 @@ export default function GraphicalAnalysis({ data = [], queryType }) {
               {
                 scaleType: "point",
                 data: dailyBusinessDates,
-                tickLabelStyle: { angle: 0, fontSize: 10 },
+                tickLabelStyle: { angle: 0, fontSize: 0 },
               },
             ]}
             series={dailyBusinessSeriesByVertical}
             width={colWidth}
             height={smallHeight}
+            slotProps={{
+              legend: { hidden: true },
+            }}
           />
         </div>
       </ChartCard>
@@ -827,10 +830,12 @@ function ExpandModal({
   const modalRef = useRef(null);
 
   useEffect(() => {
-    if (type === "bd" || type === "vertical" || type === "clients") {
-      setModalChartType("pie");
-    }
+    if(type === "bd") setModalChartType(chartType.bd);
+    else if (type === "vertical") setModalChartType(chartType.vertical);
+    else if (type === "clients") setModalChartType(chartType.clients);
+    else setModalChartType("pie");
   }, [type]);
+
 
   const gradients = {
     pie: "from-blue-600 to-indigo-700",
@@ -1102,6 +1107,12 @@ function ExpandModal({
                             },
                           },
                         ]}
+                        series={[
+                          {
+                            data: bdTotalValues,
+                            valueFormatter: (val) => `₹ ${formatAmount(val)}`,
+                          },
+                        ]}
                         width={dynamicWidth}
                         height={dynamicHeight}
                       />
@@ -1222,7 +1233,7 @@ function ExpandModal({
                     )}
                   </div>
                 )}
-                {/* Other Charts (unchanged) */}
+
                 {type === "month" && (
                   <div className="w-full h-full">
                     <LineChart
@@ -1248,16 +1259,6 @@ function ExpandModal({
                       width={dynamicWidth}
                       height={dynamicHeight}
                     />
-                    {!isFullScreen && (
-                      <ul className="space-y-2 text-gray-700 mt-4">
-                        {dailyDates.map((d, i) => (
-                          <li key={d}>
-                            📅 <strong>{d}</strong>: {dailyQuotations[i]}{" "}
-                            quotations, {dailyRegistrations[i]} registrations
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
                 )}
                 {type === "execution" && (
