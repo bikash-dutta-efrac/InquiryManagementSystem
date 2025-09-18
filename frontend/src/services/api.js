@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.183:5075/api";
+const API_BASE_URL = "http://192.168.3.211:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -13,7 +13,7 @@ function buildRequestBody(filters = {}) {
     clientNames: filters.clientNames || [],
     dateField: filters.dateField || "inqDate",
     excludeVerticals: filters.excludeVerticals,
-    excludeBDs: filters.excludeBDs,
+    excludeBds: filters.excludeBds,
     excludeClients: filters.excludeClients,
   };
 }
@@ -46,7 +46,7 @@ export async function getVerticals(filters = {}) {
 }
 
 // BD Names endpoint
-export async function getBDNames(filters = {}) {
+export async function getBdNames(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries/bdnames`, body, {
     headers: { "Content-Type": "application/json" },

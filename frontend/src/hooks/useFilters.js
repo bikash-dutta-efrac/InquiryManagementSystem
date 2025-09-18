@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { getInquiries, getProjections, getBDNames, getClientNames } from "../services/api.js";
+import { getInquiries, getProjections, getBdNames, getClientNames } from "../services/api.js";
 
 export default function useFilters(defaultFilters) {
   const [inquiries, setInquiries] = useState([]);
@@ -34,9 +34,9 @@ export default function useFilters(defaultFilters) {
   }, []);
 
   // Fetch BD names (based on current date filter)
-  const fetchBDNames = useCallback(async (filters = {}) => {
+  const fetchBdNames = useCallback(async (filters = {}) => {
     try {
-      const data = await getBDNames(filters);
+      const data = await getBdNames(filters);
       setBdNames(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch BD Names:", err);
@@ -71,7 +71,7 @@ export default function useFilters(defaultFilters) {
       };
 
       fetchData(filters);
-      fetchBDNames({ ...defaultFilters, dateField: 'inqDate' });
+      fetchBdNames({ ...defaultFilters, dateField: 'inqDate' });
       fetchClientNames({ ...defaultFilters, dateField: 'inqDate' });
     }
   }, []); // Empty dependency array ensures it only runs once
@@ -82,7 +82,7 @@ export default function useFilters(defaultFilters) {
     clientNames,
     loading,
     fetchInquiries: fetchData,
-    fetchBDNames,
+    fetchBdNames,
     fetchClientNames,
     setInquiries,
   };

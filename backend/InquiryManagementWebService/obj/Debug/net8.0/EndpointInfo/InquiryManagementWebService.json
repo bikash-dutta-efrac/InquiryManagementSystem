@@ -211,7 +211,7 @@
             },
             "nullable": true
           },
-          "excludeBDs": {
+          "excludeBds": {
             "type": "boolean"
           },
           "excludeClients": {
