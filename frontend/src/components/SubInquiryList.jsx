@@ -99,56 +99,56 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
       {/* Table */}
       <div className="overflow-x-auto border border-gray-200 rounded-2xl shadow-lg">
         <table className="w-full table-auto border-collapse">
-          <thead className="bg-linear-to-r from-blue-500 via-cyan-500 to-teal-500 text-white sticky top-0 z-10">
+          <thead className="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white">
             <tr>
               {queryType === "inquiries" && (
                 <>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                     Inquiry No
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                     Inquiry Date
                   </th>
                 </>
               )}
               {queryType !== "registrations" && (
                 <>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                     Quotation No
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                     Quotation Date
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
-                    Quotation Value<br/>(Before Discount)
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-right">
+                    Quotation Value (Before Discount)
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
-                    Quotation Value<br/>(After Discount)
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-right">
+                    Quotation Value (After Discount)
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
-                    Quotation<br/>Status
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+                    Quotation Status
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
-                    Quotation<br/>Ageing
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+                    Quotation Ageing
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                     Discount (%)
                   </th>
                 </>
               )}
-              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                 Registration No
               </th>
-              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
-                Registration<br/>Date
+              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+                Registration Date
               </th>
-              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
-                Registration<br/>Value
+              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-right">
+                Registration Value
               </th>
-              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                 BD Name
               </th>
-              <th className="px-4 py-3 text-sm font-medium whitespace-nowrap text-left">
+              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
                 Client Name
               </th>
             </tr>
@@ -159,7 +159,7 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
                 key={`${inq.inqNo}-${idx}`}
                 className={`${
                   idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                } border-t border-gray-200 transition-all duration-200 ease-in-out hover:bg-blue-50 hover:shadow-md`}
+                } border-t border-gray-200 transition-all duration-200 ease-in-out hover:bg-gray-100`}
               >
                 {queryType === "inquiries" && (
                   <>
@@ -183,10 +183,10 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
                         ? new Date(inq.quotDate).toLocaleDateString()
                         : "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-right">
                       {inq.quotValBeforeDis ?? "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-right">
                       {inq.quotValAfterDis ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
@@ -208,7 +208,7 @@ export default function SubInquiryList({ title, data = [], onBack, queryType }) 
                     ? new Date(inq.regisDate).toLocaleDateString()
                     : "-"}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-right">
                   {inq.regisVal ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">

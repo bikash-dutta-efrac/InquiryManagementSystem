@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { getInquiries, getProjections, getBdNames, getClientNames } from "../services/api.js";
+import { getInquiries, getBdNames, getClientNames } from "../services/api.js";
 
 export default function useFilters(defaultFilters) {
   const [inquiries, setInquiries] = useState([]);
@@ -7,59 +7,52 @@ export default function useFilters(defaultFilters) {
   const [clientNames, setClientNames] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch data based on dateField
+  // Fetch inquiries
   const fetchData = useCallback(async (filters = {}) => {
     setLoading(true);
     try {
-      let data;
-      if (filters.dateField === 'projDate') {
-        data = await getProjections(filters);
-      } else {
-        data = await getInquiries(filters);
-      }
+      let data = await getInquiries(filters);
 
       // Default sort for inquiries
-      if (filters.dateField === 'inqDate') {
-        data = [...data].sort((a, b) => new Date(b.inqDate) - new Date(a.inqDate));
+      if (filters.dateField === "inqDate") {
+        data = [...data].sort(
+          (a, b) => new Date(b.inqDate) - new Date(a.inqDate)
+        );
       }
 
       setInquiries(data);
     } catch (err) {
-      console.error(`Failed to fetch data for ${filters.dateField}:`, err);
+      console.error("❌ Failed to fetch inquiries:", err);
       setInquiries([]);
-      throw err; // Propagate error for the caller to handle
+      throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Fetch BD names (based on current date filter)
+  // Fetch BD names
   const fetchBdNames = useCallback(async (filters = {}) => {
     try {
       const data = await getBdNames(filters);
       setBdNames(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to fetch BD Names:", err);
+      console.error("❌ Failed to fetch BD Names:", err);
       setBdNames([]);
     }
   }, []);
 
-  // Fetch Client names (depends on BD selection + date filter)
+  // Fetch Client names
   const fetchClientNames = useCallback(async (filters = {}) => {
     try {
       const data = await getClientNames(filters);
       setClientNames(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to fetch Client Names:", err);
+      console.error("❌ Failed to fetch Client Names:", err);
       setClientNames([]);
     }
   }, []);
 
-  // ⭐ IMPORTANT FIX: This useEffect now runs only once on mount.
-  // The 'defaultFilters' object passed from App.jsx is recreated on every render,
-  // causing the useEffect to re-run and trigger the error.
-  // By using an empty dependency array, we ensure the initial fetch logic
-  // runs once and avoids the unstable dependency.
+  // Initial fetch
   useEffect(() => {
     if (defaultFilters) {
       const filters = {
@@ -71,10 +64,10 @@ export default function useFilters(defaultFilters) {
       };
 
       fetchData(filters);
-      fetchBdNames({ ...defaultFilters, dateField: 'inqDate' });
-      fetchClientNames({ ...defaultFilters, dateField: 'inqDate' });
+      fetchBdNames({ ...defaultFilters, dateField: "inqDate" });
+      fetchClientNames({ ...defaultFilters, dateField: "inqDate" });
     }
-  }, []); // Empty dependency array ensures it only runs once
+  }, []); // run once on mount
 
   return {
     inquiries,

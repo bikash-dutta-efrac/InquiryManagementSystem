@@ -99,7 +99,6 @@ function KpiCard2({ summary, type, gradient }) {
     if (type === "vertical") return "Vertical Summary";
     if (type === "bd") return "BD Summary";
     if (type === "client") return "Client Summary";
-    if (type === "lab") return "Lab Summary";
     return "Summary";
   };
 
@@ -147,7 +146,7 @@ function KpiCard2({ summary, type, gradient }) {
                 <div
                   className="absolute top-0 left-0 w-1.5 h-full rounded-l-xl"
                   style={{
-                    backgroundColor: type === "bd" ? "#00aeffff" : type === "client" ? "#ff02abff" : type === "vertical" ? "#fda501ff" : type === "lab" ? "#02b96dff" : "",
+                    backgroundColor: type === "bd" ? "#00aeffff" : type === "client" ? "#02b96dff" : "",
                   }}
                 />
 
@@ -157,7 +156,6 @@ function KpiCard2({ summary, type, gradient }) {
                     {type === "vertical" && (item.vertical ?? "-")}
                     {type === "bd" && (item.bdName ?? "-")}
                     {type === "client" && (item.client ?? "-")}
-                    {type === "lab" && (item.lab ?? "-")}
                   </h3>
                 </div>
 
@@ -280,7 +278,6 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
   const [summaryByVertical, setSummaryByVertical] = useState({});
   const [summaryByBd, setSummaryByBd] = useState({});
   const [summaryByClient, setSummaryByClient] = useState({});
-  const [summaryByLab, setSummaryByLab] = useState({});
   const [expandedChart, setExpandedChart] = useState(null);
 
   const chartRef = useRef(null);
@@ -420,36 +417,6 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
     setSummaryByClient(sortedSummary);
   }, [data]);
 
-  useEffect(() => {
-    const summary = data.reduce((acc, item) => {
-      const v = item.lab || "Unknown";
-
-      if (!acc[v]) {
-        acc[v] = {
-          lab: v,
-          totalRegistrations: 0,
-          totalRegisVal: 0,
-          approved: 0,
-          unapproved: 0,
-          parameters: new Set()
-        };
-      }
-
-      acc[v].totalRegistrations += 1;
-      acc[v].totalRegisVal += Number(item.regisVal || 0);
-      if (item.quotStatus === "Approved") acc[v].approved += 1;
-      if (item.quotStatus === "Not Approved") acc[v].unapproved += 1;
-      acc[v].parameters.add(item.parameter);
-
-      return acc;
-    }, {});
-
-    const sortedSummary = Object.values(summary).sort(
-      (a, b) => b.totalRegisVal - a.totalRegisVal
-    );
-
-    setSummaryByLab(sortedSummary);
-  }, [data]);
 
   // Maps to store counts and total registration values
   const regCountMap = {};
@@ -636,19 +603,14 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
       <KpiCard2
         summary={summaryByClient}
         type={"client"}
-        gradient={"bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500"}
+        gradient={"bg-linear-to-r from-lime-500 via-green-500 to-emerald-500"}
       />
       <KpiCard2
         summary={summaryByVertical}
         type={"vertical"}
         gradient={"bg-linear-to-r from-red-500 via-orange-500 to-yellow-500"}
       />
-      <KpiCard2
-        summary={summaryByLab}
-        type={"lab"}
-        gradient={"bg-linear-to-r from-lime-500 via-green-500 to-emerald-500"}
-      />
-
+      
       {/* Expanded Modal */}
       {expandedChart && (
         <ExpandModal

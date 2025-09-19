@@ -1,8 +1,6 @@
 ﻿using InquiryManagementWebService.Models;
 using InquiryManagementWebService.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using static Azure.Core.HttpHeader;
 
 namespace InquiryManagementWebService.Controllers
 {
