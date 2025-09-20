@@ -154,6 +154,8 @@ export default function BdProjection({ inquiries, projections }) {
   const [view, setView] = useState("table");
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  // console.log(inquiries, projections);
+
   const aggregatedData = aggregateData(inquiries, projections);
 
   const totalProjected = aggregatedData.reduce(
@@ -480,7 +482,7 @@ export default function BdProjection({ inquiries, projections }) {
         <h2 className="text-3xl font-extrabold text-gray-900 leading-tight">
           BD Performance
           <span className="block text-lg font-medium text-gray-500 mt-1">
-            Projection & Achievement Dashboard
+            Projection Vs Achievement Dashboard
           </span>
         </h2>
         <div className="relative flex items-center bg-white rounded-full p-2 shadow-lg border border-gray-200 transition-all duration-300">
@@ -546,7 +548,7 @@ export default function BdProjection({ inquiries, projections }) {
         <div className="bg-white p-6 rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105 border-t-4 border-green-500">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold uppercase text-gray-500">
-              BDs Achieved
+              Achieved
             </span>
             <div className="p-2 bg-green-100 rounded-full text-green-600">
               <CheckCircle2 className="w-6 h-6" />
@@ -564,7 +566,7 @@ export default function BdProjection({ inquiries, projections }) {
         <div className="bg-white p-6 rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105 border-t-4 border-red-500">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold uppercase text-gray-500">
-              BDs Not Achieved
+              Not Achieved
             </span>
             <div className="p-2 bg-red-100 rounded-full text-red-600">
               <XCircle className="w-6 h-6" />

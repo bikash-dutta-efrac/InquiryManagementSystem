@@ -50,7 +50,6 @@ export default function App() {
 
   const { inquiries, loading, fetchInquiries } = useInquiries(defaultFilters);
 
-  // useProjections now handles fetching internally based on filters
   const { projections, loading: projectionsLoading } = useProjections(
     queryType === "bdProjection" ? filters : null
   );
@@ -62,7 +61,6 @@ export default function App() {
         if (fetchParams.dateField !== "bdProjection") {
           await fetchInquiries(fetchParams);
         } else {
-          // For BD projection, we only need to fetch inquiries
           await fetchInquiries({ ...fetchParams, dateField: "regisDate" });
         }
       } catch (e) {
@@ -93,8 +91,6 @@ export default function App() {
       let startDate = new Date(newFilterState.range?.start);
       let endDate = new Date(newFilterState.range?.end);
 
-      // New logic to handle full-month projection data
-
       if (
         startDate >= minDate &&
         startDate <= today &&
@@ -116,13 +112,11 @@ export default function App() {
         console.warn("⛔ Invalid date range, skipping fetch");
         return;
       }
-      // Set month and year to null when filterType is range
       newFilters.month = null;
       newFilters.year = null;
     } else if (newFilterState.filterType === "month" && newFilterState.year) {
       newFilters.year = Number(newFilterState.year);
       if (newFilterState.month) newFilters.month = Number(newFilterState.month);
-      // Set fromDate and toDate to null when filterType is month
       newFilters.fromDate = null;
       newFilters.toDate = null;
     }
@@ -137,7 +131,7 @@ export default function App() {
 
     setFilters(newFilters);
 
-    console.log(inquiries, projections);
+    console.log(newFilters);
   };
 
   const onDateFieldChange = async (dateField) => {
@@ -188,6 +182,24 @@ export default function App() {
         return { title: "", data: [] };
     }
   };
+
+  // ✅ Sorting helper
+  const getSortedInquiries = (data, dateField, sortOrder) => {
+    if (!data || data.length === 0) return [];
+    return [...data].sort((a, b) => {
+      const dateA = new Date(a[dateField]);
+      const dateB = new Date(b[dateField]);
+      if (isNaN(dateA) || isNaN(dateB)) return 0; // skip invalid dates
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+  };
+
+  // ✅ Always sorted data
+  const sortedInquiries = getSortedInquiries(
+    inquiries,
+    filters.dateField,
+    filters.sortOrder
+  );
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -242,7 +254,7 @@ export default function App() {
                 <div className="max-w-7xl mx-auto mb-8 px-2 relative">
                   {queryType !== "bdProjection" && (
                     <InquiryOverview
-                      data={inquiries}
+                      data={sortedInquiries}  // ✅ use sorted data
                       queryType={queryType}
                       onCardClick={handleCardClick}
                       loading={loading}
@@ -288,7 +300,7 @@ export default function App() {
                     />
                   ) : view === "list" ? (
                     <InquiryList
-                      data={inquiries}
+                      data={sortedInquiries}
                       queryType={queryType}
                       loading={loading}
                     />
@@ -302,7 +314,7 @@ export default function App() {
                         }
                       >
                         <GraphicalAnalysis
-                          data={inquiries}
+                          data={sortedInquiries}
                           queryType={queryType}
                         />
                       </Suspense>
