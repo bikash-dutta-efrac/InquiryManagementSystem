@@ -162,8 +162,8 @@ export default function InquiryList({ data = [], queryType }) {
   return (
     <div className="space-y-8 bg-white p-8 rounded-3xl shadow-xl animate-fadeIn">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Inquiry List <span className="text-blue-600">({data.length})</span>
+        <h2 className="text-xl font-bold text-gray-800">
+          Rows <span className="text-blue-600">({data.length})</span>
         </h2>
         <div className="flex justify-end gap-3">
           <button

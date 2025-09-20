@@ -136,19 +136,29 @@ function KpiCard2({ summary, type, gradient }) {
             {items.map((item, idx) => (
               <div
                 key={idx}
-                className="relative flex-shrink-0 min-w-[160px] max-w-[160px] h-auto p-4 rounded-xl border border-gray-200
-                          shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out
-                          transform hover:-translate-y-1 bg-white flex flex-col justify-between"
+                className="relative flex-shrink-0 min-w-[160px] max-w-[160px] h-auto p-4 rounded-xl border
+             shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out
+             transform hover:-translate-y-1 bg-white flex flex-col justify-between"
+                style={{
+                  borderColor:
+                    type === "bd"
+                      ? "#00aeff"
+                      : type === "client"
+                      ? "#02b96d"
+                      : "#fd8f00",
+                }}
                 role="listitem"
                 tabIndex={0}
               >
-                {/* Decorative color stripe on left of card */}
-                <div
-                  className="absolute top-0 left-0 w-1.5 h-full rounded-l-xl"
-                  style={{
-                    backgroundColor: type === "bd" ? "#00aeffff" : type === "client" ? "#02b96dff" : "",
-                  }}
-                />
+                {/* <div
+                  className={`absolute h-full w-1 rounded-l-xl border-width: 10px border-color: ${
+                    type === "bd"
+                      ? "#00aeff"
+                      : type === "client"
+                      ? "#02b96d"
+                      : "#fd8f00"
+                  }`}
+                /> */}
 
                 {/* Card Title */}
                 <div className="flex items-center mb-2">
@@ -166,22 +176,10 @@ function KpiCard2({ summary, type, gradient }) {
                       <span className="text-gray-400">
                         {IconMapping.registrations}
                       </span>
-                      <span>Registrations</span>
+                      <span>Quotations</span>
                     </span>
                     <span className="font-semibold text-gray-900">
-                      {item.totalRegistrations ?? 0}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-indigo-500">
-                        {IconMapping.regValue}
-                      </span>
-                      <span>Reg Value</span>
-                    </span>
-                    <span className="font-semibold text-indigo-600">
-                      {formatAmount(item.totalRegisVal ?? 0)}
+                      {item.totalQuotations?.size ?? 0}
                     </span>
                   </div>
 
@@ -205,7 +203,32 @@ function KpiCard2({ summary, type, gradient }) {
                       <span>Not Approved</span>
                     </span>
                     <span className="font-semibold text-red-600">
-                      {item.unapproved ?? 0}
+                      {Number(item.totalQuotations?.size ?? 0) -
+                        Number(item.approved ?? 0) || 0}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-gray-400">
+                        {IconMapping.registrations}
+                      </span>
+                      <span>Registrations</span>
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {item.totalRegistrations ?? 0}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-indigo-500">
+                        {IconMapping.regValue}
+                      </span>
+                      <span>Reg Value</span>
+                    </span>
+                    <span className="font-semibold text-indigo-600">
+                      {formatAmount(item.totalRegisVal ?? 0)}
                     </span>
                   </div>
                 </div>
@@ -326,9 +349,9 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
         acc[v] = {
           vertical: v,
           totalRegistrations: 0,
-          totalRegisVal: 0,
+          totalQuotations: new Set(),
           approved: 0,
-          unapproved: 0,
+          totalRegisVal: 0,
           assocClients: new Set(),
           assocBds: new Set(),
         };
@@ -336,8 +359,10 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
 
       acc[v].totalRegistrations += 1;
       acc[v].totalRegisVal += Number(item.regisVal || 0);
-      if (item.quotStatus === "Approved") acc[v].approved += 1;
-      if (item.quotStatus === "Not Approved") acc[v].unapproved += 1;
+      if (!acc[v].totalQuotations.has(item.quotNo)) {
+        acc[v].totalQuotations.add(item.quotNo);
+        if (item.quotStatus === "Approved") acc[v].approved += 1;
+      }
       acc[v].assocBds.add(item.bdName);
       acc[v].assocClients.add(item.clientName);
 
@@ -359,9 +384,9 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
         acc[v] = {
           bdName: v,
           totalRegistrations: 0,
-          totalRegisVal: 0,
+          totalQuotations: new Set(),
           approved: 0,
-          unapproved: 0,
+          totalRegisVal: 0,
           assocClients: new Set(),
           assocVerticals: new Set(),
         };
@@ -369,8 +394,10 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
 
       acc[v].totalRegistrations += 1;
       acc[v].totalRegisVal += Number(item.regisVal || 0);
-      if (item.quotStatus === "Approved") acc[v].approved += 1;
-      if (item.quotStatus === "Not Approved") acc[v].unapproved += 1;
+      if (!acc[v].totalQuotations.has(item.quotNo)) {
+        acc[v].totalQuotations.add(item.quotNo);
+        if (item.quotStatus === "Approved") acc[v].approved += 1;
+      }
       acc[v].assocVerticals.add(item.vertical);
       acc[v].assocClients.add(item.clientName);
 
@@ -392,9 +419,9 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
         acc[v] = {
           client: v,
           totalRegistrations: 0,
-          totalRegisVal: 0,
+          totalQuotations: new Set(),
           approved: 0,
-          unapproved: 0,
+          totalRegisVal: 0,
           assocVerticals: new Set(),
           assocBds: new Set(),
         };
@@ -402,8 +429,10 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
 
       acc[v].totalRegistrations += 1;
       acc[v].totalRegisVal += Number(item.regisVal || 0);
-      if (item.quotStatus === "Approved") acc[v].approved += 1;
-      if (item.quotStatus === "Not Approved") acc[v].unapproved += 1;
+      if (!acc[v].totalQuotations.has(item.quotNo)) {
+        acc[v].totalQuotations.add(item.quotNo);
+        if (item.quotStatus === "Approved") acc[v].approved += 1;
+      }
       acc[v].assocVerticals.add(item.vertical);
       acc[v].assocBds.add(item.bdName);
 
@@ -416,7 +445,6 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
 
     setSummaryByClient(sortedSummary);
   }, [data]);
-
 
   // Maps to store counts and total registration values
   const regCountMap = {};
@@ -610,7 +638,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
         type={"vertical"}
         gradient={"bg-linear-to-r from-red-500 via-orange-500 to-yellow-500"}
       />
-      
+
       {/* Expanded Modal */}
       {expandedChart && (
         <ExpandModal

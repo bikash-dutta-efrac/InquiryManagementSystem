@@ -11,6 +11,7 @@ import SubInquiryList from "./components/SubInquiryList";
 import { BarChart3, List, AlertTriangle, RefreshCcw } from "lucide-react";
 import useInquiries from "./hooks/useInquiries";
 import useProjections from "./hooks/useProjections";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 
 export default function App() {
   const [view, setView] = useState("list");
@@ -99,15 +100,11 @@ export default function App() {
         startDate <= endDate
       ) {
         if (queryType === "bdProjection") {
-          startDate = new Date(
-            startDate.getFullYear(),
-            startDate.getMonth(),
-            1
-          );
-          endDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+          startDate = startOfMonth(startDate);
+          endDate = endOfMonth(endDate);
         }
-        newFilters.fromDate = startDate.toISOString().split("T")[0];
-        newFilters.toDate = endDate.toISOString().split("T")[0];
+        newFilters.fromDate = format(startDate, "yyyy-MM-dd");
+        newFilters.toDate = format(endDate, "yyyy-MM-dd");
       } else {
         console.warn("⛔ Invalid date range, skipping fetch");
         return;
@@ -183,18 +180,16 @@ export default function App() {
     }
   };
 
-  // ✅ Sorting helper
   const getSortedInquiries = (data, dateField, sortOrder) => {
     if (!data || data.length === 0) return [];
     return [...data].sort((a, b) => {
       const dateA = new Date(a[dateField]);
       const dateB = new Date(b[dateField]);
-      if (isNaN(dateA) || isNaN(dateB)) return 0; // skip invalid dates
+      if (isNaN(dateA) || isNaN(dateB)) return 0;
       return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
     });
   };
 
-  // ✅ Always sorted data
   const sortedInquiries = getSortedInquiries(
     inquiries,
     filters.dateField,
@@ -254,7 +249,7 @@ export default function App() {
                 <div className="max-w-7xl mx-auto mb-8 px-2 relative">
                   {queryType !== "bdProjection" && (
                     <InquiryOverview
-                      data={sortedInquiries}  // ✅ use sorted data
+                      data={sortedInquiries} // ✅ use sorted data
                       queryType={queryType}
                       onCardClick={handleCardClick}
                       loading={loading}
