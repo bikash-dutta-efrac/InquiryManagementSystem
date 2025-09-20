@@ -9,13 +9,5 @@ export default defineConfig({
       'spotty-dogs-worry.loca.lt',
     ],
     host: true,
-  },
-  theme: {
-    extend: {
-      fontFamily: {
-        // 'Inter' is now the first choice for the font-sans class
-        sans: ['Inter', ...defaultTheme.fontFamily.sans],
-      },
-    },
-  },
+  }
 })
