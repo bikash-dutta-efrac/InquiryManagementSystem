@@ -4,17 +4,26 @@ import {
   ArrowUpWideNarrow,
   ChevronDown,
   Calendar,
-  Users,
-  User,
-  ZapIcon,
+  Briefcase,
+  Building2,
+  Telescope,
+  ListChecks,
   X,
   RefreshCcw,
   Search,
 } from "lucide-react";
 import { getBdNames, getClientNames, getVerticals } from "../services/api.js";
 
-// Pass the 'isExcluded' prop to CustomSelect
-const CustomSelect = ({ options, selected, onToggle, onSearchChange, searchTerm, label, icon, isExcluded = false }) => {
+const CustomSelect = ({
+  options,
+  selected,
+  onToggle,
+  onSearchChange,
+  searchTerm,
+  label,
+  icon,
+  isExcluded = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -48,7 +57,11 @@ const CustomSelect = ({ options, selected, onToggle, onSearchChange, searchTerm,
           {icon}
           <span className="text-sm font-semibold text-gray-500">{label}</span>
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
       {isOpen && (
@@ -78,9 +91,9 @@ const CustomSelect = ({ options, selected, onToggle, onSearchChange, searchTerm,
                       className={
                         isSelected(option)
                           ? isExcluded
-                            ? 'font-bold text-red-600'
-                            : 'font-bold text-blue-600'
-                          : 'text-gray-800'
+                            ? "font-bold text-red-600"
+                            : "font-bold text-blue-600"
+                          : "text-gray-800"
                       }
                     >
                       {option}
@@ -92,7 +105,9 @@ const CustomSelect = ({ options, selected, onToggle, onSearchChange, searchTerm,
                 </li>
               ))
             ) : (
-              <li className="py-2 px-4 text-sm text-gray-500 text-center">No options found</li>
+              <li className="py-2 px-4 text-sm text-gray-500 text-center">
+                No options found
+              </li>
             )}
           </ul>
         </div>
@@ -100,7 +115,6 @@ const CustomSelect = ({ options, selected, onToggle, onSearchChange, searchTerm,
     </div>
   );
 };
-
 
 const ExcludeToggle = ({ enabled, onChange }) => {
   const handleClick = () => {
@@ -143,8 +157,7 @@ const ExcludeToggle = ({ enabled, onChange }) => {
   );
 };
 
-
-export default function Filters({ data = [], onChange, onResetAll, disabled }) {
+export default function Filters({ data = [], onChange, onResetAll, disabled, queryType }) {
   const today = new Date();
 
   const defaultRange = {
@@ -161,6 +174,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   const [verticals, setVerticals] = useState([]);
   const [bdNames, setBdNames] = useState([]);
   const [clientNames, setClientNames] = useState([]);
+  const [status, setStatus] = useState([]); // 🔹 NEW STATE: Status filter
   const [sortOrder, setSortOrder] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [dateField, setDateField] = useState("inqDate");
@@ -170,20 +184,27 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
   const [excludeBds, setExcludeBds] = useState(false);
   const [excludeClients, setExcludeClients] = useState(false);
 
-  // Search terms for custom selects
-  const [verticalSearchTerm, setVerticalSearchTerm] = useState('');
-  const [bdSearchTerm, setBdSearchTerm] = useState('');
-  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  // Search terms
+  const [verticalSearchTerm, setVerticalSearchTerm] = useState("");
+  const [bdSearchTerm, setBdSearchTerm] = useState("");
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [statusSearchTerm, setStatusSearchTerm] = useState(""); // 🔹 NEW STATE: Status search term
 
-  // Options fetched from API
+  // Options
   const [verticalOptions, setVerticalOptions] = useState([]);
   const [bdOptions, setBdOptions] = useState([]);
   const [clientOptions, setClientOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const statusOptions = ["Verified by HO", "Verified by QIMA", "Verified by Mail"]; // 🔹 NEW: Status options
+
+  // Flag for conditional rendering
+  // ASSUMPTION: 'labAnalysisDate' is the queryType for the Lab Analysis view
+  const isLabAnalysisView = queryType === 'labAnalysis';
 
   const filteredData = useMemo(() => {
     let list = [...data];
 
+    // Date Filtering (always present)
     if (filterType === "range" && range.start && range.end) {
       const startDate = new Date(range.start);
       const endDate = new Date(range.end);
@@ -203,28 +224,36 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
       });
     }
 
-    if (bdNames.length > 0) {
-      list = list.filter((inq) =>
-        excludeBds
-          ? !bdNames.includes(inq.bdName)
-          : bdNames.includes(inq.bdName)
-      );
+    // 🔹 NEW: Status Filter (only for Lab Analysis)
+    if (isLabAnalysisView && status.length > 0) {
+        list = list.filter((inq) => status.includes(inq.labStatus)); // Assuming the field name is `labStatus`
     }
 
-    if (clientNames.length > 0) {
-      list = list.filter((inq) =>
-        excludeClients
-          ? !clientNames.includes(inq.clientName)
-          : clientNames.includes(inq.clientName)
-      );
-    }
+    // Verticals, BD Names, Client Names are now completely ignored for filtering in Lab Analysis view
+    if (!isLabAnalysisView) {
+        if (bdNames.length > 0) {
+            list = list.filter((inq) =>
+                excludeBds
+                ? !bdNames.includes(inq.bdName)
+                : bdNames.includes(inq.bdName)
+            );
+        }
 
-    if (verticals.length > 0) {
-      list = list.filter((inq) =>
-        excludeVerticals
-          ? !verticals.includes(inq.vertical)
-          : verticals.includes(inq.vertical)
-      );
+        if (clientNames.length > 0) {
+            list = list.filter((inq) =>
+                excludeClients
+                ? !clientNames.includes(inq.clientName)
+                : clientNames.includes(inq.clientName)
+            );
+        }
+
+        if (verticals.length > 0) {
+            list = list.filter((inq) =>
+                excludeVerticals
+                ? !verticals.includes(inq.vertical)
+                : verticals.includes(inq.vertical)
+            );
+        }
     }
 
     return list;
@@ -241,53 +270,60 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     excludeBds,
     excludeClients,
     excludeVerticals,
+    isLabAnalysisView, // 🔹 NEW Dependency
+    status, // 🔹 NEW Dependency
   ]);
 
   const buildSearchRequest = (nextState = {}) => {
     const base = {
       dateField: nextState.dateField ?? dateField,
-      bdNames: nextState.bdNames ?? bdNames,
-      clientNames: nextState.clientNames ?? clientNames,
-      verticals: nextState.verticals ?? verticals,
-      excludeBds: nextState.excludeBds ?? excludeBds,
-      excludeClients: nextState.excludeClients ?? excludeClients,
-      excludeVerticals: nextState.excludeVerticals ?? excludeVerticals,
+      // 🐛 FIX: Exclude BDs, Clients, Verticals from request if in Lab Analysis View
+      bdNames: isLabAnalysisView ? [] : (nextState.bdNames ?? bdNames),
+      clientNames: isLabAnalysisView ? [] : (nextState.clientNames ?? clientNames),
+      verticals: isLabAnalysisView ? [] : (nextState.verticals ?? verticals),
+      excludeBds: isLabAnalysisView ? false : (nextState.excludeBds ?? excludeBds),
+      excludeClients: isLabAnalysisView ? false : (nextState.excludeClients ?? excludeClients),
+      excludeVerticals: isLabAnalysisView ? false : (nextState.excludeVerticals ?? excludeVerticals),
+      status: nextState.status ?? status, // 🔹 NEW: Include status
     };
 
     const nextFilterType = nextState.filterType ?? filterType;
     if (nextFilterType === "range") {
       const nextRange = nextState.range ?? range;
       if (nextRange.start && nextRange.end) {
-        return { ...base, fromDate: nextRange.start, toDate: nextRange.end };
+        return { ...base, filterType: 'range', fromDate: nextRange.start, toDate: nextRange.end };
       }
     }
 
     if (nextFilterType === "month") {
       const nextMonth = nextState.month ?? month;
       const nextYear = nextState.year ?? year;
-      const req = { ...base, year: Number(nextYear) };
+      const req = { ...base, filterType: 'month', year: Number(nextYear) };
       if (nextMonth) req.month = Number(nextMonth);
       return req;
     }
 
+    // Default return base filters without date if no date filter is selected
     return base;
   };
 
-  // emit helper -> notify parent of current filter state
+  // emit helper -> notify parent
   const emit = (next = {}) => {
     const payload = {
       filterType,
       range,
       month,
       year,
-      verticals,
-      bdNames,
-      clientNames,
+      // 🐛 FIX: Only send BDs, Clients, Verticals if NOT in Lab Analysis view
+      verticals: isLabAnalysisView ? [] : verticals,
+      bdNames: isLabAnalysisView ? [] : bdNames,
+      clientNames: isLabAnalysisView ? [] : clientNames,
+      status, // 🔹 NEW: Include status
       sortOrder,
       dateField,
-      excludeVerticals,
-      excludeBds,
-      excludeClients,
+      excludeVerticals: isLabAnalysisView ? false : excludeVerticals,
+      excludeBds: isLabAnalysisView ? false : excludeBds,
+      excludeClients: isLabAnalysisView ? false : excludeClients,
       ...next,
     };
     onChange?.(payload);
@@ -299,123 +335,131 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
     emit({ sortOrder: order });
   };
 
-  // Fetch verticals
-  useEffect(() => {
-    let cancelled = false;
-    const fetchVerticals = async () => {
-      setLoadingOptions(true);
-      try {
-        const body = buildSearchRequest();
-        const options = await getVerticals(body);
-        if (!cancelled) {
+  // 🔹 Debounced fetch utility
+  const useDebouncedEffect = (effect, deps, delay) => {
+    useEffect(() => {
+      const handler = setTimeout(() => effect(), delay);
+      return () => clearTimeout(handler);
+    }, [...deps, delay]);
+  };
+
+  // The dependency list for fetching options. We MUST include `isLabAnalysisView`
+  const optionsDeps = [
+    filterType,
+    range.start,
+    range.end,
+    month,
+    year,
+    dateField,
+    excludeBds,
+    excludeClients,
+    excludeVerticals,
+    isLabAnalysisView,
+  ];
+
+  // Fetch verticals (Conditionally disabled for Lab Analysis view)
+  useDebouncedEffect(
+    () => {
+      if (isLabAnalysisView) {
+        setVerticalOptions([]);
+        return;
+      }
+      const controller = new AbortController();
+      const fetchVerticals = async () => {
+        setLoadingOptions(true);
+        try {
+          const body = buildSearchRequest();
+          const options = await getVerticals(body, {
+            signal: controller.signal,
+          });
           setVerticalOptions(Array.isArray(options) ? options : []);
+        } catch (e) {
+          if (e.name !== "AbortError")
+            console.error("Failed to fetch verticals: ", e);
+          setVerticalOptions([]);
+        } finally {
+          setLoadingOptions(false);
         }
-      } catch (e) {
-        console.error("Failed to fetch verticals: ", e);
-        if (!cancelled) setVerticalOptions([]);
-      } finally {
-        if (!cancelled) setLoadingOptions(false);
-      }
-    };
-    fetchVerticals();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    filterType,
-    range.start,
-    range.end,
-    month,
-    year,
-    dateField,
-    bdNames,
-    clientNames,
-    excludeBds,
-    excludeClients,
-    excludeVerticals,
-  ]);
+      };
+      fetchVerticals();
+      return () => controller.abort();
+    },
+    optionsDeps,
+    400
+  );
 
-  // Fetch BD names
-  useEffect(() => {
-    let cancelled = false;
-    const fetchBDs = async () => {
-      setLoadingOptions(true);
-      try {
-        const body = buildSearchRequest();
-        const options = await getBdNames(body);
-        if (!cancelled) {
+  // Fetch BD names (Conditionally disabled for Lab Analysis view)
+  useDebouncedEffect(
+    () => {
+      if (isLabAnalysisView) {
+        setBdOptions([]);
+        return;
+      }
+      const controller = new AbortController();
+      const fetchBDs = async () => {
+        setLoadingOptions(true);
+        try {
+          const body = buildSearchRequest();
+          const options = await getBdNames(body, { signal: controller.signal });
           setBdOptions(Array.isArray(options) ? options : []);
+        } catch (e) {
+          if (e.name !== "AbortError")
+            console.error("Failed to fetch BD names", e);
+          setBdOptions([]);
+        } finally {
+          setLoadingOptions(false);
         }
-      } catch (e) {
-        console.error("Failed to fetch BD names", e);
-        if (!cancelled) setBdOptions([]);
-      } finally {
-        if (!cancelled) setLoadingOptions(false);
-      }
-    };
-    fetchBDs();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    filterType,
-    range.start,
-    range.end,
-    month,
-    year,
-    dateField,
-    clientNames,
-    verticals,
-    excludeBds,
-    excludeClients,
-    excludeVerticals,
-  ]);
+      };
+      fetchBDs();
+      return () => controller.abort();
+    },
+    optionsDeps,
+    400
+  );
 
-  // Fetch Client names
-  useEffect(() => {
-    let cancelled = false;
-    const fetchClients = async () => {
-      setLoadingOptions(true);
-      try {
-        const body = buildSearchRequest();
-        const options = await getClientNames(body);
-        if (!cancelled) {
-          setClientOptions(Array.isArray(options) ? options : []);
-        }
-      } catch (e) {
-        console.error("Failed to fetch Client names", e);
-        if (!cancelled) setClientOptions([]);
-      } finally {
-        if (!cancelled) setLoadingOptions(false);
+  // Fetch Client names (Conditionally disabled for Lab Analysis view)
+  useDebouncedEffect(
+    () => {
+      if (isLabAnalysisView) {
+        setClientOptions([]);
+        return;
       }
-    };
-    fetchClients();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    filterType,
-    range.start,
-    range.end,
-    month,
-    year,
-    dateField,
-    bdNames,
-    verticals,
-    excludeBds,
-    excludeClients,
-    excludeVerticals,
-  ]);
-  
-  // Filtered options for custom select dropdowns
-  const filteredVerticalOptions = verticalOptions.filter(v =>
+      const controller = new AbortController();
+      const fetchClients = async () => {
+        setLoadingOptions(true);
+        try {
+          const body = buildSearchRequest();
+          const options = await getClientNames(body, {
+            signal: controller.signal,
+          });
+          setClientOptions(Array.isArray(options) ? options : []);
+        } catch (e) {
+          if (e.name !== "AbortError")
+            console.error("Failed to fetch Client names", e);
+          setClientOptions([]);
+        } finally {
+          setLoadingOptions(false);
+        }
+      };
+      fetchClients();
+      return () => controller.abort();
+    },
+    optionsDeps,
+    400
+  );
+
+  // Filtered options for custom selects
+  const filteredVerticalOptions = verticalOptions.filter((v) =>
     v.toLowerCase().includes(verticalSearchTerm.toLowerCase())
   );
-  const filteredBdOptions = bdOptions.filter(bd =>
+  const filteredBdOptions = bdOptions.filter((bd) =>
     bd.toLowerCase().includes(bdSearchTerm.toLowerCase())
   );
-  const filteredClientOptions = clientOptions.filter(c =>
+  const filteredClientOptions = clientOptions.filter((c) =>
     c.toLowerCase().includes(clientSearchTerm.toLowerCase())
+  );
+  const filteredStatusOptions = statusOptions.filter((s) => // 🔹 NEW: Status search filter
+    s.toLowerCase().includes(statusSearchTerm.toLowerCase())
   );
 
   return (
@@ -429,7 +473,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
       >
         {/* Tabs Row */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          {/* Filter Type Tabs */}
+          {/* Filter Type Tabs (Date Range / Month & Year) - Always visible */}
           <div className="flex gap-2 bg-white rounded-2xl p-2 shadow-inner border border-gray-200">
             {["range", "month"].map((ft) => (
               <button
@@ -450,47 +494,54 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
           </div>
 
           <div className="flex items-center gap-4 ml-auto">
-            {/* Date Field Tabs */}
-            
+            {/* Sort Dropdown - ONLY visible when NOT in Lab Analysis view */}
+            {!isLabAnalysisView && (
+              <div className="relative">
+                <button
+                  onClick={() => setSortOpen(!sortOpen)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-xl shadow-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                >
+                  {sortOrder === "newest" ? (
+                    <ArrowDownWideNarrow className="w-5 h-5 text-blue-500" />
+                  ) : (
+                    <ArrowUpWideNarrow className="w-5 h-5 text-blue-500" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {sortOrder === "newest" ? "Newest First" : "Oldest First"}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                      sortOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-            {/* Sort Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setSortOpen(!sortOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-xl shadow-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-              >
-                {sortOrder === "newest" ? (
-                  <ArrowDownWideNarrow className="w-5 h-5 text-blue-500" />
-                ) : (
-                  <ArrowUpWideNarrow className="w-5 h-5 text-blue-500" />
+                {sortOpen && (
+                  <div className="absolute mt-2 right-0 bg-white border border-gray-200 shadow-xl rounded-xl w-40 overflow-hidden z-20 animate-fade-in-up">
+                    <button
+                      onClick={() => handleSort("newest")}
+                      className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
+                        sortOrder === "newest"
+                          ? "bg-blue-50 font-semibold text-blue-700"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <ArrowDownWideNarrow className="w-4 h-4" /> Newest First
+                    </button>
+                    <button
+                      onClick={() => handleSort("oldest")}
+                      className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
+                        sortOrder === "oldest"
+                          ? "bg-blue-50 font-semibold text-blue-700"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <ArrowUpWideNarrow className="w-4 h-4" /> Oldest First
+                    </button>
+                  </div>
                 )}
-                <span className="text-sm font-medium">
-                  {sortOrder === "newest" ? "Newest First" : "Oldest First"}
-                </span>
-                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {sortOpen && (
-                <div className="absolute mt-2 right-0 bg-white border border-gray-200 shadow-xl rounded-xl w-40 overflow-hidden z-20 animate-fade-in-up">
-                  <button
-                    onClick={() => handleSort("newest")}
-                    className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
-                      sortOrder === "newest" ? "bg-blue-50 font-semibold text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <ArrowDownWideNarrow className="w-4 h-4" /> Newest First
-                  </button>
-                  <button
-                    onClick={() => handleSort("oldest")}
-                    className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
-                      sortOrder === "oldest" ? "bg-blue-50 font-semibold text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <ArrowUpWideNarrow className="w-4 h-4" /> Oldest First
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Reset */}
             <button
@@ -501,6 +552,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                 setVerticals([]);
                 setBdNames([]);
                 setClientNames([]);
+                setStatus([]); // 🔹 Reset status
                 setSortOrder("newest");
                 setDateField("inqDate");
                 setExcludeVerticals(false);
@@ -514,6 +566,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   bdNames: [],
                   clientNames: [],
                   verticals: [],
+                  status: [], // 🔹 Reset status in emit
                   sortOrder: "newest",
                   dateField: "inqDate",
                   excludeVerticals: false,
@@ -530,8 +583,9 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
         </div>
 
         {/* Filter Boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Date Range */}
+        {/* Conditional rendering of the grid layout: 3 columns for Lab Analysis, 5 otherwise */}
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${isLabAnalysisView ? 'lg:grid-cols-3' : 'lg:grid-cols-5'} gap-4`}>
+          {/* Date Range (Col 1 & 2) */}
           {filterType === "range" && (
             <>
               <div className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
@@ -574,11 +628,13 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
             </>
           )}
 
-          {/* Month & Year */}
+          {/* Month & Year (Col 1 & 2) */}
           {filterType === "month" && (
             <>
               <div className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
-                <label className="text-xs font-semibold text-gray-500 mb-2">Month</label>
+                <label className="text-xs font-semibold text-gray-500 mb-2">
+                  Month
+                </label>
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                   <select
@@ -591,7 +647,9 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
                   >
                     {Array.from({ length: 12 }, (_, i) => (
                       <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString("default", { month: "long" })}
+                        {new Date(0, i).toLocaleString("default", {
+                          month: "long",
+                        })}
                       </option>
                     ))}
                   </select>
@@ -600,7 +658,9 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
               </div>
 
               <div className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
-                <label className="text-xs font-semibold text-gray-500 mb-2">Year</label>
+                <label className="text-xs font-semibold text-gray-500 mb-2">
+                  Year
+                </label>
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                   <input
@@ -623,113 +683,163 @@ export default function Filters({ data = [], onChange, onResetAll, disabled }) {
             </>
           )}
 
-          {/* Verticals */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                <ZapIcon className="w-4 h-4 text-gray-400" />
-                <span>Verticals</span>
-                {loadingOptions && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>}
-              </span>
-              <ExcludeToggle
-                enabled={excludeVerticals}
-                onChange={(val) => {
-                  setExcludeVerticals(val);
-                  emit({ excludeVerticals: val });
+          {/* 🔹 NEW FILTER: Status (Col 3) - Only for Lab Analysis View */}
+          {isLabAnalysisView && (
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                  <span>Status</span>
+                </span>
+              </div>
+              <CustomSelect
+                label={`${
+                  status.length === 0
+                    ? "Select Status"
+                    : `${status.length} selected`
+                }`}
+                icon={<ListChecks className="w-4 h-4 text-gray-400" />}
+                options={filteredStatusOptions}
+                selected={status}
+                onToggle={(option) => {
+                  const updated = status.includes(option)
+                    ? status.filter((n) => n !== option)
+                    : [...status, option];
+                  setStatus(updated);
+                  emit({ status: updated });
                 }}
+                searchTerm={statusSearchTerm}
+                onSearchChange={setStatusSearchTerm}
+                // isExcluded is not needed for a status filter
               />
             </div>
-            <CustomSelect
-              label={`${verticals.length === 0 ? "Select Verticals" : `${verticals.length} selecected`}`}
-              icon={<ZapIcon className="w-4 h-4 text-gray-400" />} 
-              options={filteredVerticalOptions}
-              selected={verticals}
-              onToggle={(option) => {
-                const updated = verticals.includes(option)
-                  ? verticals.filter((n) => n !== option)
-                  : [...verticals, option];
-                setVerticals(updated);
-                emit({ verticals: updated });
-              }}
-              searchTerm={verticalSearchTerm}
-              onSearchChange={setVerticalSearchTerm}
-              isExcluded={excludeVerticals}
-            />
-          </div>
+          )}
+          
+          {/* Verticals, BD Names, Client Names - ONLY for Non-Lab Analysis View */}
+          {!isLabAnalysisView && (
+            <>
+              {/* Verticals (Col 3) */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                    <span>Verticals</span>
+                    {loadingOptions && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    )}
+                  </span>
+                  <ExcludeToggle
+                    enabled={excludeVerticals}
+                    onChange={(val) => {
+                      setExcludeVerticals(val);
+                      emit({ excludeVerticals: val });
+                    }}
+                  />
+                </div>
+                <CustomSelect
+                  label={`${
+                    verticals.length === 0
+                      ? "Select Verticals"
+                      : `${verticals.length} selecected`
+                  }`}
+                  icon={<Telescope className="w-4 h-4 text-gray-400" />}
+                  options={filteredVerticalOptions}
+                  selected={verticals}
+                  onToggle={(option) => {
+                    const updated = verticals.includes(option)
+                      ? verticals.filter((n) => n !== option)
+                      : [...verticals, option];
+                    setVerticals(updated);
+                    emit({ verticals: updated });
+                  }}
+                  searchTerm={verticalSearchTerm}
+                  onSearchChange={setVerticalSearchTerm}
+                  isExcluded={excludeVerticals}
+                />
+              </div>
 
-          {/* BD Names */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-400" />
-                <span>BD Names</span>
-                {loadingOptions && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>}
-              </span>
-              <ExcludeToggle
-                enabled={excludeBds}
-                onChange={(val) => {
-                  setExcludeBds(val);
-                  emit({ excludeBds: val });
-                }}
-              />
-            </div>
-            <CustomSelect
-              label={`${bdNames.length === 0 ? "Select BDs" : `${bdNames.length} selecected`}`}
-              icon={<Users className="w-4 h-4 text-gray-400" />}
-              options={filteredBdOptions}
-              selected={bdNames}
-              onToggle={(option) => {
-                const updated = bdNames.includes(option)
-                  ? bdNames.filter((n) => n !== option)
-                  : [...bdNames, option];
-                setBdNames(updated);
-                emit({ bdNames: updated });
-              }}
-              searchTerm={bdSearchTerm}
-              onSearchChange={setBdSearchTerm}
-              isExcluded={excludeBds}
-            />
-          </div>
+              {/* BD Names (Col 4) */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                    <span>BD Names</span>
+                    {loadingOptions && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    )}
+                  </span>
+                  <ExcludeToggle
+                    enabled={excludeBds}
+                    onChange={(val) => {
+                      setExcludeBds(val);
+                      emit({ excludeBds: val });
+                    }}
+                  />
+                </div>
+                <CustomSelect
+                  label={`${
+                    bdNames.length === 0
+                      ? "Select BDs"
+                      : `${bdNames.length} selecected`
+                  }`}
+                  icon={<Briefcase className="w-4 h-4 text-gray-400" />}
+                  options={filteredBdOptions}
+                  selected={bdNames}
+                  onToggle={(option) => {
+                    const updated = bdNames.includes(option)
+                      ? bdNames.filter((n) => n !== option)
+                      : [...bdNames, option];
+                    setBdNames(updated);
+                    emit({ bdNames: updated });
+                  }}
+                  searchTerm={bdSearchTerm}
+                  onSearchChange={setBdSearchTerm}
+                  isExcluded={excludeBds}
+                />
+              </div>
 
-          {/* Client Names */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-400" />
-                <span>Client Names</span>
-                {loadingOptions && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>}
-              </span>
-              <ExcludeToggle
-                enabled={excludeClients}
-                onChange={(val) => {
-                  setExcludeClients(val);
-                  emit({ excludeClients: val });
-                }}
-              />
-            </div>
-            <CustomSelect
-              label={`${clientNames.length === 0 ? "Select Clients" : `${clientNames.length} selecected`}`}
-              icon={<User className="w-4 h-4 text-gray-400" />}
-              options={filteredClientOptions}
-              selected={clientNames}
-              onToggle={(option) => {
-                const updated = clientNames.includes(option)
-                  ? clientNames.filter((n) => n !== option)
-                  : [...clientNames, option];
-                setClientNames(updated);
-                emit({ clientNames: updated });
-              }}
-              searchTerm={clientSearchTerm}
-              onSearchChange={setClientSearchTerm}
-              isExcluded={excludeClients}
-            />
-          </div>
+              {/* Client Names (Col 5) */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                    <span>Client Names</span>
+                    {loadingOptions && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    )}
+                  </span>
+                  <ExcludeToggle
+                    enabled={excludeClients}
+                    onChange={(val) => {
+                      setExcludeClients(val);
+                      emit({ excludeClients: val });
+                    }}
+                  />
+                </div>
+                <CustomSelect
+                  label={`${
+                    clientNames.length === 0
+                      ? "Select Clients"
+                      : `${clientNames.length} selecected`
+                  }`}
+                  icon={<Building2 className="w-4 h-4 text-gray-400" />}
+                  options={filteredClientOptions}
+                  selected={clientNames}
+                  onToggle={(option) => {
+                    const updated = clientNames.includes(option)
+                      ? clientNames.filter((n) => n !== option)
+                      : [...clientNames, option];
+                    setClientNames(updated);
+                    emit({ clientNames: updated });
+                  }}
+                  searchTerm={clientSearchTerm}
+                  onSearchChange={setClientSearchTerm}
+                  isExcluded={excludeClients}
+                />
+              </div>
+            </>
+          )}
         </div>
       </fieldset>
     </>
   );
 }
-
 
 // CSS for animations and custom styles
 const style = `
@@ -753,6 +863,3 @@ const style = `
     box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
   }
 `;
-
-
-

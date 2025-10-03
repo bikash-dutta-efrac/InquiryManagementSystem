@@ -114,7 +114,7 @@ function KpiCard2({ summary, type, gradient }) {
   };
 
   return (
-    <div className="relative flex rounded-2xl shadow-xl bg-white group">
+    <div className="relative flex rounded-2xl shadow-2xl bg-white border border-gray-100/50 group">
       {/* Sidebar with vertical text */}
       <div
         className={`flex items-center justify-center p-4 rounded-r-2xl bg-gradient-to-b ${gradient}`}
@@ -136,9 +136,10 @@ function KpiCard2({ summary, type, gradient }) {
             {items.map((item, idx) => (
               <div
                 key={idx}
-                className="relative flex-shrink-0 min-w-[160px] max-w-[160px] h-auto p-4 rounded-xl border
-             shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out
-             transform hover:-translate-y-1 bg-white flex flex-col justify-between"
+                className="relative flex-shrink-0 min-w-[180px] max-w-[180px] h-auto p-4 rounded-xl border border-gray-200
+                  shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out
+                  transform hover:-translate-y-0.5 bg-white flex flex-col justify-between
+                  border-t-4"
                 style={{
                   borderColor:
                     type === "bd"
@@ -470,7 +471,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
       {/* KPI Cards (non-regisDate view) */}
       {queryType !== "regisDate" && (
         <div
-          className={`grid gap-4 sm:gap-6 items-stretch
+          className={`grid gap-4 sm:gap-4 items-stretch
           grid-cols-1 sm:grid-cols-2 md:grid-cols-3 
           ${queryType === "inqDate" ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}
         >
@@ -503,7 +504,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
           </div>
 
           <div
-            onClick={() => onCardClick("registrations")}
+            onClick={() => onCardClick("quotations")}
             className="cursor-pointer"
           >
             <KpiCard1
@@ -516,11 +517,11 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
           </div>
 
           <div
-            onClick={() => onCardClick("registrations")}
+            onClick={() => onCardClick("quotations")}
             className="cursor-pointer"
           >
             <KpiCard1
-              title="Unapproved Quotations"
+              title="Not Approved Quotations"
               value={totalQuotations - registeredFromQuot}
               icon={<XCircle className="w-5 h-5" />}
               gradient="from-red-600 via-rose-700 to-pink-700"
@@ -558,7 +559,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
 
       {/* KPI Cards + Chart (regisDate view) */}
       {queryType === "regisDate" && (
-        <div className="grid gap-6 items-stretch lg:grid-cols-[250px_250px_1fr]">
+        <div className="grid gap-4 items-stretch lg:grid-cols-[250px_250px_1fr]">
           {/* KPI Card 1 */}
           <div
             onClick={() => onCardClick("registrations")}
@@ -730,7 +731,7 @@ function ExpandModal({ title, onClose, dailyDates, dailyRegisValues }) {
                     valueFormatter: (val) => `₹ ${formatAmount(val)}`,
                   },
                 ]}
-                width={undefined} // fills parent div
+                width={undefined}
                 height={
                   window.innerWidth < 640
                     ? 260 // phone

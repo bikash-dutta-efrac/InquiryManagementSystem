@@ -349,10 +349,17 @@ export default function GraphicalAnalysis({ data = [], queryType }) {
               ]}
               width={colWidth}
               height={smallHeight}
+              margin={{ top: 10, bottom: 10, left: 10, right: 10 }}
               sx={{
                 [`& .${pieArcLabelClasses.root}`]: {
                   fill: "#fff",
-                  fontSize: 14, // Increased font size for better readability
+                  fontSize: 14,
+                },
+              }}
+              slotProps={{
+                legend: {
+                  position: { vertical: "middle", horizontal: "right" },
+                  direction: "column",
                 },
               }}
             />
@@ -391,10 +398,17 @@ export default function GraphicalAnalysis({ data = [], queryType }) {
                     ]}
                     width={colWidth}
                     height={smallHeight}
+                    margin={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     sx={{
                       [`& .${pieArcLabelClasses.root}`]: {
                         fill: "#fff",
                         fontSize: 6, // Increased font size
+                      },
+                    }}
+                    slotProps={{
+                      legend: {
+                        position: { vertical: "middle", horizontal: "right" },
+                        direction: "column",
                       },
                     }}
                   />
@@ -467,10 +481,17 @@ export default function GraphicalAnalysis({ data = [], queryType }) {
                     ]}
                     width={colWidth}
                     height={smallHeight}
+                    margin={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     sx={{
                       [`& .${pieArcLabelClasses.root}`]: {
                         fill: "#fff",
                         fontSize: 12, // Increased font size
+                      },
+                    }}
+                    slotProps={{
+                      legend: {
+                        position: { vertical: "middle", horizontal: "right" },
+                        direction: "column",
                       },
                     }}
                     tooltip={{
@@ -546,10 +567,17 @@ export default function GraphicalAnalysis({ data = [], queryType }) {
                     ]}
                     width={colWidth}
                     height={smallHeight}
+                    margin={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     sx={{
                       [`& .${pieArcLabelClasses.root}`]: {
                         fill: "#fff",
                         fontSize: 12, // Increased font size
+                      },
+                    }}
+                    slotProps={{
+                      legend: {
+                        position: { vertical: "middle", horizontal: "right" },
+                        direction: "column",
                       },
                     }}
                   />
@@ -803,6 +831,7 @@ function ChartCard({
   );
 }
 
+// ExpandModal component is UNCHANGED as requested
 function ExpandModal({
   type,
   chartType,
@@ -830,12 +859,11 @@ function ExpandModal({
   const modalRef = useRef(null);
 
   useEffect(() => {
-    if(type === "bd") setModalChartType(chartType.bd);
+    if (type === "bd") setModalChartType(chartType.bd);
     else if (type === "vertical") setModalChartType(chartType.vertical);
     else if (type === "clients") setModalChartType(chartType.clients);
     else setModalChartType("pie");
   }, [type]);
-
 
   const gradients = {
     pie: "from-blue-600 to-indigo-700",
@@ -1030,7 +1058,7 @@ function ExpandModal({
                       series={[
                         {
                           innerRadius: isFullScreen ? 100 : 80,
-                            outerRadius: isFullScreen ? 240 : 150,
+                          outerRadius: isFullScreen ? 240 : 150,
                           arcLabel: (item) => `${item.value}`,
                           data: [
                             {
@@ -1087,11 +1115,14 @@ function ExpandModal({
                           },
                         }}
                         slotProps={{
-                        legend: {
-                          position: { vertical: "middle", horizontal: "left" },
-                          direction: "column",
-                        },
-                      }}
+                          legend: {
+                            position: {
+                              vertical: "middle",
+                              horizontal: "left",
+                            },
+                            direction: "column",
+                          },
+                        }}
                       />
                     ) : (
                       <BarChart

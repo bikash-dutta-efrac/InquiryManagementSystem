@@ -7,6 +7,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IInquiryRepository, InquiryRepository>();
 builder.Services.AddScoped<IProjectionRepository, ProjectionRepository>();
+builder.Services.AddScoped<ILabRepository, LabRepository>();
 
 builder.Services.AddCors(options =>
 {
@@ -17,7 +18,10 @@ builder.Services.AddCors(options =>
                 .WithOrigins(
                     "http://localhost:5173",
                     "http://192.168.3.183:5173",
-                    "http://192.168.3.211:5173"
+                    "http://192.168.3.186:5173",
+                    "http://192.168.3.211:5173",
+                    "http://192.168.3.173:5173",
+                    "http://192.168.3.200:5174"
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod();

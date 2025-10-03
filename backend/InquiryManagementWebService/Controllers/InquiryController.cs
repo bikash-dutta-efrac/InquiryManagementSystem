@@ -44,11 +44,11 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost("bdnames")]
-        public async Task<IActionResult> GetBDNamesAsync([FromBody] InquiryRequest request)
+        public async Task<IActionResult> GetBdNamesAsync([FromBody] InquiryRequest request)
         {
             try
             {
-                var bdNames = await _inquiryRepository.GetBDNamesAsync(request);
+                var bdNames = await _inquiryRepository.GetBdNamesAsync(request);
                 return Ok(bdNames);
             }
             catch (Exception ex)

@@ -17,7 +17,7 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
-    "Method": "GetBDNamesAsync",
+    "Method": "GetBdNamesAsync",
     "RelativePath": "api/inquiries/bdnames",
     "HttpMethod": "POST",
     "IsController": true,
@@ -58,6 +58,22 @@
       {
         "Name": "request",
         "Type": "InquiryManagementWebService.Models.InquiryRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.LabController",
+    "Method": "GetProjections",
+    "RelativePath": "api/labs",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.LabRequest",
         "IsRequired": true
       }
     ],

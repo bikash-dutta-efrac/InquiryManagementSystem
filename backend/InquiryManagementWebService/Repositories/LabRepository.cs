@@ -1,0 +1,77 @@
+﻿using Dapper;
+using InquiryManagementWebService.Models;
+using Microsoft.Data.SqlClient;
+
+namespace InquiryManagementWebService.Repositories
+{
+    public class LabRepository : ILabRepository
+    {
+        private readonly string _connectionString;
+        public LabRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration["Connnectionstrings:MyConnection"];
+        }
+
+        public async Task<IEnumerable<Lab>> GetLabParameters(LabRequest request)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = @"
+                    WITH Data AS (
+                    SELECT 
+                        R1.TRN1DATE AS RegDate,
+                        R1.TRN1REFNO AS RegNo,
+                        R2.TRN2REGREFNO AS SubRegNo,
+                        OC.CODEDESC AS LabName,
+                        OH.HEADDESC AS Parameter,
+                        R2.TRN2HODReview AS HodReview,
+                        CASE 
+                            WHEN R2.TRN2Review = 'Y' AND R2.TRN2AuthYN = 'Y' THEN 'Y'
+                            ELSE 'N'
+                        END AS QaReview,
+                        R2.TRN2MDateofReport AS MailDate
+                    FROM TRN105 R1
+                    LEFT JOIN TRN205 R2 
+                        ON R1.TRN1REFNO = R2.TRN2REFNO
+                    LEFT JOIN OHEADMST OH 
+                        ON R2.TRN2HEADER = OH.HEADCD
+                    LEFT JOIN OCODEMST OC 
+                        ON OH.HEADDEPARTMENT = OC.CODECD
+                    WHERE OC.CODETYPE = 'DM'
+                      AND (
+                            (@Month IS NOT NULL AND @Year IS NOT NULL 
+                                AND MONTH(R1.TRN1DATE) = @Month 
+                                AND YEAR(R1.TRN1DATE) = @Year)
+
+                            OR (@FromDate IS NOT NULL AND @ToDate IS NOT NULL 
+                                AND R1.TRN1DATE BETWEEN @FromDate AND @ToDate)
+
+                            OR (@Month IS NULL AND @Year IS NULL AND @FromDate IS NULL AND @ToDate IS NULL)
+                          )
+                )
+                SELECT *
+                FROM Data
+                WHERE 
+                    (CHARINDEX('byHodReview', @ReviewsBy) = 0 OR HodReview = 'Y')
+                    AND
+                    (CHARINDEX('byQaReview', @ReviewsBy) = 0 OR QaReview = 'Y')
+                    AND
+                    (CHARINDEX('byMail', @ReviewsBy) = 0 OR MailDate IS NOT NULL);
+
+                    ";
+
+                var reviewsBy = request.ReviewsBy?.Any() == true ? string.Join(",", request.ReviewsBy) : null;
+
+                return await connection.QueryAsync<Lab>(query, new
+                {
+                    FromDate = request.FromDate,
+                    ToDate = request.ToDate,
+                    Month = request.Month,
+                    Year = request.Year,
+                    ReviewsBy = reviewsBy
+                });
+            }
+        }
+
+    }
+}
