@@ -65,8 +65,24 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.LabController",
-    "Method": "GetProjections",
+    "Method": "GetLabParameters",
     "RelativePath": "api/labs",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.LabRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.LabController",
+    "Method": "GetLabSummary",
+    "RelativePath": "api/labs/summary",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,

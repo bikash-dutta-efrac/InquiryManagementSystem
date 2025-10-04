@@ -12,20 +12,9 @@ import SubInquiryList from "./components/SubInquiryList";
 import { BarChart3, List, AlertTriangle, RefreshCcw } from "lucide-react";
 import useInquiries from "./hooks/useInquiries";
 import useProjections from "./hooks/useProjections";
+import useLabAnalysis from "./hooks/useLabAnalysis"; 
 import { startOfMonth, endOfMonth, format } from "date-fns";
 
-// 🔹 DEMO DATA FOR LAB ANALYSIS
-const demoLabAnalysisData = [
-    { RegDate: '2025-09-01', QuotNo: 'Q1001', Lab: 'Lab A', Parameter: 'Moisture Content', quantity: 120, unit: 'g', status: 'Verified by HO' },
-    { RegDate: '2025-09-02', QuotNo: 'Q1002', Lab: 'Lab B', Parameter: 'pH Level', quantity: 50, unit: 'mL', status: 'By QIMA' },
-    { RegDate: '2025-09-03', QuotNo: 'Q1003', Lab: 'Lab A', Parameter: 'Viscosity', quantity: 80, unit: 'cP', status: 'Verified by HO' },
-    { RegDate: '2025-09-04', QuotNo: 'Q1004', Lab: 'Lab C', Parameter: 'Protein Assay', quantity: 200, unit: 'mg', status: 'By Mail' },
-    { RegDate: '2025-09-05', QuotNo: 'Q1005', Lab: 'Lab B', Parameter: 'Toxicity Test', quantity: 30, unit: 'unit', status: 'By QIMA' },
-    { RegDate: '2025-09-06', QuotNo: 'Q1006', Lab: 'Lab C', Parameter: 'Density', quantity: 150, unit: 'kg/m³', status: 'Verified by HO' },
-    { RegDate: '2025-09-07', QuotNo: 'Q1007', Lab: 'Lab A', Parameter: 'Colorimetry', quantity: 10, unit: 'lumen', status: 'By Mail' },
-    { RegDate: '2025-09-08', QuotNo: 'Q1008', Lab: 'Lab B', Parameter: 'Ash Content', quantity: 65, unit: 'g', status: 'Verified by HO' },
-    { RegDate: '2025-09-09', QuotNo: 'Q1009', Lab: 'Lab A', Parameter: 'Heavy Metals', quantity: 15, unit: 'ppb', status: 'By QIMA' },
-];
 
 export default function App() {
   const [view, setView] = useState("list");
@@ -33,10 +22,8 @@ export default function App() {
   const [queryType, setQueryType] = useState("inqDate");
   const [showGraph, setShowGraph] = useState(false);
   const [error, setError] = useState(null);
-  // 1. NEW STATE: State for side menu minimization
   const [isMinimized, setIsMinimized] = useState(false);
 
-  // 2. NEW FUNCTION: Toggle function
   const handleToggleMinimize = () => {
     setIsMinimized((prev) => !prev);
   };
@@ -62,6 +49,10 @@ export default function App() {
     sortOrder: "newest",
     dateField: "inqDate",
     status: [], 
+    reviewsBy: null, 
+    // 🟢 ADD PAGINATION DEFAULTS
+    pageNumber: 1, 
+    pageSize: 50, 
   };
 
   const [filters, setFilters] = useState({
@@ -69,6 +60,11 @@ export default function App() {
     fromDate: defaultFilters.range.start,
     toDate: defaultFilters.range.end,
     sortOrder: defaultFilters.sortOrder,
+    status: defaultFilters.status,
+    reviewsBy: defaultFilters.reviewsBy, 
+    // 🟢 ADD PAGINATION TO STATE
+    pageNumber: defaultFilters.pageNumber, 
+    pageSize: defaultFilters.pageSize, 
   });
 
   const { inquiries, loading, fetchInquiries } = useInquiries(defaultFilters);
@@ -76,13 +72,24 @@ export default function App() {
   const { projections, loading: projectionsLoading } = useProjections(
     queryType === "bdProjection" ? filters : null
   );
+  
+  // 🟢 UPDATE HOOK TO GET totalCount
+  const { 
+    labParameters, 
+    labAnalysis, 
+    loading: labAnalysisLoading, 
+    totalCount 
+  } = useLabAnalysis(
+    queryType === "labAnalysis" ? filters : null
+  );
+
 
   const safeFetch = useCallback(
     async (fetchParams) => {
       setError(null);
-      // 🔹 Skip actual API call for Lab Analysis demo view, only simulate delay for global loader
+      
       if (fetchParams.dateField === "labAnalysis") {
-         return new Promise(resolve => setTimeout(resolve, 500));
+         return; 
       }
       
       try {
@@ -100,8 +107,11 @@ export default function App() {
   );
 
   useEffect(() => {
-    safeFetch(filters);
-  }, [filters, safeFetch]);
+    // Only call safeFetch for non-labAnalysis views. LabAnalysis fetch is driven by the useLabAnalysis hook.
+    if (queryType !== 'labAnalysis') {
+        safeFetch(filters);
+    }
+  }, [filters, safeFetch, queryType]);
 
   useEffect(() => {
     if (view === "graph") {
@@ -113,8 +123,31 @@ export default function App() {
   }, [view]);
 
   const onFiltersChange = (newFilterState) => {
-    let newFilters = { ...newFilterState, dateField: queryType };
+    // 🟢 DESTRUCTURE PAGINATION VALUES
+    const { reviewsBy, status, pageNumber, pageSize, ...restOfNewFilterState } = newFilterState;
+    
+    // Default: Use existing state to preserve pageNumber/pageSize unless explicitly provided
+    let newFilters = { 
+        ...filters, 
+        ...restOfNewFilterState,
+        dateField: queryType,
+        pageNumber: pageNumber || filters.pageNumber, // Keep existing page number if not provided (i.e., only a filter changed)
+        pageSize: pageSize || filters.pageSize,
+    };
+    
+    // If any filter other than pageNumber/pageSize changes, reset pageNumber to 1
+    const filtersChangedExceptPagination = (
+        JSON.stringify(restOfNewFilterState) !== JSON.stringify(filters) ||
+        JSON.stringify(status) !== JSON.stringify(filters.status) ||
+        reviewsBy !== filters.reviewsBy
+    );
 
+    if (filtersChangedExceptPagination) {
+        newFilters.pageNumber = 1;
+    }
+
+
+    // --- Date Range Logic --- (Remains the same)
     if (newFilterState.filterType === "range") {
       let startDate = new Date(newFilterState.range?.start);
       let endDate = new Date(newFilterState.range?.end);
@@ -133,7 +166,7 @@ export default function App() {
         newFilters.fromDate = format(startDate, "yyyy-MM-dd");
         newFilters.toDate = format(endDate, "yyyy-MM-dd");
       } else {
-        console.warn("⛔ Invalid date range, skipping fetch");
+        console.warn("⛔ Invalid date range, skipping filter update");
         return;
       }
       newFilters.month = null;
@@ -145,6 +178,8 @@ export default function App() {
       newFilters.toDate = null;
     }
 
+
+    // --- View Specific Filters ---
     if (queryType !== 'labAnalysis') {
         newFilters.bdNames = newFilterState.bdNames || [];
         newFilters.clientNames = newFilterState.clientNames || [];
@@ -152,28 +187,46 @@ export default function App() {
         newFilters.excludeVerticals = newFilterState.excludeVerticals;
         newFilters.excludeBds = newFilterState.excludeBds;
         newFilters.excludeClients = newFilterState.excludeClients;
+        newFilters.status = []; 
+        newFilters.reviewsBy = null;
     } else {
+        // Lab Analysis-specific filters
         newFilters.bdNames = [];
         newFilters.clientNames = [];
         newFilters.verticals = [];
         newFilters.excludeVerticals = false;
         newFilters.excludeBds = false;
         newFilters.excludeClients = false;
-        newFilters.status = newFilterState.status || [];
+        newFilters.status = status || [];
+        newFilters.reviewsBy = reviewsBy || null; 
     }
     
     newFilters.sortOrder = newFilterState.sortOrder;
     
     setFilters(newFilters);
-
-    console.log(newFilters);
   };
 
   const onDateFieldChange = async (dateField) => {
     setView("list");
     setSubView(null);
 
-    const updatedFilters = { ...filters, dateField };
+    let updatedFilters = { 
+        ...filters, 
+        dateField,
+        pageNumber: 1, // 🟢 ALWAYS RESET PAGE TO 1 ON VIEW CHANGE
+    };
+    if (dateField === 'labAnalysis') {
+        updatedFilters = {
+            ...updatedFilters,
+            verticals: [],
+            bdNames: [],
+            clientNames: [],
+            excludeVerticals: false,
+            excludeBds: false,
+            excludeClients: false,
+        };
+    }
+    
     setQueryType(dateField);
     setFilters(updatedFilters);
   };
@@ -187,6 +240,10 @@ export default function App() {
       toDate: defaultFilters.range.end,
       sortOrder: defaultFilters.sortOrder,
       status: [],
+      reviewsBy: null,
+      // 🟢 RESET PAGINATION ON RESET ALL
+      pageNumber: defaultFilters.pageNumber, 
+      pageSize: defaultFilters.pageSize, 
     });
   };
 
@@ -223,31 +280,16 @@ export default function App() {
   };
 
   const getSortedInquiries = (data, dateField, sortOrder) => {
-    // 🔹 Use demo data if in lab analysis view
-    const sourceData = queryType === 'labAnalysis' ? demoLabAnalysisData : data;
+    const sourceData = queryType === 'labAnalysis' ? labParameters : data; 
 
     if (!sourceData || sourceData.length === 0) return [];
     
-    // Filtering by Date and Status on the client-side for the Lab Analysis Demo Data
-    const filteredByDateAndStatus = sourceData.filter(item => {
-        // Simple date filtering (for demo data, we will ignore the actual date filter logic 
-        // to simplify, but in a real app, this logic would apply the filters. 
-        // We'll keep the Status filtering though).
-        
-        // Status filtering only applies in Lab Analysis view
-        if (queryType === 'labAnalysis' && filters.status?.length > 0) {
-            const itemStatus = item.status || 'Pending';
-            return filters.status.includes(itemStatus);
-        }
-        return true;
-    });
-
-    return [...filteredByDateAndStatus].sort((a, b) => {
-      // Use RegDate for Lab Analysis sorting, otherwise use default
-      const dateKey = queryType === 'labAnalysis' ? 'RegDate' : dateField;
+    return [...sourceData].sort((a, b) => {
+      const dateKey = queryType === 'labAnalysis' ? 'RegDate' : dateField; 
       
-      const dateA = new Date(a[dateKey]);
-      const dateB = new Date(b[dateKey]);
+      // Use case-insensitive access to handle API inconsistencies
+      const dateA = new Date(a[dateKey] || a[dateKey.toLowerCase()] || a[dateKey.toUpperCase()]);
+      const dateB = new Date(b[dateKey] || b[dateKey.toLowerCase()] || b[dateKey.toUpperCase()]);
 
       if (isNaN(dateA) || isNaN(dateB)) return 0;
       
@@ -260,6 +302,9 @@ export default function App() {
     filters.dateField,
     filters.sortOrder
   );
+  
+  const totalLoading = loading || projectionsLoading || labAnalysisLoading;
+
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -277,7 +322,7 @@ export default function App() {
         }`}
       >
         {/* Global Loader */}
-        {(loading || projectionsLoading) && (
+        {totalLoading && (
           <div
             className={`fixed top-0 right-0 bottom-0 ${
               isMinimized ? "left-20" : "left-56"
@@ -287,7 +332,7 @@ export default function App() {
           </div>
         )}
 
-        {error && !loading && !projectionsLoading && (
+        {error && !totalLoading && (
           <div
             className={`fixed top-4 right-4 z-40 flex justify-center transition-all duration-300 ${
               isMinimized ? "left-20" : "left-56"
@@ -313,7 +358,7 @@ export default function App() {
               data={inquiries}
               onChange={onFiltersChange}
               onResetAll={handleResetAll}
-              disabled={loading || projectionsLoading}
+              disabled={totalLoading}
               queryType={queryType}
             />
           </div>
@@ -331,7 +376,14 @@ export default function App() {
               </div>
             ) : queryType === "labAnalysis" ? (
               <div className="max-w-7xl mx-auto px-2 relative">
-                <LabAnalysis data={sortedInquiries} />
+                {/* 🟢 PASS FILTERS, SETFILTERS, AND totalCount */}
+                <LabAnalysis 
+                    data={labParameters} 
+                    labSummaryData={labAnalysis} 
+                    filters={filters}
+                    setFilters={setFilters} 
+                    totalCount={totalCount}
+                />
               </div>
             ) : (
               // 2. STANDARD / BD PROJECTION VIEWS

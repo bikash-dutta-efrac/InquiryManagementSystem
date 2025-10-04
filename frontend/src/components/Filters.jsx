@@ -14,6 +14,13 @@ import {
 } from "lucide-react";
 import { getBdNames, getClientNames, getVerticals } from "../services/api.js";
 
+// Mapping from UI status names to SQL parameter keys
+const STATUS_MAP = {
+  "Verified by HOD": "byHodReview",
+  "Verified by QA": "byQaReview",
+  "Verified by Mail": "byMail",
+};
+
 const CustomSelect = ({
   options,
   selected,
@@ -195,13 +202,24 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
   const [bdOptions, setBdOptions] = useState([]);
   const [clientOptions, setClientOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
-  const statusOptions = ["Verified by HO", "Verified by QIMA", "Verified by Mail"]; // 🔹 NEW: Status options
+  const statusOptions = Object.keys(STATUS_MAP); // 🔹 NEW: Use keys from STATUS_MAP for UI options
 
   // Flag for conditional rendering
-  // ASSUMPTION: 'labAnalysisDate' is the queryType for the Lab Analysis view
+  // ASSUMPTION: 'labAnalysis' is the queryType for the Lab Analysis view
   const isLabAnalysisView = queryType === 'labAnalysis';
 
+  // -------------------------------------------------------------
+  // HELPER: Maps the UI status array to the SQL reviewsBy string
+  // -------------------------------------------------------------
+  const mapStatusToReviewsBy = (statusArray) => {
+    if (!statusArray || statusArray.length === 0) return null;
+    return statusArray.map(s => STATUS_MAP[s]).filter(Boolean).join(',');
+  };
+
   const filteredData = useMemo(() => {
+    // Client-side filtering is mostly irrelevant now, as the analysis happens server-side.
+    // However, the date/status filtering is kept for consistency with the original hook logic 
+    // where `data` might be client-side filtered first.
     let list = [...data];
 
     // Date Filtering (always present)
@@ -224,7 +242,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
       });
     }
 
-    // 🔹 NEW: Status Filter (only for Lab Analysis)
+    // 🔹 NEW: Status Filter (only for Lab Analysis) - Only useful if `data` is still raw data
     if (isLabAnalysisView && status.length > 0) {
         list = list.filter((inq) => status.includes(inq.labStatus)); // Assuming the field name is `labStatus`
     }
@@ -270,11 +288,16 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
     excludeBds,
     excludeClients,
     excludeVerticals,
-    isLabAnalysisView, // 🔹 NEW Dependency
-    status, // 🔹 NEW Dependency
+    isLabAnalysisView,
+    status,
   ]);
 
+  // -------------------------------------------------------------
+  // BUILD REQUEST: Includes mapping status to reviewsBy
+  // -------------------------------------------------------------
   const buildSearchRequest = (nextState = {}) => {
+    const nextStatus = nextState.status ?? status;
+
     const base = {
       dateField: nextState.dateField ?? dateField,
       // 🐛 FIX: Exclude BDs, Clients, Verticals from request if in Lab Analysis View
@@ -284,7 +307,9 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
       excludeBds: isLabAnalysisView ? false : (nextState.excludeBds ?? excludeBds),
       excludeClients: isLabAnalysisView ? false : (nextState.excludeClients ?? excludeClients),
       excludeVerticals: isLabAnalysisView ? false : (nextState.excludeVerticals ?? excludeVerticals),
-      status: nextState.status ?? status, // 🔹 NEW: Include status
+      
+      // 🔹 NEW: Map status array to reviewsBy string
+      reviewsBy: isLabAnalysisView ? mapStatusToReviewsBy(nextStatus) : null,
     };
 
     const nextFilterType = nextState.filterType ?? filterType;
@@ -309,21 +334,31 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
 
   // emit helper -> notify parent
   const emit = (next = {}) => {
+    const nextStatus = next.status ?? status;
+    const isLab = next.queryType === 'labAnalysis' || isLabAnalysisView;
+
     const payload = {
       filterType,
       range,
       month,
       year,
       // 🐛 FIX: Only send BDs, Clients, Verticals if NOT in Lab Analysis view
-      verticals: isLabAnalysisView ? [] : verticals,
-      bdNames: isLabAnalysisView ? [] : bdNames,
-      clientNames: isLabAnalysisView ? [] : clientNames,
-      status, // 🔹 NEW: Include status
+      verticals: isLab ? [] : verticals,
+      bdNames: isLab ? [] : bdNames,
+      clientNames: isLab ? [] : clientNames,
+      
+      status: nextStatus, // 🔹 NEW: Include status array
+      
       sortOrder,
       dateField,
-      excludeVerticals: isLabAnalysisView ? false : excludeVerticals,
-      excludeBds: isLabAnalysisView ? false : excludeBds,
-      excludeClients: isLabAnalysisView ? false : excludeClients,
+      
+      excludeVerticals: isLab ? false : excludeVerticals,
+      excludeBds: isLab ? false : excludeBds,
+      excludeClients: isLab ? false : excludeClients,
+      
+      // 🔹 NEW: Map status array to reviewsBy string for the API call payload
+      reviewsBy: isLab ? mapStatusToReviewsBy(nextStatus) : null,
+      
       ...next,
     };
     onChange?.(payload);

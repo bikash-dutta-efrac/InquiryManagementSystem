@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.186:5075/api";
+const API_BASE_URL = "http://192.168.3.211:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -11,11 +11,35 @@ function buildRequestBody(filters = {}) {
     verticals: filters.verticals || [],
     bdNames: filters.bdNames || [],
     clientNames: filters.clientNames || [],
+    reviewsBy: filters.reviewsBy || null,
     dateField: filters.dateField || "inqDate",
     excludeVerticals: filters.excludeVerticals,
     excludeBds: filters.excludeBds,
     excludeClients: filters.excludeClients,
+    pageNumber: filters.pageNumber || 1,
+    pageSize: filters.pageSize || 50,
   };
+}
+
+export async function getLabSummary(filters = {}) {
+  const body = buildRequestBody(filters);
+
+  const response = await axios.post(`${API_BASE_URL}/labs/summary`, body, {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  return response.data;
+}
+
+// New Lab Parameters endpoint for fetching paginated detailed lab data
+export async function getLabParameters(filters = {}) {
+  const body = buildRequestBody(filters);
+  
+  const response = await axios.post(`${API_BASE_URL}/labs`, body, {
+    headers: { "Content-Type": "application/json" },
+  });
+  
+  return response.data;
 }
 
 // Inquiries endpoint
@@ -27,7 +51,7 @@ export async function getInquiries(filters = {}) {
   return response.data;
 }
 
-// ⭐ NEW Projections endpoint
+// Projections endpoint
 export async function getProjections(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/projections`, body, {

@@ -17,11 +17,25 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetProjections([FromBody] LabRequest request)
+        public async Task<IActionResult> GetLabParameters([FromBody] LabRequest request)
         {
             try
             {
                 var response = await _labRepository.GetLabParameters(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("summary")]
+        public async Task<IActionResult> GetLabSummary([FromBody] LabRequest request)
+        {
+            try
+            {
+                var response = await _labRepository.GetLabSummary(request);
                 return Ok(response);
             }
             catch (Exception ex)
