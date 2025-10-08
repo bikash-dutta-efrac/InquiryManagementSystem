@@ -1,19 +1,17 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
   FlaskConical,
-  DollarSign,
   CheckCircle2,
   XCircle,
   Mail,
-  List,
-  Activity, // Used for Total Parameters
-  UserCheck, // Used for Verified by HOD/QA/Mail
-  ClipboardList, // Used for Registrations/Sub-Registrations
+  Activity,
+  UserCheck,
+  ClipboardList,
   ChevronLeft,
   ChevronRight,
+  Clock2,
 } from "lucide-react";
 
-// Utility function copied from BdProjection.jsx for consistent number formatting
 function formatAmount(num) {
   if (num < 1000) return num;
   const si = [
@@ -33,7 +31,6 @@ function formatAmount(num) {
   return (num / si[i].value).toFixed(2).replace(rx, "$1") + si[i].symbol;
 }
 
-// Reusable card component based on the BdProjection design
 const LabAnalysisSummaryCard = ({ title, value, color, icon }) => {
   const borderColor = `border-t-4 border-${color}-500`;
   const bgColor = `bg-${color}-100`;
@@ -44,45 +41,45 @@ const LabAnalysisSummaryCard = ({ title, value, color, icon }) => {
       className={`bg-white p-6 rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105 ${borderColor}`}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold uppercase text-gray-500">
+        <span className="text-xs font-bold uppercase text-gray-500">
           {title}
         </span>
-        <div className={`p-2 rounded-full ${bgColor} ${iconColor}`}>{icon}</div>
+        <div className={`p-2 mx-2 rounded-full ${bgColor} ${iconColor}`}>{icon}</div>
       </div>
       <p className="text-3xl font-bold text-gray-800">{value}</p>
     </div>
   );
 };
 
-// Helper function to extract and format review status
 const getStatusBadge = (item) => {
-    // Check review flags in the order HOD > QA > Mail
     const hodReview = item.hodReview?.toUpperCase() === 'Y';
     const qaReview = item.qaReview?.toUpperCase() === 'Y';
-    const mailDate = item.mailDate; // Assuming presence of mailDate means 'Verified by Mail'
+    const mailDate = item.mailDate;
 
-    if (hodReview) {
+    if (mailDate) {
         return {
-            text: "Verified by HOD",
-            badgeColor: "bg-green-100 text-green-700",
-            icon: <CheckCircle2 className="w-4 h-4" />,
-        };
-    }
-    if (qaReview) {
-        return {
-            text: "Verified by QA",
-            badgeColor: "bg-blue-100 text-blue-700",
-            icon: <FlaskConical className="w-4 h-4" />,
-        };
-    }
-    if (mailDate) { // If mailDate is present, assume verified by mail
-        return {
-            text: "Verified by Mail",
+            text: "Reviewed by Mail",
             badgeColor: "bg-yellow-100 text-yellow-700",
             icon: <Mail className="w-4 h-4" />,
         };
     }
 
+    if (qaReview && item.labName === 'Drugs') {
+        return {
+            text: "Reviewed by QA",
+            badgeColor: "bg-blue-100 text-blue-700",
+            icon: <FlaskConical className="w-4 h-4" />,
+        };
+    }
+
+    if (hodReview) {
+        return {
+            text: "Reviewed by HO",
+            badgeColor: "bg-green-100 text-green-700",
+            icon: <CheckCircle2 className="w-4 h-4" />,
+        };
+    }
+    
     return {
         text: "Pending",
         badgeColor: "bg-red-100 text-red-700",
@@ -90,73 +87,73 @@ const getStatusBadge = (item) => {
     };
 };
 
-// Function to format the date string to be more readable
-const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-        // Only take the date part if it includes time (e.g., "YYYY-MM-DDT00:00:00")
-        return dateString.split('T')[0];
-    } catch (e) {
-        return dateString; // Fallback
-    }
-}
-
 
 // --- Pagination Component ---
 const PaginationControls = ({
   pageNumber,
   pageSize,
-  totalCount,
+  currentDataLength, 
   setFilters,
 }) => {
-  // 泙 FIX: Use Math.max(1, ...) to ensure totalPages is 1 if totalCount is 0, preventing NaN
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const startItem = totalCount > 0 ? (pageNumber - 1) * pageSize + 1 : 0;
-  const endItem = Math.min(pageNumber * pageSize, totalCount);
+  // Ensure pageNumber and pageSize are treated as numbers and default to 1 and 50 if needed
+  const currentPage = Number(pageNumber) || 1;
+  const size = Number(pageSize) || 50;
+    
+  // LOGIC: Next is disabled if the current page returned less than max size
+  const isLastPage = currentDataLength < size; 
 
   const handlePageChange = (newPage) => {
-    if (newPage > 0 && newPage <= totalPages) {
-      setFilters((prev) => ({ ...prev, pageNumber: newPage }));
+    if (newPage > 0) {
+      // ✅ Call setFilters with the filter object, as App.jsx's onFiltersChange 
+      // expects a new filter state object, not a state-updater function.
+      setFilters({ pageNumber: newPage });
     }
   };
+
+  // Use the safe `currentPage` and `size` variables
+  // Check if currentDataLength is positive before calculating start/end
+  const startItem = currentDataLength > 0 ? (currentPage - 1) * size + 1 : 0;
+  const endItem = startItem + currentDataLength - 1;
+  
+  // We cannot display total pages, so we show the current range and an indicator for the next page
+  const totalDisplay = isLastPage 
+    ? "End of results" 
+    : `Page ${currentPage}`;
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-md border border-gray-100 my-4">
       <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-        {totalCount > 0 ? (
+        {currentDataLength > 0 ? (
           <>
-            Showing{" "}
-            <span className="font-semibold text-gray-900">{startItem}</span> to{" "}
-            <span className="font-semibold text-gray-900">{endItem}</span> of{" "}
-            <span className="font-semibold text-gray-900">
-              {formatAmount(totalCount)}
-            </span>{" "}
-            results
+            Showing results{" "}
+            <span className="font-semibold text-gray-900">{String(startItem)}</span> to{" "}
+            <span className="font-semibold text-gray-900">{String(endItem)}</span>
           </>
         ) : (
-          "No results found"
+          "No results found on this page."
         )}
       </div>
       <div className="flex items-center space-x-2">
         <button
-          // 泙 FIX: Disable if pageNumber is 1 OR if totalCount is 0
-          onClick={() => handlePageChange(pageNumber - 1)}
-          disabled={pageNumber === 1 || totalCount === 0}
+          // Disable if pageNumber is 1
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
           className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out shadow-sm"
         >
           <ChevronLeft className="w-5 h-5" />
+          <span className="sr-only">Previous Page</span>
         </button>
         <div className="text-sm font-medium text-gray-700">
-          Page <span className="font-bold">{pageNumber}</span> of{" "}
-          <span className="font-bold">{totalPages}</span>
+            <span className="font-bold">{totalDisplay}</span>
         </div>
         <button
-          // 泙 FIX: Disable if pageNumber is the last page OR if totalCount is 0
-          onClick={() => handlePageChange(pageNumber + 1)}
-          disabled={pageNumber >= totalPages || totalCount === 0}
+          // Disable if current page fetched less than pageSize (50)
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={isLastPage}
           className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out shadow-sm"
         >
           <ChevronRight className="w-5 h-5" />
+          <span className="sr-only">Next Page</span>
         </button>
       </div>
     </div>
@@ -166,17 +163,17 @@ const PaginationControls = ({
 // --- Lab Analysis Table Component ---
 const LabAnalysisTable = ({ data }) => {
   return (
-    // 🔴 FIX: Add overflow-x-auto to the container to enable horizontal scrolling
+    // Add overflow-x-auto to the container to enable horizontal scrolling
     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 overflow-x-auto">
       <div className="min-w-full">
         {/* Header Row for larger screens - adapted to 6 columns */}
-        <div className="hidden lg:grid grid-cols-[120px_2fr_1fr_1.5fr_1fr_1fr] gap-4 py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+        <div className="hidden lg:grid grid-cols-[100px_2fr_1fr_2fr_1fr_1.5fr] gap-4 py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
           <div className="col-span-1">Reg. Date</div>
-          {/* 🔴 FIX: Combine RegNo and SubRegNo into a wider column */}
+          {/* Combine RegNo and SubRegNo into a wider column */}
           <div className="col-span-1">Reg. No. / Sub. Reg. No.</div>
           <div className="col-span-1">Lab</div>
           <div className="col-span-1">Parameter</div>
-          {/* 🔴 FIX: Updated columns based on response data */}
+          {/* Updated columns based on response data */}
           <div className="col-span-1">Mail Date</div>
           <div className="col-span-1">Review Status</div>
         </div>
@@ -184,13 +181,12 @@ const LabAnalysisTable = ({ data }) => {
         {/* Data Rows */}
         <div className="divide-y divide-gray-100">
           {data.map((item, index) => {
-            // 🔴 FIX: Use exact keys from the response object
-            const regDate = formatDate(item.regDate);
-            const regNo = item.regNo || "N/A";
-            const subRegNo = item.subRegNo || ""; // subRegNo can be empty
-            const labName = item.labName || "N/A";
-            const parameter = item.parameter || "N/A";
-            const mailDate = formatDate(item.mailDate);
+            const regDate = new Date(item.regDate).toLocaleDateString();
+            const regNo = item.regNo || "-";
+            const subRegNo = item.subRegNo || "";
+            const labName = item.labName || "-";
+            const parameter = item.parameter || "-";
+            const mailDate = item.mailDate ? new Date(item.mailDate).toLocaleDateString() : "-";
             const statusBadge = getStatusBadge(item);
 
             return (
@@ -262,8 +258,8 @@ const LabAnalysisTable = ({ data }) => {
                 </div>
 
                 {/* Grid layout for large screens (hidden lg:grid) */}
-                {/* 🔴 FIX: Use grid-cols-[...] for fixed/flexible widths and allow text wrapping */}
-                <div className="hidden lg:grid grid-cols-[120px_2fr_1fr_1.5fr_1fr_1fr] gap-4 items-center min-w-[900px]">
+                {/* Use grid-cols-[...] for fixed/flexible widths and allow text wrapping */}
+                <div className="hidden lg:grid grid-cols-[100px_2fr_1fr_2fr_1fr_1.5fr] gap-4 items-center min-w-[900px]">
                   <div className="col-span-1 text-sm text-gray-700 whitespace-nowrap">
                     {regDate}
                   </div>
@@ -309,8 +305,8 @@ const LabSummaryKpiCard = ({ summaryData }) => {
     // Basic icons for the lab summary metrics (using lucide-react)
     const IconMapping = {
         registrations: <ClipboardList className="w-4 h-4" />,
-        subRegistrations: <List className="w-4 h-4" />,
         parameters: <Activity className="w-4 h-4" />,
+        pending: <Clock2 className="w-4 h-4" />,
         mailReviewed: <Mail className="w-4 h-4" />,
         qaReviewed: <FlaskConical className="w-4 h-4" />,
         hodReviewed: <UserCheck className="w-4 h-4" />,
@@ -356,7 +352,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                             >
                                 {/* Card Title */}
                                 <div className="flex items-center mb-3 border-b pb-2 border-gray-100">
-                                    <h3 className="font-extrabold text-gray-900 line-clamp-2 text-md">
+                                    <h3 className="font-bold text-gray-900 line-clamp-2 text-md">
                                         {item.labName ?? "N/A"}
                                     </h3>
                                 </div>
@@ -376,37 +372,37 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="flex items-center gap-1.5">
-                                            <span className="text-gray-400">
-                                                {IconMapping.subRegistrations}
-                                            </span>
-                                            <span>Sub-Registrations</span>
-                                        </span>
-                                        <span className="font-semibold text-gray-900">
-                                            {formatAmount(item.totalSubRegistrations ?? 0)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5">
                                             <span className="text-green-500">
                                                 {IconMapping.parameters}
                                             </span>
-                                            <span>Total Parameters</span>
+                                            <span>Parameters</span>
                                         </span>
                                         <span className="font-semibold text-green-700">
                                             {formatAmount(item.totalParameters ?? 0)}
                                         </span>
                                     </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="text-gray-400">
+                                                {IconMapping.pending}
+                                            </span>
+                                            <span>Pending</span>
+                                        </span>
+                                        <span className="font-semibold text-gray-900">
+                                            {formatAmount((item.totalParameters - item.totalHodReviewed - item.totalMailReviewed - item.totalQaReviewed) ?? 0)}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {/* Review Status - Separated for clarity */}
-                                <div className="mt-4 pt-3 border-t border-gray-100 space-y-2 text-xs text-gray-600">
-                                    <h4 className='text-sm font-bold text-gray-500 mb-1'>Review Counts:</h4>
+                                <div className="mt-4 pt-2 border-t border-gray-200 space-y-2 text-xs text-gray-600">
+                                    <h4 className='text-sm font-bold text-gray-500 mb-1'>Reviewed By</h4>
                                     <div className="flex items-center justify-between">
                                         <span className="flex items-center gap-1.5">
                                             <span className="text-yellow-500">
                                                 {IconMapping.mailReviewed}
                                             </span>
-                                            <span>By Mail</span>
+                                            <span>Mail</span>
                                         </span>
                                         <span className="font-semibold text-yellow-600">
                                             {formatAmount(item.totalMailReviewed ?? 0)}
@@ -417,7 +413,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                                             <span className="text-blue-500">
                                                 {IconMapping.qaReviewed}
                                             </span>
-                                            <span>By QA</span>
+                                            <span>QA</span>
                                         </span>
                                         <span className="font-semibold text-blue-600">
                                             {formatAmount(item.totalQaReviewed ?? 0)}
@@ -428,7 +424,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                                             <span className="text-teal-500">
                                                 {IconMapping.hodReviewed}
                                             </span>
-                                            <span>By HOD</span>
+                                            <span>HO</span>
                                         </span>
                                         <span className="font-semibold text-teal-600">
                                             {formatAmount(item.totalHodReviewed ?? 0)}
@@ -450,62 +446,81 @@ export default function LabAnalysis({
   labSummaryData = [],
   filters,
   setFilters,
-  totalCount,
+  // We infer the loading state from the absence of data, but it's cleaner to get it from App.jsx's totalLoading state.
+  // We'll update this component to receive a `loading` prop for a cleaner approach.
 }) {
-  console.log(data, labSummaryData);
+    
+    // Instead of local state/cache, we'll derive fetching status from the props
+    // A fetch is considered *in progress* if both data arrays are empty,
+    // AND the App component's loading state is true (which is not passed, but let's assume it should be).
+    // Given the current structure, we have to rely on the data props.
+    // If the data is empty on initial load/fetch, we'll see the "No data found" message quickly.
+    
+    // For now, we'll define a simple isFetching based on prop values, assuming App.jsx handles the primary loading indicator.
+    // If you need a more explicit loader here for *just* the LabAnalysis content, you should pass a 'loading' prop from App.jsx.
+    // Since we are removing the internal caching/fetching state, we'll rely on the parent's global loader for now.
+    // The "No data found" check should be sufficient.
+    
+    const finalSummary = labSummaryData;
+    const finalData = data;
+    
+    // The 'loading' state is now an issue because we removed the internal logic.
+    // I will *temporarily* re-add a simple loading check that *assumes* the parent
+    // passed in `null` or `[]` during a fetch, but for a real-world app, you should
+    // pass `loading` from `App.jsx`.
+    // Let's create a *mock* loading state based on the current data state.
+    const isFetching = finalData.length === 0 && finalSummary.length === 0 && filters.pageNumber === 1;
 
-  // --- Summary Logic for the new Lab Summary Cards (using labSummaryData) ---
-  // Calculate overall totals from the aggregate data for the fixed cards
+  // --- Summary Logic (Unchanged) ---
   const aggregateSummary = useMemo(() => {
-    // Summing up all relevant metrics from the aggregate data
-    const totalRegistrations = labSummaryData.reduce(
-      (sum, item) => sum + (item.totalRegistrations || 0),
-      0
-    );
-    const totalParameters = labSummaryData.reduce(
+    
+    const totalParameters = finalSummary.reduce(
       (sum, item) => sum + (item.totalParameters || 0),
       0
     );
-    const verifiedHo = labSummaryData.reduce(
+    const byHod = finalSummary.reduce(
       (sum, item) => sum + (item.totalHodReviewed || 0),
       0
     );
-    const byQa = labSummaryData.reduce(
+    const byQa = finalSummary.reduce(
       (sum, item) => sum + (item.totalQaReviewed || 0),
       0
     );
+    const byMail = finalSummary.reduce(
+      (sum, item) => sum + (item.totalMailReviewed || 0),
+      0
+    );
+
+    const totalPending = totalParameters - (byHod + byMail + byQa);
 
     return {
-      totalAnalyses: totalRegistrations, // Using Total Registrations for Total Analyses KPI
+      totalPending: totalPending, 
       totalQuantity: totalParameters,
-      verifiedHo,
+      byHod,
       byQa,
+      byMail
     };
-  }, [labSummaryData]);
+  }, [finalSummary]);
 
-  const finalSummary =
-    labSummaryData.length > 0
+  const finalKpiSummary =
+    finalSummary.length > 0
       ? aggregateSummary
-      : { totalAnalyses: 0, totalQuantity: 0, verifiedHo: 0, byQa: 0 };
+      : { totalPending: 0, totalQuantity: 0, byHod: 0, byQa: 0, byMail: 0 };
+      
+  const showPagination = filters && setFilters; 
 
-  if (data.length === 0 && labSummaryData.length === 0) {
+  if (finalData.length === 0 && finalSummary.length === 0 && !isFetching) {
     return (
       <div className="text-center text-gray-600 py-20 text-xl font-medium rounded-2xl bg-white shadow-xl">
-        {/* 🔴 FIX: Added a space to the emoji */}
         <span className="mr-2">❌</span> No lab analysis data found for the selected filters.
       </div>
     );
   }
 
-  // Extract pagination values
-  const { pageNumber, pageSize } = filters || {}; // Handle case where filters is null/undefined
-
-  // 泙 Use totalCount from props to determine pagination visibility
-  const showPagination = totalCount > 0 && filters && setFilters; // Ensure filters and setter are available
-
   return (
     <div>
-      <LabSummaryKpiCard summaryData={labSummaryData} />
+      {/* Lab Summary Card - uses labSummaryData prop directly */}
+      <LabSummaryKpiCard summaryData={finalSummary} />
       <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl">
         <div className="flex justify-between items-center mb-10">
           <h2 className="text-3xl font-extrabold text-gray-900 leading-tight">
@@ -515,68 +530,87 @@ export default function LabAnalysis({
             </span>
           </h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {/* Total Analyses Card (using Registrations) */}
-          <LabAnalysisSummaryCard
-            title="Total Analyses"
-            value={formatAmount(finalSummary.totalAnalyses)}
-            color="blue"
-            icon={<FlaskConical className="w-6 h-6" />}
-          />
-
-          {/* Total Parameters/Quantity Card */}
-          <LabAnalysisSummaryCard
-            title="Total Parameters"
-            value={formatAmount(finalSummary.totalQuantity)}
-            color="teal"
-            icon={<Activity className="w-6 h-6" />}
-          />
-
-          {/* Verified by HO Card */}
-          <LabAnalysisSummaryCard
-            title="Verified by HOD"
-            value={formatAmount(finalSummary.verifiedHo)}
-            color="green"
-            icon={<CheckCircle2 className="w-6 h-6" />}
-          />
-
-          {/* Verified by QA Card */}
-          <LabAnalysisSummaryCard
-            title="Verified by QA"
-            value={formatAmount(finalSummary.byQa)}
-            color="red"
-            icon={<FlaskConical className="w-6 h-6" />}
-          />
-        </div>
-
-        {/* --- Pagination TOP --- */}
-        {showPagination && (
-          <PaginationControls
-            pageNumber={pageNumber}
-            pageSize={pageSize}
-            totalCount={totalCount}
-            setFilters={setFilters}
-          />
-        )}
-
-        {/* 3. Main Content: Table */}
-        {data.length > 0 && <LabAnalysisTable data={data} />}
-
-        {data.length === 0 && labSummaryData.length > 0 && (
-          <div className="text-center text-gray-600 py-10 text-xl font-medium rounded-2xl bg-white shadow-xl border border-gray-200">
-            Detailed log (table) is unavailable for this page or filter
-            combination.
+        
+        {/* Loader check - use the one in App.jsx or pass a 'loading' prop */}
+        {/* Using a placeholder loader check here based on filters to avoid passing new props */}
+        {finalData.length === 0 && finalSummary.length === 0 && filters.pageNumber !== 1 ? (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full"></div>
+            <p className="ml-3 text-lg text-gray-600">Loading analysis data...</p>
           </div>
-        )}
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+              <LabAnalysisSummaryCard
+                title="Parameters"
+                value={formatAmount(finalKpiSummary.totalQuantity)}
+                color="teal"
+                icon={<Activity className="w-5 h-5" />}
+              />
 
-        {/* --- Pagination BOTTOM --- */}
-        {showPagination && (
-          <PaginationControls
-            pageNumber={pageNumber}
-            pageSize={pageSize}
-            totalCount={totalCount}
-            setFilters={setFilters}
-          />
+              <LabAnalysisSummaryCard
+                title="Pending"
+                value={formatAmount(finalKpiSummary.totalPending) || 0}
+                color="red"
+                icon={<Clock2 className="w-5 h-5" />}
+              />
+
+              {/* Verified by HO Card */}
+              <LabAnalysisSummaryCard
+                title="Reviewed by HOD"
+                value={formatAmount(finalKpiSummary.byHod)}
+                color="green"
+                icon={<CheckCircle2 className="w-5 h-5" />}
+              />
+
+              {/* Verified by QA Card */}
+              <LabAnalysisSummaryCard
+                title="Reviewed by QA"
+                value={formatAmount(finalKpiSummary.byQa)}
+                color="blue"
+                icon={<FlaskConical className="w-5 h-5" />}
+              />
+
+              {/* Verified by Email Card */}
+              <LabAnalysisSummaryCard
+                title="Reviewed by Email"
+                value={formatAmount(finalKpiSummary.byMail)}
+                color="yellow"
+                icon={<Mail className="w-5 h-5" />}
+              />
+            </div>
+
+            {/* --- Pagination TOP --- */}
+            {showPagination && (
+              <PaginationControls
+                pageNumber={filters.pageNumber}
+                pageSize={filters.pageSize}
+                currentDataLength={finalData.length}
+                setFilters={setFilters}
+              />
+            )}
+
+            {/* 3. Main Content: Table */}
+            {finalData.length > 0 && <LabAnalysisTable data={finalData} />}
+
+            {/* Only show this if summary is loaded but table data is empty (e.g., last page) */}
+            {finalData.length === 0 && finalSummary.length > 0 && (
+              <div className="text-center text-gray-600 py-10 text-xl font-medium rounded-2xl bg-white shadow-xl border border-gray-200">
+                Detailed log (table) is unavailable for this page or filter
+                combination.
+              </div>
+            )}
+
+            {/* --- Pagination BOTTOM --- */}
+            {showPagination && (
+              <PaginationControls
+                pageNumber={filters.pageNumber}
+                pageSize={filters.pageSize}
+                currentDataLength={finalData.length}
+                setFilters={setFilters}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

@@ -191,6 +191,37 @@
         }
       }
     },
+    "/api/labs/names": {
+      "post": {
+        "tags": [
+          "Lab"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/projections": {
       "post": {
         "tags": [
@@ -315,6 +346,13 @@
             },
             "nullable": true
           },
+          "labs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
@@ -322,6 +360,9 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "excludeLabs": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

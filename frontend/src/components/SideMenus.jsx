@@ -5,7 +5,8 @@ import {
   FlaskConical,
   TrendingUp,
   ChevronsLeft, // New Icon for Minimize/Collapse (when expanded)
-  ChevronsRight, // New Icon for Maximize/Expand (when minimized)
+  ChevronsRight,
+  Microscope, // New Icon for Maximize/Expand (when minimized)
 } from "lucide-react";
 
 export default function SideMenus({ activeView, onViewChange, isMinimized = false, onToggleMinimize }) {
@@ -17,7 +18,7 @@ export default function SideMenus({ activeView, onViewChange, isMinimized = fals
 
   const analysisMenus = [
     { key: "bdProjection", label: "Bd Projection", icon: TrendingUp },
-    { key: "labAnalysis", label: "Lab Analysis", icon: FlaskConical },
+    { key: "labAnalysis", label: "Lab Analysis", icon: Microscope },
   ];
 
   // Helper to render a menu button

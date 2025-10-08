@@ -44,5 +44,19 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
+        [HttpPost("names")]
+        public async Task<IActionResult> GetLabs([FromBody] LabRequest request)
+        {
+            try
+            {
+                var response = await _labRepository.GetLabsAsync(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }

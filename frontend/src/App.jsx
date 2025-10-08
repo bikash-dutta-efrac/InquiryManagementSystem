@@ -43,9 +43,11 @@ export default function App() {
     verticals: [],
     bdNames: [],
     clientNames: [],
+    labNames: [],
     excludeVerticals: false,
     excludeBds: false,
     excludeClients: false,
+    excludeLabs: false,
     sortOrder: "newest",
     dateField: "inqDate",
     status: [], 
@@ -123,31 +125,45 @@ export default function App() {
   }, [view]);
 
   const onFiltersChange = (newFilterState) => {
-    // 🟢 DESTRUCTURE PAGINATION VALUES
+    
+    // 1. Destructure pagination and LabAnalysis-specific fields from the incoming state
     const { reviewsBy, status, pageNumber, pageSize, ...restOfNewFilterState } = newFilterState;
     
-    // Default: Use existing state to preserve pageNumber/pageSize unless explicitly provided
-    let newFilters = { 
-        ...filters, 
-        ...restOfNewFilterState,
-        dateField: queryType,
-        pageNumber: pageNumber || filters.pageNumber, // Keep existing page number if not provided (i.e., only a filter changed)
-        pageSize: pageSize || filters.pageSize,
-    };
-    
-    // If any filter other than pageNumber/pageSize changes, reset pageNumber to 1
-    const filtersChangedExceptPagination = (
-        JSON.stringify(restOfNewFilterState) !== JSON.stringify(filters) ||
-        JSON.stringify(status) !== JSON.stringify(filters.status) ||
-        reviewsBy !== filters.reviewsBy
-    );
+    // 2. Determine if non-pagination filters were passed.
+    const newFilterKeys = Object.keys(newFilterState);
+    const isOnlyPaginationChange = newFilterKeys.every(key => key === 'pageNumber' || key === 'pageSize');
 
-    if (filtersChangedExceptPagination) {
+    // 3. Initialize newFilters with current state as base
+    let newFilters = { ...filters };
+    
+    // 4. Handle page number and size
+    if (isOnlyPaginationChange) {
+        // If it's ONLY pagination, only update pageNumber/Size if they were provided (e.g., from PaginationControls)
+        newFilters.pageNumber = pageNumber !== undefined ? pageNumber : filters.pageNumber;
+        newFilters.pageSize = pageSize !== undefined ? pageSize : filters.pageSize;
+    } else {
+        // ✅ If ANY other filter changed, reset page to 1
         newFilters.pageNumber = 1;
+        newFilters.pageSize = pageSize !== undefined ? pageSize : filters.pageSize; 
+
+        // 5. Merge all *other* filter changes (excluding pagination, which is already handled above)
+        newFilters = {
+            ...newFilters, // Contains current page=1 and pageSize
+            ...restOfNewFilterState,
+        };
+        
+        // 6. Handle labAnalysis specific filters (which are stripped in restOfNewFilterState)
+        if (queryType === 'labAnalysis') {
+            newFilters.status = status !== undefined ? status : newFilters.status;
+            newFilters.reviewsBy = reviewsBy !== undefined ? reviewsBy : newFilters.reviewsBy;
+        }
     }
 
-
-    // --- Date Range Logic --- (Remains the same)
+    // 7. Common field updates (sortOrder, dateField)
+    newFilters.dateField = queryType;
+    newFilters.sortOrder = newFilterState.sortOrder || filters.sortOrder;
+    
+    // 8. Date Range Logic (Applies to all non-pagination changes, potentially resetting date fields)
     if (newFilterState.filterType === "range") {
       let startDate = new Date(newFilterState.range?.start);
       let endDate = new Date(newFilterState.range?.end);
@@ -178,8 +194,7 @@ export default function App() {
       newFilters.toDate = null;
     }
 
-
-    // --- View Specific Filters ---
+    // 9. Handle non-labAnalysis specific filters (verticals, bds, clients)
     if (queryType !== 'labAnalysis') {
         newFilters.bdNames = newFilterState.bdNames || [];
         newFilters.clientNames = newFilterState.clientNames || [];
@@ -190,19 +205,19 @@ export default function App() {
         newFilters.status = []; 
         newFilters.reviewsBy = null;
     } else {
-        // Lab Analysis-specific filters
+        newFilters.labNames = newFilterState.labNames,
+        newFilters.excludeLabs = newFilterState.excludeLabs,
         newFilters.bdNames = [];
         newFilters.clientNames = [];
         newFilters.verticals = [];
         newFilters.excludeVerticals = false;
         newFilters.excludeBds = false;
         newFilters.excludeClients = false;
-        newFilters.status = status || [];
-        newFilters.reviewsBy = reviewsBy || null; 
     }
-    
-    newFilters.sortOrder = newFilterState.sortOrder;
-    
+
+
+    console.log("app.jsx", newFilters)
+    // 10. Final State Update
     setFilters(newFilters);
   };
 
@@ -233,9 +248,7 @@ export default function App() {
 
   const handleResetAll = () => {
     setError(null);
-    setQueryType("inqDate");
     setFilters({
-      dateField: "inqDate",
       fromDate: defaultFilters.range.start,
       toDate: defaultFilters.range.end,
       sortOrder: defaultFilters.sortOrder,
@@ -293,7 +306,7 @@ export default function App() {
 
       if (isNaN(dateA) || isNaN(dateB)) return 0;
       
-      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+      return sortOrder === "newest" ? dateB - dateA : dateA - b[dateField];
     });
   };
 
@@ -381,7 +394,7 @@ export default function App() {
                     data={labParameters} 
                     labSummaryData={labAnalysis} 
                     filters={filters}
-                    setFilters={setFilters} 
+                    setFilters={onFiltersChange}
                     totalCount={totalCount}
                 />
               </div>
@@ -448,8 +461,7 @@ export default function App() {
                     <div className="block">
                       <Suspense
                         fallback={
-                          <div className="flex justify-center py-10">
-                            <div className="animate-spin h-6 w-6 border-b-2 border-blue-600 rounded-full"></div>
+                          <div className="flex justify-center py-10">\n                            <div className="animate-spin h-6 w-6 border-b-2 border-blue-600 rounded-full"></div>
                           </div>
                         }
                       >

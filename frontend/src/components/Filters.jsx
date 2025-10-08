@@ -11,14 +11,21 @@ import {
   X,
   RefreshCcw,
   Search,
+  FlaskConical,
 } from "lucide-react";
-import { getBdNames, getClientNames, getVerticals } from "../services/api.js";
+import {
+  getBdNames,
+  getClientNames,
+  getVerticals,
+  getLabNames,
+} from "../services/api.js";
 
 // Mapping from UI status names to SQL parameter keys
 const STATUS_MAP = {
+  "Pending": "pending",
   "Verified by HOD": "byHodReview",
   "Verified by QA": "byQaReview",
-  "Verified by Mail": "byMail",
+  "Verified by Mail": "byMailReview",
 };
 
 const CustomSelect = ({
@@ -164,7 +171,13 @@ const ExcludeToggle = ({ enabled, onChange }) => {
   );
 };
 
-export default function Filters({ data = [], onChange, onResetAll, disabled, queryType }) {
+export default function Filters({
+  data = [],
+  onChange,
+  onResetAll,
+  disabled,
+  queryType,
+}) {
   const today = new Date();
 
   const defaultRange = {
@@ -185,40 +198,44 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
   const [sortOrder, setSortOrder] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [dateField, setDateField] = useState("inqDate");
+  const [labNames, setLabNames] = useState([]);
 
   // exclude toggles
   const [excludeVerticals, setExcludeVerticals] = useState(false);
   const [excludeBds, setExcludeBds] = useState(false);
   const [excludeClients, setExcludeClients] = useState(false);
+  const [excludeLabs, setExcludeLabs] = useState(false);
 
   // Search terms
   const [verticalSearchTerm, setVerticalSearchTerm] = useState("");
   const [bdSearchTerm, setBdSearchTerm] = useState("");
   const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [labSearchTerm, setLabSearchTerm] = useState("");
   const [statusSearchTerm, setStatusSearchTerm] = useState(""); // 🔹 NEW STATE: Status search term
 
   // Options
   const [verticalOptions, setVerticalOptions] = useState([]);
   const [bdOptions, setBdOptions] = useState([]);
   const [clientOptions, setClientOptions] = useState([]);
+  const [labOptions, setLabOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
-  const statusOptions = Object.keys(STATUS_MAP); // 🔹 NEW: Use keys from STATUS_MAP for UI options
+  const statusOptions = Object.keys(STATUS_MAP);
 
   // Flag for conditional rendering
   // ASSUMPTION: 'labAnalysis' is the queryType for the Lab Analysis view
-  const isLabAnalysisView = queryType === 'labAnalysis';
+  const isLabAnalysisView = queryType === "labAnalysis";
 
   // -------------------------------------------------------------
   // HELPER: Maps the UI status array to the SQL reviewsBy string
   // -------------------------------------------------------------
   const mapStatusToReviewsBy = (statusArray) => {
     if (!statusArray || statusArray.length === 0) return null;
-    return statusArray.map(s => STATUS_MAP[s]).filter(Boolean).join(',');
+    return statusArray.map((s) => STATUS_MAP[s]).filter(Boolean);
   };
 
   const filteredData = useMemo(() => {
     // Client-side filtering is mostly irrelevant now, as the analysis happens server-side.
-    // However, the date/status filtering is kept for consistency with the original hook logic 
+    // However, the date/status filtering is kept for consistency with the original hook logic
     // where `data` might be client-side filtered first.
     let list = [...data];
 
@@ -244,34 +261,34 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
 
     // 🔹 NEW: Status Filter (only for Lab Analysis) - Only useful if `data` is still raw data
     if (isLabAnalysisView && status.length > 0) {
-        list = list.filter((inq) => status.includes(inq.labStatus)); // Assuming the field name is `labStatus`
+      list = list.filter((inq) => status.includes(inq.labStatus)); // Assuming the field name is `labStatus`
     }
 
     // Verticals, BD Names, Client Names are now completely ignored for filtering in Lab Analysis view
     if (!isLabAnalysisView) {
-        if (bdNames.length > 0) {
-            list = list.filter((inq) =>
-                excludeBds
-                ? !bdNames.includes(inq.bdName)
-                : bdNames.includes(inq.bdName)
-            );
-        }
+      if (bdNames.length > 0) {
+        list = list.filter((inq) =>
+          excludeBds
+            ? !bdNames.includes(inq.bdName)
+            : bdNames.includes(inq.bdName)
+        );
+      }
 
-        if (clientNames.length > 0) {
-            list = list.filter((inq) =>
-                excludeClients
-                ? !clientNames.includes(inq.clientName)
-                : clientNames.includes(inq.clientName)
-            );
-        }
+      if (clientNames.length > 0) {
+        list = list.filter((inq) =>
+          excludeClients
+            ? !clientNames.includes(inq.clientName)
+            : clientNames.includes(inq.clientName)
+        );
+      }
 
-        if (verticals.length > 0) {
-            list = list.filter((inq) =>
-                excludeVerticals
-                ? !verticals.includes(inq.vertical)
-                : verticals.includes(inq.vertical)
-            );
-        }
+      if (verticals.length > 0) {
+        list = list.filter((inq) =>
+          excludeVerticals
+            ? !verticals.includes(inq.vertical)
+            : verticals.includes(inq.vertical)
+        );
+      }
     }
 
     return list;
@@ -290,24 +307,35 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
     excludeVerticals,
     isLabAnalysisView,
     status,
+    labNames,
+    excludeLabs,
   ]);
 
-  // -------------------------------------------------------------
-  // BUILD REQUEST: Includes mapping status to reviewsBy
-  // -------------------------------------------------------------
   const buildSearchRequest = (nextState = {}) => {
     const nextStatus = nextState.status ?? status;
 
     const base = {
       dateField: nextState.dateField ?? dateField,
       // 🐛 FIX: Exclude BDs, Clients, Verticals from request if in Lab Analysis View
-      bdNames: isLabAnalysisView ? [] : (nextState.bdNames ?? bdNames),
-      clientNames: isLabAnalysisView ? [] : (nextState.clientNames ?? clientNames),
-      verticals: isLabAnalysisView ? [] : (nextState.verticals ?? verticals),
-      excludeBds: isLabAnalysisView ? false : (nextState.excludeBds ?? excludeBds),
-      excludeClients: isLabAnalysisView ? false : (nextState.excludeClients ?? excludeClients),
-      excludeVerticals: isLabAnalysisView ? false : (nextState.excludeVerticals ?? excludeVerticals),
-      
+      bdNames: isLabAnalysisView ? [] : nextState.bdNames ?? bdNames,
+      clientNames: isLabAnalysisView
+        ? []
+        : nextState.clientNames ?? clientNames,
+      verticals: isLabAnalysisView ? [] : nextState.verticals ?? verticals,
+      labNames: !isLabAnalysisView ? [] : nextState.labNames ?? labNames,
+      excludeBds: isLabAnalysisView
+        ? false
+        : nextState.excludeBds ?? excludeBds,
+      excludeClients: isLabAnalysisView
+        ? false
+        : nextState.excludeClients ?? excludeClients,
+      excludeVerticals: isLabAnalysisView
+        ? false
+        : nextState.excludeVerticals ?? excludeVerticals,
+      excludeLabs: !isLabAnalysisView
+        ? false
+        : nextState.excludeLabs ?? excludeLabs,
+
       // 🔹 NEW: Map status array to reviewsBy string
       reviewsBy: isLabAnalysisView ? mapStatusToReviewsBy(nextStatus) : null,
     };
@@ -316,14 +344,19 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
     if (nextFilterType === "range") {
       const nextRange = nextState.range ?? range;
       if (nextRange.start && nextRange.end) {
-        return { ...base, filterType: 'range', fromDate: nextRange.start, toDate: nextRange.end };
+        return {
+          ...base,
+          filterType: "range",
+          fromDate: nextRange.start,
+          toDate: nextRange.end,
+        };
       }
     }
 
     if (nextFilterType === "month") {
       const nextMonth = nextState.month ?? month;
       const nextYear = nextState.year ?? year;
-      const req = { ...base, filterType: 'month', year: Number(nextYear) };
+      const req = { ...base, filterType: "month", year: Number(nextYear) };
       if (nextMonth) req.month = Number(nextMonth);
       return req;
     }
@@ -335,7 +368,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
   // emit helper -> notify parent
   const emit = (next = {}) => {
     const nextStatus = next.status ?? status;
-    const isLab = next.queryType === 'labAnalysis' || isLabAnalysisView;
+    const isLab = next.queryType === "labAnalysis" || isLabAnalysisView;
 
     const payload = {
       filterType,
@@ -346,19 +379,21 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
       verticals: isLab ? [] : verticals,
       bdNames: isLab ? [] : bdNames,
       clientNames: isLab ? [] : clientNames,
-      
-      status: nextStatus, // 🔹 NEW: Include status array
-      
+      labNames: isLab ? labNames : [],
+
+      status: nextStatus,
+
       sortOrder,
       dateField,
-      
+
       excludeVerticals: isLab ? false : excludeVerticals,
       excludeBds: isLab ? false : excludeBds,
       excludeClients: isLab ? false : excludeClients,
-      
+      excludeLabs: isLab ? excludeLabs : false,
+
       // 🔹 NEW: Map status array to reviewsBy string for the API call payload
       reviewsBy: isLab ? mapStatusToReviewsBy(nextStatus) : null,
-      
+
       ...next,
     };
     onChange?.(payload);
@@ -389,6 +424,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
     excludeBds,
     excludeClients,
     excludeVerticals,
+    excludeLabs,
     isLabAnalysisView,
   ];
 
@@ -483,6 +519,36 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
     400
   );
 
+  useDebouncedEffect(
+    () => {
+      if (!isLabAnalysisView) {
+        setLabOptions([]);
+        return;
+      }
+      const controller = new AbortController();
+      const fetchLabNames = async () => {
+        setLoadingOptions(true);
+        try {
+          const body = buildSearchRequest();
+          const options = await getLabNames(body, {
+            signal: controller.signal,
+          });
+          setLabOptions(Array.isArray(options) ? options : []);
+        } catch (e) {
+          if (e.name !== "AbortError")
+            console.error("Failed to fetch lab names: ", e);
+          setLabOptions([]);
+        } finally {
+          setLoadingOptions(false);
+        }
+      };
+      fetchLabNames();
+      return () => controller.abort();
+    },
+    optionsDeps,
+    400
+  );
+
   // Filtered options for custom selects
   const filteredVerticalOptions = verticalOptions.filter((v) =>
     v.toLowerCase().includes(verticalSearchTerm.toLowerCase())
@@ -493,7 +559,10 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
   const filteredClientOptions = clientOptions.filter((c) =>
     c.toLowerCase().includes(clientSearchTerm.toLowerCase())
   );
-  const filteredStatusOptions = statusOptions.filter((s) => // 🔹 NEW: Status search filter
+  const filteredLabOptions = labOptions.filter((c) =>
+    c.toLowerCase().includes(labSearchTerm.toLowerCase())
+  );
+  const filteredStatusOptions = statusOptions.filter((s) =>
     s.toLowerCase().includes(statusSearchTerm.toLowerCase())
   );
 
@@ -593,6 +662,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
                 setExcludeVerticals(false);
                 setExcludeBds(false);
                 setExcludeClients(false);
+                setLabNames([]);
                 onResetAll?.();
                 emit({
                   range: defaultRange,
@@ -607,6 +677,7 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
                   excludeVerticals: false,
                   excludeBds: false,
                   excludeClients: false,
+                  labNames: [],
                 });
               }}
               className="flex items-center gap-2 text-sm px-4 py-2 bg-gray-800 text-white rounded-xl shadow-lg hover:bg-gray-700 transition-colors duration-200 transform hover:scale-105"
@@ -619,7 +690,11 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
 
         {/* Filter Boxes */}
         {/* Conditional rendering of the grid layout: 3 columns for Lab Analysis, 5 otherwise */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${isLabAnalysisView ? 'lg:grid-cols-3' : 'lg:grid-cols-5'} gap-4`}>
+        <div
+          className={`grid grid-cols-1 md:grid-cols-2 ${
+            isLabAnalysisView ? "lg:grid-cols-4" : "lg:grid-cols-5"
+          } gap-4`}
+        >
           {/* Date Range (Col 1 & 2) */}
           {filterType === "range" && (
             <>
@@ -720,35 +795,75 @@ export default function Filters({ data = [], onChange, onResetAll, disabled, que
 
           {/* 🔹 NEW FILTER: Status (Col 3) - Only for Lab Analysis View */}
           {isLabAnalysisView && (
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                  <span>Status</span>
-                </span>
+            <>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                    <span>Labs</span>
+                    {loadingOptions && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    )}
+                  </span>
+                  <ExcludeToggle
+                    enabled={excludeLabs}
+                    onChange={(val) => {
+                      setExcludeLabs(val);
+                      emit({ excludeLabs: val });
+                    }}
+                  />
+                </div>
+                <CustomSelect
+                  label={`${
+                    labNames.length === 0
+                      ? "Select Labs"
+                      : `${labNames.length} selecected`
+                  }`}
+                  icon={<FlaskConical className="w-4 h-4 text-gray-400" />}
+                  options={filteredLabOptions}
+                  selected={labNames}
+                  onToggle={(option) => {
+                    const updated = labNames.includes(option)
+                      ? labNames.filter((n) => n !== option)
+                      : [...labNames, option];
+                    setLabNames(updated);
+                    emit({ labNames: updated });
+                  }}
+                  searchTerm={labSearchTerm}
+                  onSearchChange={setLabSearchTerm}
+                  isExcluded={excludeLabs}
+                />
               </div>
-              <CustomSelect
-                label={`${
-                  status.length === 0
-                    ? "Select Status"
-                    : `${status.length} selected`
-                }`}
-                icon={<ListChecks className="w-4 h-4 text-gray-400" />}
-                options={filteredStatusOptions}
-                selected={status}
-                onToggle={(option) => {
-                  const updated = status.includes(option)
-                    ? status.filter((n) => n !== option)
-                    : [...status, option];
-                  setStatus(updated);
-                  emit({ status: updated });
-                }}
-                searchTerm={statusSearchTerm}
-                onSearchChange={setStatusSearchTerm}
-                // isExcluded is not needed for a status filter
-              />
-            </div>
+
+              <div className="flex flex-col mt-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                    <span>Status</span>
+                  </span>
+                </div>
+                <CustomSelect
+                  label={`${
+                    status.length === 0
+                      ? "Select Status"
+                      : `${status.length} selected`
+                  }`}
+                  icon={<ListChecks className="w-4 h-4 text-gray-400" />}
+                  options={filteredStatusOptions}
+                  selected={status}
+                  onToggle={(option) => {
+                    const updated = status.includes(option)
+                      ? status.filter((n) => n !== option)
+                      : [...status, option];
+                    setStatus(updated);
+                    emit({ status: updated });
+                  }}
+                  searchTerm={statusSearchTerm}
+                  onSearchChange={setStatusSearchTerm}
+                  // isExcluded is not needed for a status filter
+                />
+              </div>
+            </>
           )}
-          
+
           {/* Verticals, BD Names, Client Names - ONLY for Non-Lab Analysis View */}
           {!isLabAnalysisView && (
             <>

@@ -7,12 +7,14 @@ export default function useLabAnalysis(filters) {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0); 
 
+    //console.log("in useLab hooks", filters)
+
   useEffect(() => {
     const isFilterSet = filters && Object.keys(filters).length > 0;
     
     // Check for essential filters like fromDate/toDate being present
     // We assume App.jsx sets a default range when view switches to 'labAnalysis'.
-    const hasDateFilters = filters?.fromDate && filters?.toDate; 
+    const hasDateFilters = (filters?.fromDate && filters?.toDate) || (filters?.month && filters?.year); 
 
     if (!isFilterSet || !hasDateFilters) {
       setLabParameters([]);
@@ -69,7 +71,7 @@ export default function useLabAnalysis(filters) {
 
   return {
     labParameters,
-    labAnalysis: labSummaryData, // Renamed for consistency with App.jsx
+    labAnalysis: labSummaryData,
     loading,
     totalCount, 
   };

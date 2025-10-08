@@ -81,6 +81,22 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.LabController",
+    "Method": "GetLabs",
+    "RelativePath": "api/labs/names",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.LabRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.LabController",
     "Method": "GetLabSummary",
     "RelativePath": "api/labs/summary",
     "HttpMethod": "POST",

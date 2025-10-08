@@ -30,6 +30,12 @@ export default function InquiryList({ data = [], queryType }) {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
 
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
@@ -126,38 +132,49 @@ export default function InquiryList({ data = [], queryType }) {
     doc.save("inquiries.pdf");
   };
 
-  const Pagination = () =>
-    totalPages > 1 && (
-      <div className="flex justify-center items-center gap-2 my-6 flex-wrap">
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
-          className="flex items-center gap-1 px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 transition-all shadow-sm hover:shadow"
-        >
-          <ChevronLeft className="w-4 h-4" /> Prev
-        </button>
-        {getPageNumbers().map((num) => (
-          <button
-            key={num}
-            onClick={() => setCurrentPage(num)}
-            className={`px-4 py-2 rounded-full transition-all shadow-sm hover:shadow ${
-              num === currentPage
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-            }`}
-          >
-            {num}
-          </button>
-        ))}
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="flex items-center gap-1 px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 transition-all shadow-sm hover:shadow"
-        >
-          Next <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
+const PaginationControls = ({ currentPage, totalPages, goToPage, getPageNumbers }) => {
+    return (
+        <div className="flex justify-between items-center mt-6 p-4 bg-white rounded-xl shadow-md border border-gray-100">
+            <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition duration-150 ease-in-out shadow-sm"
+            >
+                <ChevronLeft className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center space-x-1 sm:space-x-2">
+                <span className="text-sm text-gray-600 hidden sm:inline">Page</span>
+                {getPageNumbers().map((page, index) =>
+                    page === "..." ? (
+                        <span key={index} className="px-2 py-1 text-sm text-gray-500">...</span>
+                    ) : (
+                        <button
+                            key={page}
+                            onClick={() => goToPage(page)}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-150 ease-in-out ${
+                                page === currentPage
+                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/50"
+                                    : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                            }`}
+                        >
+                            {page}
+                        </button>
+                    )
+                )}
+                <span className="text-sm text-gray-600 hidden sm:inline">of {totalPages}</span>
+            </div>
+
+            <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition duration-150 ease-in-out shadow-sm"
+            >
+                <ChevronRight className="w-5 h-5" />
+            </button>
+        </div>
     );
+};
 
   return (
     <div className="space-y-8 bg-white p-8 rounded-3xl shadow-xl animate-fadeIn">
@@ -182,7 +199,14 @@ export default function InquiryList({ data = [], queryType }) {
           </button>
         </div>
       </div>
-      <Pagination />
+      {totalPages > 1 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          goToPage={goToPage}
+          getPageNumbers={getPageNumbers}
+        />
+      )}
       
       {/* Table for large screens */}
       <div className="hidden lg:block overflow-x-auto border border-gray-200 rounded-2xl shadow-lg">
@@ -352,7 +376,14 @@ export default function InquiryList({ data = [], queryType }) {
           </div>
         ))}
       </div>
-      <Pagination />
+      {totalPages > 1 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          goToPage={goToPage}
+          getPageNumbers={getPageNumbers}
+        />
+      )}
     </div>
   );
 }
