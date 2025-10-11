@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { getLabSummary, getLabParameters } from "../services/api.js";
+import { getLabSummaries, getSampleSummaries } from "../services/api.js";
 
 export default function useLabAnalysis(filters) {
-  const [labParameters, setLabParameters] = useState([]);
-  const [labSummaryData, setLabSummaryData] = useState([]);
+  const [sampleSummaries, setSampleSummaries] = useState([]);
+  const [labSummaries, setLabSummaries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0); 
 
@@ -17,8 +17,8 @@ export default function useLabAnalysis(filters) {
     const hasDateFilters = (filters?.fromDate && filters?.toDate) || (filters?.month && filters?.year); 
 
     if (!isFilterSet || !hasDateFilters) {
-      setLabParameters([]);
-      setLabSummaryData([]);
+      setSampleSummaries([]);
+      setLabSummaries([]);
       setTotalCount(0); 
       setLoading(false);
       return;
@@ -30,29 +30,27 @@ export default function useLabAnalysis(filters) {
     const fetchData = async () => {
       try {
         // Fetch both the detailed data and the summary data concurrently
-        const [parametersResponse, summaryResponse] = await Promise.all([
-          getLabParameters(filters), // For the detailed table (paginated data)
-          getLabSummary(filters),   // For the horizontal KPI summary cards (aggregate data)
+        const [sampleSummaryResponse, labSummaryResponse] = await Promise.all([
+          getSampleSummaries(filters), // For the detailed table (paginated data)
+          getLabSummaries(filters),   // For the horizontal KPI summary cards (aggregate data)
         ]);
 
         if (isMounted) {
           
-          // 🟢 CRITICAL FIX: Safely extract data array from API response
-          const detailedData = parametersResponse?.data || parametersResponse;
-          const summaryData = summaryResponse?.data || summaryResponse; // <--- This extracts the summary data
+          const detailedData = sampleSummaryResponse?.data || sampleSummaryResponse;
+          const summaryData = labSummaryResponse?.data || labSummaryResponse;
           
-          // Safely determine total count from the parameters endpoint
-          const count = parametersResponse?.totalCount ?? (Array.isArray(detailedData) ? detailedData.length : 0);
+          const count = sampleSummaryResponse?.totalCount ?? (Array.isArray(detailedData) ? detailedData.length : 0);
           
-          setLabParameters(Array.isArray(detailedData) ? detailedData : []);
-          setLabSummaryData(Array.isArray(summaryData) ? summaryData : []); // <--- Update state with extracted data
+          setSampleSummaries(Array.isArray(detailedData) ? detailedData : []);
+          setLabSummaries(Array.isArray(summaryData) ? summaryData : []);
           setTotalCount(count); 
         }
       } catch (err) {
         if (isMounted) {
           console.error("❌ Failed to fetch lab analysis data:", err);
-          setLabParameters([]);
-          setLabSummaryData([]);
+          setSampleSummaries([]);
+          setLabSummaries([]);
           setTotalCount(0);
         }
       } finally {
@@ -70,9 +68,9 @@ export default function useLabAnalysis(filters) {
   }, [filters]);
 
   return {
-    labParameters,
-    labAnalysis: labSummaryData,
+    sampleSummaries,
+    labSummaries,
     loading,
-    totalCount, 
+    totalCount,
   };
 }

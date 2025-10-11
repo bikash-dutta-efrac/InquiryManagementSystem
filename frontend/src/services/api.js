@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.186:5075/api";
+const API_BASE_URL = "http://192.168.3.189:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -12,7 +12,7 @@ function buildRequestBody(filters = {}) {
     bdNames: filters.bdNames || [],
     clientNames: filters.clientNames || [],
     labs: filters.labNames || [],
-    reviewsBy: filters.reviewsBy || null,
+    statusFilter: filters.labStatusFilter || null,
     dateField: filters.dateField || "inqDate",
     excludeVerticals: filters.excludeVerticals,
     excludeBds: filters.excludeBds,
@@ -23,12 +23,10 @@ function buildRequestBody(filters = {}) {
   };
 }
 
-export async function getLabSummary(filters = {}) {
+export async function getLabSummaries(filters = {}) {
   const body = buildRequestBody(filters);
 
-  // console.log(body)
-
-  const response = await axios.post(`${API_BASE_URL}/labs/summary`, body, {
+  const response = await axios.post(`${API_BASE_URL}/lab/summaries`, body, {
     headers: { "Content-Type": "application/json" },
   });
 
@@ -36,23 +34,22 @@ export async function getLabSummary(filters = {}) {
 }
 
 // New Lab Parameters endpoint for fetching paginated detailed lab data
-export async function getLabParameters(filters = {}) {
+export async function getSampleSummaries(filters = {}) {
   const body = buildRequestBody(filters);
 
-  console.log(body)
-  
-  const response = await axios.post(`${API_BASE_URL}/labs`, body, {
+  const response = await axios.post(`${API_BASE_URL}/lab/samples`, body, {
     headers: { "Content-Type": "application/json" },
   });
+  console.log(body, response.data)
+
   return response.data;
 }
 
 export async function getLabNames(filters = {}) {
   const body = buildRequestBody(filters);
 
-  console.log(body)
 
-  const response = await axios.post(`${API_BASE_URL}/labs/names`, body, {
+  const response = await axios.post(`${API_BASE_URL}/lab/names`, body, {
     headers: { "Content-Type": "application/json" },
   });
 

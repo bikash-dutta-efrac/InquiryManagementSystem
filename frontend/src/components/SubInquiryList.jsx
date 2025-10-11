@@ -135,76 +135,67 @@ export default function SubInquiryList({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto border border-gray-200 mt-6 rounded-2xl shadow-lg">
-        <table className="w-full table-auto border-collapse">
-          <thead className="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white">
+      <div className="bg-white p-6 my-4 rounded-2xl shadow-lg border border-gray-200 overflow-x-auto">
+        <table className="min-w-[1300px] table-auto border-collapse">
+          <thead className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
             <tr>
-              {queryType === "inquiries" && (
+              {queryType === "inqueries" && (
                 <>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-left whitespace-nowrap">
                     Inquiry No
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
-                    Inquiry Date
+                  <th className="px-4 py-3 text-left whitespace-nowrap">
+                    Inquiry<br/>Date
                   </th>
                 </>
               )}
               {queryType !== "registrations" && (
                 <>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-left whitespace-nowrap">
                     Quotation No
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
-                    Quotation Date
+                  <th className="px-4 py-3 text-left whitespace-nowrap">
+                    Quotation<br/>Date
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-right">
-                    Quotation Value (Before Discount)
+                  <th className="px-4 py-3 text-right whitespace-nowrap">
+                    Quotation Value<br/>(Before Discount)
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-right">
-                    Quotation Value (After Discount)
+                  <th className="px-4 py-3 text-right whitespace-nowrap">
+                    Quotation Value<br/>(After Discount)
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
-                    Quotation Status
+                  <th className="px-4 py-3 text-left whitespace-nowrap">
+                    Quotation<br/>Ageing
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
-                    Quotation Ageing
-                  </th>
-                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+                  <th className="px-4 py-3 text-left whitespace-nowrap">
                     Discount (%)
                   </th>
                 </>
               )}
-              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+              <th className="px-4 py-3 text-left whitespace-nowrap">
                 Registration No
               </th>
-              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
-                Registration Date
+              <th className="px-4 py-3 text-left whitespace-nowrap">
+                Registration<br/>Date
               </th>
-              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-right">
-                Registration Value
+              <th className="px-4 py-3 text-right whitespace-nowrap">
+                Registration<br/>Value
               </th>
-              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
-                BD Name
-              </th>
-              <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-left">
+              <th className="px-4 py-3 text-left whitespace-nowrap">BD Name</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">
                 Client Name
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
             {paginatedData.map((inq, idx) => (
               <tr
                 key={`${inq.inqNo}-${idx}`}
-                className={`${
-                  idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                } border-t border-gray-200 transition-all duration-200 ease-in-out hover:bg-gray-100`}
+                className="hover:bg-gray-50 transition-colors duration-200"
               >
-                {queryType === "inquiries" && (
+                {queryType === "inqueries" && (
                   <>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                      {inq.inqNo ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                    <td className="px-4 py-3">{inq.inqNo ?? "-"}</td>
+                    <td className="px-4 py-3">
                       {inq.inqDate
                         ? new Date(inq.inqDate).toLocaleDateString()
                         : "-"}
@@ -213,48 +204,33 @@ export default function SubInquiryList({
                 )}
                 {queryType !== "registrations" && (
                   <>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                      {inq.quotNo ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                    <td className="px-4 py-3">{inq.quotNo ?? "-"}</td>
+                    <td className="px-4 py-3">
                       {inq.quotDate
                         ? new Date(inq.quotDate).toLocaleDateString()
                         : "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-right">
-                      {inq.quotValBeforeDis ?? "-"}
+                    <td className="px-4 py-3 text-right">
+                      {Math.round(inq.quotValBeforeDis) ?? "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-right">
-                      {inq.quotValAfterDis ?? "-"}
+                    <td className="px-4 py-3 text-right">
+                      {Math.round(inq.quotValAfterDis) ?? "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                      {inq.quotStatus ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                      {inq.quotAgeing ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                      {inq.percOfDis ?? "-"}
-                    </td>
+                    <td className="px-4 py-3">{inq.quotAgeing ?? "-"}</td>
+                    <td className="px-4 py-3">{inq.percOfDis ?? "-"}</td>
                   </>
                 )}
-                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                  {inq.regisNo ?? "-"}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
+                <td className="px-4 py-3">{inq.regisNo ?? "-"}</td>
+                <td className="px-4 py-3">
                   {inq.regisDate
                     ? new Date(inq.regisDate).toLocaleDateString()
                     : "-"}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-right">
-                  {inq.regisVal ?? "-"}
+                <td className="font-semibold text-black px-4 py-3 text-right">
+                  {Math.round(inq.regisVal) ?? "-"}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                  {inq.bdName ?? "-"}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-left">
-                  {inq.clientName ?? "-"}
-                </td>
+                <td className="px-4 py-3">{inq.bdName ?? "-"}</td>
+                <td className="px-4 py-3">{inq.clientName ?? "-"}</td>
               </tr>
             ))}
           </tbody>

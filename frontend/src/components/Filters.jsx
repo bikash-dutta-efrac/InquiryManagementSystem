@@ -20,13 +20,7 @@ import {
   getLabNames,
 } from "../services/api.js";
 
-// Mapping from UI status names to SQL parameter keys
-const STATUS_MAP = {
-  "Pending": "pending",
-  "Verified by HOD": "byHodReview",
-  "Verified by QA": "byQaReview",
-  "Verified by Mail": "byMailReview",
-};
+// Mapping from UI status names to SQL parameter keys - REMOVED
 
 const CustomSelect = ({
   options,
@@ -61,10 +55,11 @@ const CustomSelect = ({
   const isSelected = (option) => selected.includes(option);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
-        className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-xl shadow-sm p-4 text-left hover:shadow-md transition-shadow cursor-pointer"
+        // 🚨 ADDED HEIGHT FOR ALIGNMENT: h-[54px] to align with date/month inputs
+        className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition-shadow cursor-pointer h-[54px]"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2">
@@ -194,7 +189,7 @@ export default function Filters({
   const [verticals, setVerticals] = useState([]);
   const [bdNames, setBdNames] = useState([]);
   const [clientNames, setClientNames] = useState([]);
-  const [status, setStatus] = useState([]); // 🔹 NEW STATE: Status filter
+  const [labStatusFilter, setLabStatusFilter] = useState(null); 
   const [sortOrder, setSortOrder] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [dateField, setDateField] = useState("inqDate");
@@ -211,7 +206,6 @@ export default function Filters({
   const [bdSearchTerm, setBdSearchTerm] = useState("");
   const [clientSearchTerm, setClientSearchTerm] = useState("");
   const [labSearchTerm, setLabSearchTerm] = useState("");
-  const [statusSearchTerm, setStatusSearchTerm] = useState(""); // 🔹 NEW STATE: Status search term
 
   // Options
   const [verticalOptions, setVerticalOptions] = useState([]);
@@ -219,104 +213,32 @@ export default function Filters({
   const [clientOptions, setClientOptions] = useState([]);
   const [labOptions, setLabOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
-  const statusOptions = Object.keys(STATUS_MAP);
+  const statusOptions = ["All", "Pending", "Released"]; 
 
   // Flag for conditional rendering
-  // ASSUMPTION: 'labAnalysis' is the queryType for the Lab Analysis view
   const isLabAnalysisView = queryType === "labAnalysis";
 
   // -------------------------------------------------------------
-  // HELPER: Maps the UI status array to the SQL reviewsBy string
+  // HELPER: Maps the UI status name to the SQL reviewsBy string
   // -------------------------------------------------------------
-  const mapStatusToReviewsBy = (statusArray) => {
-    if (!statusArray || statusArray.length === 0) return null;
-    return statusArray.map((s) => STATUS_MAP[s]).filter(Boolean);
+  const mapStatusToReviewsBy = (statusName) => {
+    switch (statusName) {
+      case "Pending":
+        return "pending";
+      case "Released":
+        return "released";
+      case "All":
+      default:
+        return null;
+    }
   };
 
-  const filteredData = useMemo(() => {
-    // Client-side filtering is mostly irrelevant now, as the analysis happens server-side.
-    // However, the date/status filtering is kept for consistency with the original hook logic
-    // where `data` might be client-side filtered first.
-    let list = [...data];
-
-    // Date Filtering (always present)
-    if (filterType === "range" && range.start && range.end) {
-      const startDate = new Date(range.start);
-      const endDate = new Date(range.end);
-      list = list.filter(
-        (inq) =>
-          new Date(inq[dateField]) >= startDate &&
-          new Date(inq[dateField]) <= endDate
-      );
-    }
-
-    if (filterType === "month" && month && year) {
-      list = list.filter((inq) => {
-        const d = new Date(inq[dateField]);
-        return (
-          d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year)
-        );
-      });
-    }
-
-    // 🔹 NEW: Status Filter (only for Lab Analysis) - Only useful if `data` is still raw data
-    if (isLabAnalysisView && status.length > 0) {
-      list = list.filter((inq) => status.includes(inq.labStatus)); // Assuming the field name is `labStatus`
-    }
-
-    // Verticals, BD Names, Client Names are now completely ignored for filtering in Lab Analysis view
-    if (!isLabAnalysisView) {
-      if (bdNames.length > 0) {
-        list = list.filter((inq) =>
-          excludeBds
-            ? !bdNames.includes(inq.bdName)
-            : bdNames.includes(inq.bdName)
-        );
-      }
-
-      if (clientNames.length > 0) {
-        list = list.filter((inq) =>
-          excludeClients
-            ? !clientNames.includes(inq.clientName)
-            : clientNames.includes(inq.clientName)
-        );
-      }
-
-      if (verticals.length > 0) {
-        list = list.filter((inq) =>
-          excludeVerticals
-            ? !verticals.includes(inq.vertical)
-            : verticals.includes(inq.vertical)
-        );
-      }
-    }
-
-    return list;
-  }, [
-    data,
-    filterType,
-    range,
-    month,
-    year,
-    bdNames,
-    clientNames,
-    verticals,
-    dateField,
-    excludeBds,
-    excludeClients,
-    excludeVerticals,
-    isLabAnalysisView,
-    status,
-    labNames,
-    excludeLabs,
-  ]);
 
   const buildSearchRequest = (nextState = {}) => {
-    const nextStatus = nextState.status ?? status;
+    const nextLabStatusFilter = nextState.labStatusFilter ?? labStatusFilter; 
 
     const base = {
       dateField: nextState.dateField ?? dateField,
-      // 🐛 FIX: Exclude BDs, Clients, Verticals from request if in Lab Analysis View
       bdNames: isLabAnalysisView ? [] : nextState.bdNames ?? bdNames,
       clientNames: isLabAnalysisView
         ? []
@@ -336,8 +258,7 @@ export default function Filters({
         ? false
         : nextState.excludeLabs ?? excludeLabs,
 
-      // 🔹 NEW: Map status array to reviewsBy string
-      reviewsBy: isLabAnalysisView ? mapStatusToReviewsBy(nextStatus) : null,
+      reviewsBy: isLabAnalysisView ? mapStatusToReviewsBy(nextLabStatusFilter) : null,
     };
 
     const nextFilterType = nextState.filterType ?? filterType;
@@ -361,13 +282,12 @@ export default function Filters({
       return req;
     }
 
-    // Default return base filters without date if no date filter is selected
     return base;
   };
 
   // emit helper -> notify parent
   const emit = (next = {}) => {
-    const nextStatus = next.status ?? status;
+    const nextLabStatusFilter = next.labStatusFilter ?? labStatusFilter;
     const isLab = next.queryType === "labAnalysis" || isLabAnalysisView;
 
     const payload = {
@@ -375,25 +295,18 @@ export default function Filters({
       range,
       month,
       year,
-      // 🐛 FIX: Only send BDs, Clients, Verticals if NOT in Lab Analysis view
       verticals: isLab ? [] : verticals,
       bdNames: isLab ? [] : bdNames,
       clientNames: isLab ? [] : clientNames,
       labNames: isLab ? labNames : [],
-
-      status: nextStatus,
-
+      labStatusFilter: nextLabStatusFilter,
       sortOrder,
       dateField,
-
       excludeVerticals: isLab ? false : excludeVerticals,
       excludeBds: isLab ? false : excludeBds,
       excludeClients: isLab ? false : excludeClients,
       excludeLabs: isLab ? excludeLabs : false,
-
-      // 🔹 NEW: Map status array to reviewsBy string for the API call payload
-      reviewsBy: isLab ? mapStatusToReviewsBy(nextStatus) : null,
-
+      reviewsBy: isLab ? mapStatusToReviewsBy(nextLabStatusFilter) : null,
       ...next,
     };
     onChange?.(payload);
@@ -405,6 +318,41 @@ export default function Filters({
     emit({ sortOrder: order });
   };
 
+  // Reset logic
+  const handleReset = () => {
+    setFilterType("range");
+    setRange(defaultRange);
+    setMonth(defaultMonth);
+    setYear(defaultYear);
+    setVerticals([]);
+    setBdNames([]);
+    setClientNames([]);
+    setLabStatusFilter(null); 
+    setSortOrder("newest");
+    setDateField("inqDate");
+    setExcludeVerticals(false);
+    setExcludeBds(false);
+    setExcludeClients(false);
+    setLabNames([]);
+    onResetAll?.();
+    emit({
+      filterType: "range",
+      range: defaultRange,
+      month: defaultMonth,
+      year: defaultYear,
+      bdNames: [],
+      clientNames: [],
+      verticals: [],
+      labStatusFilter: null, 
+      sortOrder: "newest",
+      dateField: "inqDate",
+      excludeVerticals: false,
+      excludeBds: false,
+      excludeClients: false,
+      labNames: [],
+    });
+  };
+
   // 🔹 Debounced fetch utility
   const useDebouncedEffect = (effect, deps, delay) => {
     useEffect(() => {
@@ -413,7 +361,7 @@ export default function Filters({
     }, [...deps, delay]);
   };
 
-  // The dependency list for fetching options. We MUST include `isLabAnalysisView`
+  // The dependency list for fetching options.
   const optionsDeps = [
     filterType,
     range.start,
@@ -426,6 +374,7 @@ export default function Filters({
     excludeVerticals,
     excludeLabs,
     isLabAnalysisView,
+    labStatusFilter, 
   ];
 
   // Fetch verticals (Conditionally disabled for Lab Analysis view)
@@ -519,6 +468,7 @@ export default function Filters({
     400
   );
 
+  // Fetch Lab names (Conditionally enabled for Lab Analysis view)
   useDebouncedEffect(
     () => {
       if (!isLabAnalysisView) {
@@ -562,429 +512,407 @@ export default function Filters({
   const filteredLabOptions = labOptions.filter((c) =>
     c.toLowerCase().includes(labSearchTerm.toLowerCase())
   );
-  const filteredStatusOptions = statusOptions.filter((s) =>
-    s.toLowerCase().includes(statusSearchTerm.toLowerCase())
-  );
-
+  
   return (
     <>
       <style>{style}</style>
       <fieldset
         disabled={disabled}
-        className={`relative bg-gray-50 shadow-2xl rounded-3xl p-6 mb-8 border border-gray-200 transition-all duration-300 font-inter ${
+        className={`relative transition-all duration-300 font-inter space-y-4 mb-8 ${ 
           disabled ? "opacity-50 pointer-events-none" : ""
         }`}
       >
-        {/* Tabs Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          {/* Filter Type Tabs (Date Range / Month & Year) - Always visible */}
-          <div className="flex gap-2 bg-white rounded-2xl p-2 shadow-inner border border-gray-200">
-            {["range", "month"].map((ft) => (
-              <button
-                key={ft}
-                onClick={() => {
-                  setFilterType(ft);
-                  emit({ filterType: ft });
-                }}
-                className={`px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-100 ${
-                  filterType === ft
-                    ? "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white shadow-gradient-blue animate-tab-pulse"
-                    : "bg-white text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-                }`}
-              >
-                {ft === "range" ? "Date Range" : "Month & Year"}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-4 ml-auto">
-            {/* Sort Dropdown - ONLY visible when NOT in Lab Analysis view */}
-            {!isLabAnalysisView && (
-              <div className="relative">
-                <button
-                  onClick={() => setSortOpen(!sortOpen)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-xl shadow-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                >
-                  {sortOrder === "newest" ? (
-                    <ArrowDownWideNarrow className="w-5 h-5 text-blue-500" />
-                  ) : (
-                    <ArrowUpWideNarrow className="w-5 h-5 text-blue-500" />
-                  )}
-                  <span className="text-sm font-medium">
-                    {sortOrder === "newest" ? "Newest First" : "Oldest First"}
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
-                      sortOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {sortOpen && (
-                  <div className="absolute mt-2 right-0 bg-white border border-gray-200 shadow-xl rounded-xl w-40 overflow-hidden z-20 animate-fade-in-up">
+        
+        {/* ========================================================= */}
+        {/* CARD 1 (TOP ROW): Time Range, Sort, and Reset */}
+        {/* ========================================================= */}
+        <div className="bg-gray-50 shadow-2xl rounded-3xl p-6 border border-gray-200">
+          
+          {/* Main flex container for Card 1: Toggles/Inputs on Left, Actions on Right */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            
+            {/* Left side: Toggles and Inputs */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
+                {/* Filter Type Tabs (Date Range / Month & Year) - Always visible */}
+                <div className="flex gap-2 bg-white rounded-2xl p-2 shadow-inner border border-gray-200 flex-shrink-0">
+                    {["range", "month"].map((ft) => (
                     <button
-                      onClick={() => handleSort("newest")}
-                      className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
-                        sortOrder === "newest"
-                          ? "bg-blue-50 font-semibold text-blue-700"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                        key={ft}
+                        onClick={() => {
+                        setFilterType(ft);
+                        emit({ filterType: ft });
+                        }}
+                        className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-100 ${
+                        filterType === ft
+                            ? "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white shadow-gradient-blue animate-tab-pulse"
+                            : "bg-white text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                        }`}
                     >
-                      <ArrowDownWideNarrow className="w-4 h-4" /> Newest First
+                        {ft === "range" ? "Date Range" : "Month & Year"}
                     </button>
+                    ))}
+                </div>
+
+                {/* Date/Month/Year Selectors - Horizontal alignment */}
+                <div className={`flex gap-4 w-full ${filterType === 'range' ? 'max-w-xs' : 'max-w-sm'}`}>
+                    {/* Date Range */}
+                    {filterType === "range" && (
+                        <>
+                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                <input
+                                type="date"
+                                value={range.start}
+                                onChange={(e) => {
+                                    const next = { ...range, start: e.target.value };
+                                    setRange(next);
+                                    emit({ range: next });
+                                }}
+                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                                placeholder="Start Date"
+                                />
+                            </div>
+
+                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                <input
+                                type="date"
+                                value={range.end}
+                                onChange={(e) => {
+                                    const next = { ...range, end: e.target.value };
+                                    setRange(next);
+                                    emit({ range: next });
+                                }}
+                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                                placeholder="End Date"
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {/* Month & Year */}
+                    {filterType === "month" && (
+                        <>
+                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                <select
+                                value={month}
+                                onChange={(e) => {
+                                    setMonth(e.target.value);
+                                    emit({ month: e.target.value });
+                                }}
+                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium appearance-none"
+                                >
+                                {Array.from({ length: 12 }, (_, i) => (
+                                    <option key={i + 1} value={i + 1}>
+                                    {new Date(0, i).toLocaleString("default", {
+                                        month: "long",
+                                    })}
+                                    </option>
+                                ))}
+                                </select>
+                                <ChevronDown className="w-4 h-4 text-gray-500 ml-auto pointer-events-none" />
+                            </div>
+
+                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                <input
+                                type="number"
+                                placeholder="Year"
+                                value={year}
+                                onChange={(e) => {
+                                    const currentYear = new Date().getFullYear();
+                                    const val = e.target.value;
+                                    if (val <= currentYear) {
+                                    setYear(val);
+                                    emit({ year: val });
+                                    }
+                                }}
+                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                                max={new Date().getFullYear()}
+                                />
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
+
+            {/* Right side: Sort and Reset Buttons */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+                {/* Sort Dropdown - ONLY visible when NOT in Lab Analysis view */}
+                {!isLabAnalysisView && (
+                <div className="relative">
                     <button
-                      onClick={() => handleSort("oldest")}
-                      className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
-                        sortOrder === "oldest"
-                          ? "bg-blue-50 font-semibold text-blue-700"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                    onClick={() => setSortOpen(!sortOpen)}
+                    // 🚨 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 h-[54px]"
                     >
-                      <ArrowUpWideNarrow className="w-4 h-4" /> Oldest First
+                    {sortOrder === "newest" ? (
+                        <ArrowDownWideNarrow className="w-5 h-5 text-blue-500" />
+                    ) : (
+                        <ArrowUpWideNarrow className="w-5 h-5 text-blue-500" />
+                    )}
+                    <span className="text-sm font-medium">
+                        {sortOrder === "newest" ? "Newest First" : "Oldest First"}
+                    </span>
+                    <ChevronDown
+                        className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                        sortOpen ? "rotate-180" : ""
+                        }`}
+                    />
                     </button>
-                  </div>
+
+                    {sortOpen && (
+                    <div className="absolute mt-2 right-0 bg-white border border-gray-200 shadow-xl rounded-xl w-40 overflow-hidden z-20 animate-fade-in-up">
+                        <button
+                        onClick={() => handleSort("newest")}
+                        className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
+                            sortOrder === "newest"
+                            ? "bg-blue-50 font-semibold text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                        >
+                        <ArrowDownWideNarrow className="w-4 h-4" /> Newest First
+                        </button>
+                        <button
+                        onClick={() => handleSort("oldest")}
+                        className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
+                            sortOrder === "oldest"
+                            ? "bg-blue-50 font-semibold text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                        >
+                        <ArrowUpWideNarrow className="w-4 h-4" /> Oldest First
+                        </button>
+                    </div>
+                    )}
+                </div>
                 )}
-              </div>
-            )}
 
-            {/* Reset */}
-            <button
-              onClick={() => {
-                setRange(defaultRange);
-                setMonth(defaultMonth);
-                setYear(defaultYear);
-                setVerticals([]);
-                setBdNames([]);
-                setClientNames([]);
-                setStatus([]); // 🔹 Reset status
-                setSortOrder("newest");
-                setDateField("inqDate");
-                setExcludeVerticals(false);
-                setExcludeBds(false);
-                setExcludeClients(false);
-                setLabNames([]);
-                onResetAll?.();
-                emit({
-                  range: defaultRange,
-                  month: defaultMonth,
-                  year: defaultYear,
-                  bdNames: [],
-                  clientNames: [],
-                  verticals: [],
-                  status: [], // 🔹 Reset status in emit
-                  sortOrder: "newest",
-                  dateField: "inqDate",
-                  excludeVerticals: false,
-                  excludeBds: false,
-                  excludeClients: false,
-                  labNames: [],
-                });
-              }}
-              className="flex items-center gap-2 text-sm px-4 py-2 bg-gray-800 text-white rounded-xl shadow-lg hover:bg-gray-700 transition-colors duration-200 transform hover:scale-105"
-            >
-              <RefreshCcw className="w-4 h-4" />
-              Reset
-            </button>
+                {/* Reset */}
+                <button
+                    onClick={handleReset}
+                    // 🚨 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
+                    className="flex items-center gap-2 text-sm px-4 py-2 bg-gray-800 text-white rounded-2xl shadow-lg hover:bg-gray-700 transition-colors duration-200 transform hover:scale-105 h-[54px]"
+                >
+                    <RefreshCcw className="w-4 h-4" />
+                    Reset
+                </button>
+            </div>
           </div>
         </div>
 
-        {/* Filter Boxes */}
-        {/* Conditional rendering of the grid layout: 3 columns for Lab Analysis, 5 otherwise */}
-        <div
-          className={`grid grid-cols-1 md:grid-cols-2 ${
-            isLabAnalysisView ? "lg:grid-cols-4" : "lg:grid-cols-5"
-          } gap-4`}
-        >
-          {/* Date Range (Col 1 & 2) */}
-          {filterType === "range" && (
-            <>
-              <div className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
-                <label className="text-xs font-semibold text-gray-500 mb-2">
-                  Start Date
-                </label>
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                  <input
-                    type="date"
-                    value={range.start}
-                    onChange={(e) => {
-                      const next = { ...range, start: e.target.value };
-                      setRange(next);
-                      emit({ range: next });
+        {/* ========================================================= */}
+        {/* CARD 2 (BOTTOM ROW): Specific Filters (Verticals/BDs/Clients OR Labs/Status) */}
+        {/* ========================================================= */}
+        <div className="bg-gray-50 shadow-2xl rounded-3xl p-6 border border-gray-200">
+          <div
+            // 🚨 UPDATED GRID: Use `grid-cols-3` for general view and `grid-cols-4` for lab view 
+            // to evenly distribute filters across the full width.
+            className={`grid grid-cols-1 md:grid-cols-2 ${
+              isLabAnalysisView ? "lg:grid-cols-4" : "lg:grid-cols-3"
+            } gap-4`}
+          >
+
+            {/* Labs and Status Filter - Only for Lab Analysis View */}
+            {isLabAnalysisView && (
+              <>
+                {/* Labs (Col 1/4) - Full Width */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                      <span>Labs</span>
+                      {loadingOptions && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      )}
+                    </span>
+                    <ExcludeToggle
+                      enabled={excludeLabs}
+                      onChange={(val) => {
+                        setExcludeLabs(val);
+                        emit({ excludeLabs: val });
+                      }}
+                    />
+                  </div>
+                  <CustomSelect
+                    label={`${
+                      labNames.length === 0
+                        ? "Select Labs"
+                        : `${labNames.length} selected`
+                    }`}
+                    icon={<FlaskConical className="w-4 h-4 text-gray-400" />}
+                    options={filteredLabOptions}
+                    selected={labNames}
+                    onToggle={(option) => {
+                      const updated = labNames.includes(option)
+                        ? labNames.filter((n) => n !== option)
+                        : [...labNames, option];
+                      setLabNames(updated);
+                      emit({ labNames: updated });
                     }}
-                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                    searchTerm={labSearchTerm}
+                    onSearchChange={setLabSearchTerm}
+                    isExcluded={excludeLabs}
                   />
                 </div>
-              </div>
 
-              <div className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
-                <label className="text-xs font-semibold text-gray-500 mb-2">
-                  End Date
-                </label>
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                  <input
-                    type="date"
-                    value={range.end}
-                    onChange={(e) => {
-                      const next = { ...range, end: e.target.value };
-                      setRange(next);
-                      emit({ range: next });
-                    }}
-                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Month & Year (Col 1 & 2) */}
-          {filterType === "month" && (
-            <>
-              <div className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
-                <label className="text-xs font-semibold text-gray-500 mb-2">
-                  Month
-                </label>
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                  <select
-                    value={month}
-                    onChange={(e) => {
-                      setMonth(e.target.value);
-                      emit({ month: e.target.value });
-                    }}
-                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium appearance-none"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString("default", {
-                          month: "long",
-                        })}
-                      </option>
+                {/* Single-Select Status Filter (Col 2/4) - Full Width */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 mb-2 h-6">
+                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                      <ListChecks className="w-4 h-4 text-gray-400" />
+                      <span>Status Filter</span>
+                    </span>
+                  </div>
+                  {/* 🚨 ALIGNMENT FIX: Used h-[54px] to match CustomSelect height */}
+                  <div className="flex gap-2 bg-white rounded-2xl p-1 shadow-inner border border-gray-200 h-[54px]">
+                    {statusOptions.map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          setLabStatusFilter(mapStatusToReviewsBy(status));
+                          emit({ labStatusFilter: mapStatusToReviewsBy(status) });
+                        }}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-100 ${
+                          labStatusFilter === mapStatusToReviewsBy(status)
+                            ? "bg-blue-500 text-white shadow-md"
+                            : "bg-white text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {status}
+                      </button>
                     ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-gray-500 ml-auto pointer-events-none" />
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
-                <label className="text-xs font-semibold text-gray-500 mb-2">
-                  Year
-                </label>
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                  <input
-                    type="number"
-                    placeholder="Year"
-                    value={year}
-                    onChange={(e) => {
-                      const currentYear = new Date().getFullYear();
-                      const val = e.target.value;
-                      if (val <= currentYear) {
-                        setYear(val);
-                        emit({ year: val });
-                      }
+                {/* Empty columns to fill remaining width (Col 3/4, Col 4/4) */}
+                <div className="lg:col-span-2 hidden lg:block"></div> 
+              </>
+            )}
+
+            {/* Verticals, BD Names, Client Names - ONLY for Non-Lab Analysis View */}
+            {!isLabAnalysisView && (
+              <>
+                {/* Verticals (Col 1/3) - Full Width */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                      <span>Verticals</span>
+                      {loadingOptions && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      )}
+                    </span>
+                    <ExcludeToggle
+                      enabled={excludeVerticals}
+                      onChange={(val) => {
+                        setExcludeVerticals(val);
+                        emit({ excludeVerticals: val });
+                      }}
+                    />
+                  </div>
+                  <CustomSelect
+                    label={`${
+                      verticals.length === 0
+                        ? "Select Verticals"
+                        : `${verticals.length} selected`
+                    }`}
+                    icon={<Telescope className="w-4 h-4 text-gray-400" />}
+                    options={filteredVerticalOptions}
+                    selected={verticals}
+                    onToggle={(option) => {
+                      const updated = verticals.includes(option)
+                        ? verticals.filter((n) => n !== option)
+                        : [...verticals, option];
+                      setVerticals(updated);
+                      emit({ verticals: updated });
                     }}
-                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                    max={new Date().getFullYear()}
+                    searchTerm={verticalSearchTerm}
+                    onSearchChange={setVerticalSearchTerm}
+                    isExcluded={excludeVerticals}
                   />
                 </div>
-              </div>
-            </>
-          )}
 
-          {/* 🔹 NEW FILTER: Status (Col 3) - Only for Lab Analysis View */}
-          {isLabAnalysisView && (
-            <>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                    <span>Labs</span>
-                    {loadingOptions && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    )}
-                  </span>
-                  <ExcludeToggle
-                    enabled={excludeLabs}
-                    onChange={(val) => {
-                      setExcludeLabs(val);
-                      emit({ excludeLabs: val });
+                {/* BD Names (Col 2/3) - Full Width */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                      <span>BD Names</span>
+                      {loadingOptions && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      )}
+                    </span>
+                    <ExcludeToggle
+                      enabled={excludeBds}
+                      onChange={(val) => {
+                        setExcludeBds(val);
+                        emit({ excludeBds: val });
+                      }}
+                    />
+                  </div>
+                  <CustomSelect
+                    label={`${
+                      bdNames.length === 0
+                        ? "Select BDs"
+                        : `${bdNames.length} selected`
+                    }`}
+                    icon={<Briefcase className="w-4 h-4 text-gray-400" />}
+                    options={filteredBdOptions}
+                    selected={bdNames}
+                    onToggle={(option) => {
+                      const updated = bdNames.includes(option)
+                        ? bdNames.filter((n) => n !== option)
+                        : [...bdNames, option];
+                      setBdNames(updated);
+                      emit({ bdNames: updated });
                     }}
+                    searchTerm={bdSearchTerm}
+                    onSearchChange={setBdSearchTerm}
+                    isExcluded={excludeBds}
                   />
                 </div>
-                <CustomSelect
-                  label={`${
-                    labNames.length === 0
-                      ? "Select Labs"
-                      : `${labNames.length} selecected`
-                  }`}
-                  icon={<FlaskConical className="w-4 h-4 text-gray-400" />}
-                  options={filteredLabOptions}
-                  selected={labNames}
-                  onToggle={(option) => {
-                    const updated = labNames.includes(option)
-                      ? labNames.filter((n) => n !== option)
-                      : [...labNames, option];
-                    setLabNames(updated);
-                    emit({ labNames: updated });
-                  }}
-                  searchTerm={labSearchTerm}
-                  onSearchChange={setLabSearchTerm}
-                  isExcluded={excludeLabs}
-                />
-              </div>
 
-              <div className="flex flex-col mt-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                    <span>Status</span>
-                  </span>
-                </div>
-                <CustomSelect
-                  label={`${
-                    status.length === 0
-                      ? "Select Status"
-                      : `${status.length} selected`
-                  }`}
-                  icon={<ListChecks className="w-4 h-4 text-gray-400" />}
-                  options={filteredStatusOptions}
-                  selected={status}
-                  onToggle={(option) => {
-                    const updated = status.includes(option)
-                      ? status.filter((n) => n !== option)
-                      : [...status, option];
-                    setStatus(updated);
-                    emit({ status: updated });
-                  }}
-                  searchTerm={statusSearchTerm}
-                  onSearchChange={setStatusSearchTerm}
-                  // isExcluded is not needed for a status filter
-                />
-              </div>
-            </>
-          )}
-
-          {/* Verticals, BD Names, Client Names - ONLY for Non-Lab Analysis View */}
-          {!isLabAnalysisView && (
-            <>
-              {/* Verticals (Col 3) */}
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                    <span>Verticals</span>
-                    {loadingOptions && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    )}
-                  </span>
-                  <ExcludeToggle
-                    enabled={excludeVerticals}
-                    onChange={(val) => {
-                      setExcludeVerticals(val);
-                      emit({ excludeVerticals: val });
+                {/* Client Names (Col 3/3) - Full Width */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                      <span>Client Names</span>
+                      {loadingOptions && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      )}
+                    </span>
+                    <ExcludeToggle
+                      enabled={excludeClients}
+                      onChange={(val) => {
+                        setExcludeClients(val);
+                        emit({ excludeClients: val });
+                      }}
+                    />
+                  </div>
+                  <CustomSelect
+                    label={`${
+                      clientNames.length === 0
+                        ? "Select Clients"
+                        : `${clientNames.length} selected`
+                    }`}
+                    icon={<Building2 className="w-4 h-4 text-gray-400" />}
+                    options={filteredClientOptions}
+                    selected={clientNames}
+                    onToggle={(option) => {
+                      const updated = clientNames.includes(option)
+                        ? clientNames.filter((n) => n !== option)
+                        : [...clientNames, option];
+                      setClientNames(updated);
+                      emit({ clientNames: updated });
                     }}
+                    searchTerm={clientSearchTerm}
+                    onSearchChange={setClientSearchTerm}
+                    isExcluded={excludeClients}
                   />
                 </div>
-                <CustomSelect
-                  label={`${
-                    verticals.length === 0
-                      ? "Select Verticals"
-                      : `${verticals.length} selecected`
-                  }`}
-                  icon={<Telescope className="w-4 h-4 text-gray-400" />}
-                  options={filteredVerticalOptions}
-                  selected={verticals}
-                  onToggle={(option) => {
-                    const updated = verticals.includes(option)
-                      ? verticals.filter((n) => n !== option)
-                      : [...verticals, option];
-                    setVerticals(updated);
-                    emit({ verticals: updated });
-                  }}
-                  searchTerm={verticalSearchTerm}
-                  onSearchChange={setVerticalSearchTerm}
-                  isExcluded={excludeVerticals}
-                />
-              </div>
-
-              {/* BD Names (Col 4) */}
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                    <span>BD Names</span>
-                    {loadingOptions && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    )}
-                  </span>
-                  <ExcludeToggle
-                    enabled={excludeBds}
-                    onChange={(val) => {
-                      setExcludeBds(val);
-                      emit({ excludeBds: val });
-                    }}
-                  />
-                </div>
-                <CustomSelect
-                  label={`${
-                    bdNames.length === 0
-                      ? "Select BDs"
-                      : `${bdNames.length} selecected`
-                  }`}
-                  icon={<Briefcase className="w-4 h-4 text-gray-400" />}
-                  options={filteredBdOptions}
-                  selected={bdNames}
-                  onToggle={(option) => {
-                    const updated = bdNames.includes(option)
-                      ? bdNames.filter((n) => n !== option)
-                      : [...bdNames, option];
-                    setBdNames(updated);
-                    emit({ bdNames: updated });
-                  }}
-                  searchTerm={bdSearchTerm}
-                  onSearchChange={setBdSearchTerm}
-                  isExcluded={excludeBds}
-                />
-              </div>
-
-              {/* Client Names (Col 5) */}
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                    <span>Client Names</span>
-                    {loadingOptions && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    )}
-                  </span>
-                  <ExcludeToggle
-                    enabled={excludeClients}
-                    onChange={(val) => {
-                      setExcludeClients(val);
-                      emit({ excludeClients: val });
-                    }}
-                  />
-                </div>
-                <CustomSelect
-                  label={`${
-                    clientNames.length === 0
-                      ? "Select Clients"
-                      : `${clientNames.length} selecected`
-                  }`}
-                  icon={<Building2 className="w-4 h-4 text-gray-400" />}
-                  options={filteredClientOptions}
-                  selected={clientNames}
-                  onToggle={(option) => {
-                    const updated = clientNames.includes(option)
-                      ? clientNames.filter((n) => n !== option)
-                      : [...clientNames, option];
-                    setClientNames(updated);
-                    emit({ clientNames: updated });
-                  }}
-                  searchTerm={clientSearchTerm}
-                  onSearchChange={setClientSearchTerm}
-                  isExcluded={excludeClients}
-                />
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </fieldset>
     </>

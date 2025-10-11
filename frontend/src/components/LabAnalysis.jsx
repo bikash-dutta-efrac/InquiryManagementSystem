@@ -1,19 +1,19 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import {
-  FlaskConical,
-  CheckCircle2,
-  XCircle,
-  Mail,
-  Activity,
-  UserCheck,
-  ClipboardList,
-  ChevronLeft,
-  ChevronRight,
-  Clock2,
-} from "lucide-react";
+  HiBeaker,
+  HiClock,
+  HiCheckCircle,
+  HiBuildingLibrary,
+  HiCurrencyRupee,
+} from "react-icons/hi2";
+import { MdHourglassFull, MdAccessTimeFilled, MdPaid } from "react-icons/md";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { FaMoneyBillWave } from "react-icons/fa";
 
 function formatAmount(num) {
-  if (num < 1000) return num;
+  if (num === null || num === undefined) return 0;
+  const number = parseFloat(num);
+  if (number < 1000) return number.toFixed(0);
   const si = [
     { value: 1, symbol: "" },
     { value: 1e3, symbol: "K" },
@@ -24,260 +24,297 @@ function formatAmount(num) {
   const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
   let i;
   for (i = si.length - 1; i > 0; i--) {
-    if (num >= si[i].value) {
+    if (number >= si[i].value) {
       break;
     }
   }
-  return (num / si[i].value).toFixed(2).replace(rx, "$1") + si[i].symbol;
+  return (number / si[i].value).toFixed(2).replace(rx, "$1") + si[i].symbol;
 }
 
-const LabAnalysisSummaryCard = ({ title, value, color, icon }) => {
-  const borderColor = `border-t-4 border-${color}-500`;
-  const bgColor = `bg-${color}-100`;
-  const iconColor = `text-${color}-600`;
+// Helper to format date/time strings from "MM/DD/YYYY HH:mm:ss"
+const formatDate = (dateString, includeTime = false) => {
+  if (!dateString) return "-";
+  try {
+    // The format is "MM/DD/YYYY HH:mm:ss"
+    const [datePart, timePart] = dateString.split(" ");
+    const [month, day, year] = datePart.split("/");
+    const isoDateString = `${year}-${month}-${day}T${timePart || "00:00:00"}`;
+
+    const date = new Date(isoDateString);
+    if (isNaN(date.getTime())) return dateString; // Return original if parsing fails
+
+    const dateOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
+    const timeOptions = { hour: "2-digit", minute: "2-digit", hour12: true };
+
+    let options = dateOptions;
+    if (includeTime) {
+      options = { ...dateOptions, ...timeOptions };
+    }
+
+    return date.toLocaleString("en-IN", options).replace(/, /g, " ");
+  } catch (e) {
+    return dateString;
+  }
+};
+
+const colorMap = {
+  blue: {
+    border: "border-t-4 border-blue-500",
+    bg: "bg-blue-100",
+    icon: "text-blue-600",
+  },
+  green: {
+    border: "border-t-4 border-green-500",
+    bg: "bg-green-100",
+    icon: "text-green-600",
+  },
+  red: {
+    border: "border-t-4 border-red-500",
+    bg: "bg-red-100",
+    icon: "text-red-600",
+  },
+  orange: {
+    border: "border-t-4 border-orange-500",
+    bg: "bg-orange-100",
+    icon: "text-orange-600",
+  },
+  teal: {
+    border: "border-t-4 border-teal-500",
+    bg: "bg-teal-100",
+    icon: "text-teal-600",
+  },
+  gray: {
+    border: "border-t-4 border-gray-500",
+    bg: "bg-gray-100",
+    icon: "text-gray-600",
+  },
+};
+
+const LabAnalysisSummaryCard = ({ title, value, color = "gray", icon }) => {
+  const colorClasses = colorMap[color] || colorMap.gray;
 
   return (
     <div
-      className={`bg-white p-6 rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105 ${borderColor}`}
+      className={`bg-white p-6 rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105 ${colorClasses.border}`}
     >
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold uppercase text-gray-500">
           {title}
         </span>
-        <div className={`p-2 mx-2 rounded-full ${bgColor} ${iconColor}`}>{icon}</div>
+        <div
+          className={`p-2 mx-2 rounded-full ${colorClasses.bg} ${colorClasses.icon}`}
+        >
+          {icon}
+        </div>
       </div>
       <p className="text-3xl font-bold text-gray-800">{value}</p>
     </div>
   );
 };
 
+// Simplified getStatusBadge logic to use the explicit 'status' field
 const getStatusBadge = (item) => {
-    const hodReview = item.hodReview?.toUpperCase() === 'Y';
-    const qaReview = item.qaReview?.toUpperCase() === 'Y';
-    const mailDate = item.mailDate;
+  const status =
+    item.status?.toUpperCase() || (item.mailingDate ? "RELEASED" : "PENDING");
 
-    if (mailDate) {
-        return {
-            text: "Reviewed by Mail",
-            badgeColor: "bg-yellow-100 text-yellow-700",
-            icon: <Mail className="w-4 h-4" />,
-        };
-    }
-
-    if (qaReview && item.labName === 'Drugs') {
-        return {
-            text: "Reviewed by QA",
-            badgeColor: "bg-blue-100 text-blue-700",
-            icon: <FlaskConical className="w-4 h-4" />,
-        };
-    }
-
-    if (hodReview) {
-        return {
-            text: "Reviewed by HO",
-            badgeColor: "bg-green-100 text-green-700",
-            icon: <CheckCircle2 className="w-4 h-4" />,
-        };
-    }
-    
+  if (status === "RELEASED") {
     return {
-        text: "Pending",
-        badgeColor: "bg-red-100 text-red-700",
-        icon: <XCircle className="w-4 h-4" />,
+      text: "Released",
+      badgeColor: "bg-green-100 text-green-700",
+      icon: <HiCheckCircle className="w-4 h-4" />,
     };
-};
+  }
 
-
-// --- Pagination Component ---
-const PaginationControls = ({
-  pageNumber,
-  pageSize,
-  currentDataLength, 
-  setFilters,
-}) => {
-  // Ensure pageNumber and pageSize are treated as numbers and default to 1 and 50 if needed
-  const currentPage = Number(pageNumber) || 1;
-  const size = Number(pageSize) || 50;
-    
-  // LOGIC: Next is disabled if the current page returned less than max size
-  const isLastPage = currentDataLength < size; 
-
-  const handlePageChange = (newPage) => {
-    if (newPage > 0) {
-      // ✅ Call setFilters with the filter object, as App.jsx's onFiltersChange 
-      // expects a new filter state object, not a state-updater function.
-      setFilters({ pageNumber: newPage });
-    }
+  // Fallback for "PENDING" or any other status
+  return {
+    text:
+      status === "PENDING"
+        ? "Pending"
+        : status.charAt(0) + status.slice(1).toLowerCase(),
+    badgeColor: "bg-red-100 text-red-700",
+    icon: <HiClock className="w-4 h-4" />,
   };
-
-  // Use the safe `currentPage` and `size` variables
-  // Check if currentDataLength is positive before calculating start/end
-  const startItem = currentDataLength > 0 ? (currentPage - 1) * size + 1 : 0;
-  const endItem = startItem + currentDataLength - 1;
-  
-  // We cannot display total pages, so we show the current range and an indicator for the next page
-  const totalDisplay = isLastPage 
-    ? "End of results" 
-    : `Page ${currentPage}`;
-
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-md border border-gray-100 my-4">
-      <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-        {currentDataLength > 0 ? (
-          <>
-            Showing results{" "}
-            <span className="font-semibold text-gray-900">{String(startItem)}</span> to{" "}
-            <span className="font-semibold text-gray-900">{String(endItem)}</span>
-          </>
-        ) : (
-          "No results found on this page."
-        )}
-      </div>
-      <div className="flex items-center space-x-2">
-        <button
-          // Disable if pageNumber is 1
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out shadow-sm"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          <span className="sr-only">Previous Page</span>
-        </button>
-        <div className="text-sm font-medium text-gray-700">
-            <span className="font-bold">{totalDisplay}</span>
-        </div>
-        <button
-          // Disable if current page fetched less than pageSize (50)
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={isLastPage}
-          className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out shadow-sm"
-        >
-          <ChevronRight className="w-5 h-5" />
-          <span className="sr-only">Next Page</span>
-        </button>
-      </div>
-    </div>
-  );
 };
 
-// --- Lab Analysis Table Component ---
+// PaginationControls component (Copied from InquiryList.jsx)
+const PaginationControls = ({
+  currentPage,
+  totalPages,
+  goToPage,
+  getPageNumbers,
+}) => (
+  <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-md border border-gray-100">
+    <button
+      onClick={() => goToPage(currentPage - 1)}
+      disabled={currentPage === 1}
+      className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition duration-150 ease-in-out shadow-sm"
+    >
+      <ChevronLeft className="w-5 h-5" />
+    </button>
+
+    <div className="flex items-center space-x-2 text-sm font-medium text-gray-700 my-2 sm:my-0">
+      {getPageNumbers().map((page, index) =>
+        page === "..." ? (
+          <span key={index} className="px-2 text-gray-500">
+            ...
+          </span>
+        ) : (
+          <button
+            key={page}
+            onClick={() => goToPage(page)}
+            className={`px-3 py-1 rounded-lg transition-colors duration-150 ${
+              page === currentPage
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+            }`}
+          >
+            {page}
+          </button>
+        )
+      )}
+      <span className="text-gray-500">of {totalPages}</span>
+    </div>
+
+    <button
+      onClick={() => goToPage(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      className="p-2 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition duration-150 ease-in-out shadow-sm"
+    >
+      <ChevronRight className="w-5 h-5" />
+    </button>
+  </div>
+);
+
+// Lab Analysis Table remains mostly the same, accepts paginated data
 const LabAnalysisTable = ({ data }) => {
   return (
-    // Add overflow-x-auto to the container to enable horizontal scrolling
-    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 overflow-x-auto">
+    <div className="bg-white p-6 my-4 rounded-2xl shadow-lg border border-gray-200 overflow-x-auto">
       <div className="min-w-full">
-        {/* Header Row for larger screens - adapted to 6 columns */}
-        <div className="hidden lg:grid grid-cols-[100px_2fr_1fr_2fr_1fr_1.5fr] gap-4 py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
-          <div className="col-span-1">Reg. Date</div>
-          {/* Combine RegNo and SubRegNo into a wider column */}
-          <div className="col-span-1">Reg. No. / Sub. Reg. No.</div>
-          <div className="col-span-1">Lab</div>
-          <div className="col-span-1">Parameter</div>
-          {/* Updated columns based on response data */}
-          <div className="col-span-1">Mail Date</div>
-          <div className="col-span-1">Review Status</div>
+        {/* Header Row for larger screens - 7 columns */}
+        <div className="hidden lg:grid grid-cols-[2fr_2.5fr_1fr_1fr_1fr_1fr_1fr_1.5fr] gap-4 py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[1000px]">
+          <div className="col-span-1">Registration No.</div>
+          <div className="col-span-1">Sample Name / Lab</div>
+          <div className="col-span-1">Registration Date</div>
+          <div className="col-span-1">TAT Date</div>
+          <div className="col-span-1">Mailing Date</div>
+          <div className="col-span-1">Completion Date</div>
+          <div className="col-span-1 text-right">Registration Value</div>
+          <div className="col-span-1">Status</div>
         </div>
 
         {/* Data Rows */}
         <div className="divide-y divide-gray-100">
           {data.map((item, index) => {
-            const regDate = new Date(item.regDate).toLocaleDateString();
-            const regNo = item.regNo || "-";
-            const subRegNo = item.subRegNo || "";
-            const labName = item.labName || "-";
-            const parameter = item.parameter || "-";
-            const mailDate = item.mailDate ? new Date(item.mailDate).toLocaleDateString() : "-";
+            const registrationNo = item.registrationNo || "-";
+            const sampleName = item.sampleName || "-";
+            const labName = item.lab || "-";
+
+            // New date/time fields
+            const regDateTime = formatDate(item.registrationDateTime, true);
+            const labTatDate = formatDate(item.labTatDate);
+            const mailingDate = formatDate(item.mailingDate);
+            const completionDateTime = formatDate(item.completionDateTime);
+            const value = `₹${formatAmount(item.distributedRegisVal)}`;
             const statusBadge = getStatusBadge(item);
 
             return (
               <div
-                key={regNo + index} // Use RegNo and index as key
+                key={registrationNo + index}
                 className="py-5 px-6 hover:bg-gray-50 transition-colors duration-200"
               >
                 {/* Card layout for small and medium screens (lg:hidden) */}
                 <div className="lg:hidden grid grid-cols-1 gap-6 p-6 mb-4 rounded-2xl shadow-lg bg-white border border-gray-100">
-                  {/* Header Section: Reg. No and Reg. Date */}
-                  <div className="flex items-center justify-between border-b pb-4 border-gray-200">
-                    <h3 className="text-xl font-extrabold text-gray-900 line-clamp-2">
-                        {regNo}
+                  {/* Header Section: Reg. No and Status */}
+                  <div className="flex items-start justify-between border-b pb-4 border-gray-200">
+                    <h3 className="text-base font-extrabold text-gray-900 line-clamp-2 pr-2">
+                      {registrationNo}
                     </h3>
-                    <span className="text-sm font-medium text-gray-500 flex-shrink-0 ml-4">
-                      {regDate}
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusBadge.badgeColor} flex-shrink-0`}
+                    >
+                      {statusBadge.icon}
+                      {statusBadge.text}
                     </span>
                   </div>
-                  
-                  {/* Sub Reg No */}
-                  {subRegNo && (
-                    <div className="text-sm font-medium text-gray-700 break-words">
-                        <span className="font-semibold text-gray-500">Sub Reg. No:</span> {subRegNo}
-                    </div>
-                  )}
 
-                  {/* Key Metrics Section: Lab and Parameter */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col items-start p-4 bg-blue-50 rounded-lg">
-                      <span className="text-xs font-semibold uppercase text-blue-700">
-                        Lab
-                      </span>
-                      <p className="mt-1 text-base font-bold text-blue-800 line-clamp-2">
-                        {labName}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-start p-4 bg-teal-50 rounded-lg">
-                      <span className="text-xs font-semibold uppercase text-teal-700">
-                        Parameter
-                      </span>
-                      <p className="mt-1 text-base font-bold text-teal-800 line-clamp-2">
-                        {parameter}
-                      </p>
-                    </div>
+                  {/* Sample & Lab */}
+                  <div className="text-sm font-medium text-gray-700 break-words">
+                    <span className="font-semibold text-gray-500 block">
+                      Sample:
+                    </span>
+                    <p className="font-bold text-gray-800">{sampleName}</p>
+                    <span className="font-semibold text-gray-500 block mt-2">
+                      Lab:
+                    </span>
+                    <p className="font-bold text-blue-700">{labName}</p>
                   </div>
 
-                  {/* Status */}
-                  <div className="flex flex-col space-y-3 pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Review Status
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${statusBadge.badgeColor}`}
-                      >
-                        {statusBadge.icon}
-                        {statusBadge.text}
+                  {/* Date & Value Grid */}
+                  <div className="grid grid-cols-2 gap-4 text-xs font-medium">
+                    <div className="flex flex-col">
+                      <span className="text-gray-500">Reg. Date:</span>
+                      <span className="text-gray-900 font-semibold">
+                        {regDateTime}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-700">
-                          Mail Date
-                        </span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {mailDate}
-                        </span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500">TAT Date:</span>
+                      <span className="text-gray-600 font-semibold">
+                        {labTatDate}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500">Completion Date:</span>
+                      <span className="text-gray-600 font-semibold">
+                        {completionDateTime.split(" ")[0]}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-right">
+                        Reg. Value:
+                      </span>
+                      <span className="text-gray-700 font-semibold text-right">
+                        {value}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Grid layout for large screens (hidden lg:grid) */}
-                {/* Use grid-cols-[...] for fixed/flexible widths and allow text wrapping */}
-                <div className="hidden lg:grid grid-cols-[100px_2fr_1fr_2fr_1fr_1.5fr] gap-4 items-center min-w-[900px]">
-                  <div className="col-span-1 text-sm text-gray-700 whitespace-nowrap">
-                    {regDate}
-                  </div>
-                  {/* RegNo and SubRegNo in the wide column */}
+                {/* Grid layout for large screens */}
+                <div className="hidden lg:grid grid-cols-[2fr_2.5fr_1fr_1fr_1fr_1fr_1fr_1.5fr] gap-4 items-center">
+                  {/* Reg. No */}
                   <div className="col-span-1 text-xs font-semibold text-gray-900 break-words pr-2">
-                    <p className="font-bold">{regNo}</p>
-                    <p className="text-gray-500 text-[11px]">{subRegNo}</p>
+                    {registrationNo}
                   </div>
-                  <div className="col-span-1 text-sm text-gray-700 break-words">
-                    {labName}
+                  {/* Sample Name / Lab */}
+                  <div className="col-span-1 text-sm text-gray-700 break-words pr-2">
+                    <p className="font-semibold text-xs text-gray-800 line-clamp-2">
+                      {sampleName}
+                    </p>
+                    <p className="text-xs text-blue-600 font-medium mt-1">
+                      {labName}
+                    </p>
                   </div>
-                  <div className="col-span-1 text-sm text-gray-700 break-words">
-                    {parameter}
+                  {/* Reg. Date */}
+                  <div className="col-span-1 text-xs text-gray-700 whitespace-nowrap">
+                    {regDateTime.split(" ")[0]}
                   </div>
-                  {/* Mail Date */}
-                  <div className="col-span-1 text-sm text-gray-700 font-medium break-words">
-                    {mailDate}
+                  {/* TAT Date */}
+                  <div className="col-span-1 text-xs text-gray-600 font-medium whitespace-nowrap">
+                    {labTatDate}
                   </div>
+                  <div className="col-span-1 text-xs text-gray-700 whitespace-nowrap">
+                    {completionDateTime.split(" ")[0]}
+                  </div>
+                  {/* Mailing Date */}
+                  <div className="col-span-1 text-xs text-gray-600 font-medium whitespace-nowrap">
+                    {mailingDate}
+                  </div>
+                  {/* Value */}
+                  <div className="col-span-1 text-sm text-gray-700 font-bold break-words text-right">
+                    {value}
+                  </div>
+                  {/* Status */}
                   <div className="col-span-1">
                     <span
                       className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${statusBadge.badgeColor}`}
@@ -296,321 +333,410 @@ const LabAnalysisTable = ({ data }) => {
   );
 };
 
-// --- Lab Summary Card Component (based on KpiCard2 structure) ---
 const LabSummaryKpiCard = ({ summaryData }) => {
-    // The summaryData is the user's 'my data' array
-    const items = summaryData || [];
-    const scrollRef = useRef(null);
+  const items = summaryData || [];
+  const scrollRef = useRef(null);
 
-    // Basic icons for the lab summary metrics (using lucide-react)
-    const IconMapping = {
-        registrations: <ClipboardList className="w-4 h-4" />,
-        parameters: <Activity className="w-4 h-4" />,
-        pending: <Clock2 className="w-4 h-4" />,
-        mailReviewed: <Mail className="w-4 h-4" />,
-        qaReviewed: <FlaskConical className="w-4 h-4" />,
-        hodReviewed: <UserCheck className="w-4 h-4" />,
-    };
+  const IconMapping = {
+    samples: <HiBeaker className="w-4 h-4" />,
+    released: <HiCheckCircle className="w-4 h-4" />,
+    pending: <HiClock className="w-4 h-4" />,
+    beforeTat: <HiCheckCircle className="w-3 h-3 text-green-500" />,
+    onTat: <MdAccessTimeFilled className="w-3 h-3 text-blue-500" />,
+    afterTat: <MdAccessTimeFilled className="w-3 h-3 text-orange-500" />,
+    beyondTat: <MdHourglassFull className="w-3 h-3" />,
+    totalValue: <HiBuildingLibrary className="w-4 h-4" />,
+    pendingValue: <HiCurrencyRupee className="w-4 h-4" />,
+    invoiced: <MdPaid className="w-3 h-3" />,
+    billed: <FaMoneyBillWave className="w-3 h-3" />,
+  };
 
-    if (!items.length) return null;
+  if (!items.length) return null;
 
-    // A fixed color for the border-top of the lab cards
-    const cardBorderColor = "#0384fcff"; // Orange shade (similar to KpiCard2's vertical color)
+  const cardBorderColor = "#0384fcff";
 
-    return (
-        <div className="relative flex rounded-2xl shadow-2xl bg-white border border-gray-100/50 group mb-12">
-            {/* Sidebar with vertical text */}
-            <div
-                className={`flex items-center justify-center p-4 rounded-l-2xl bg-linear-to-b from-cyan-700 via-blue-500 to-indigo-600`}
-                style={{ writingMode: "vertical-rl" }}
-            >
-                <h3 className="font-semibold text-m text-white" style={{transform: "rotate(180deg)"}}>Lab Summary</h3>
-            </div>
+  return (
+    <div className="relative flex rounded-2xl shadow-xl bg-white border border-gray-100/50 group mb-2">
+      <div
+        className={`flex items-center justify-center p-4 rounded-l-2xl bg-linear-to-b from-cyan-700 via-blue-500 to-indigo-600`}
+        style={{ writingMode: "vertical-rl" }}
+      >
+        <h3
+          className="font-semibold text-m text-white"
+          style={{ transform: "rotate(180deg)" }}
+        >
+          Lab Summary
+        </h3>
+      </div>
 
-            {/* Main content area */}
-            <div className="flex-grow-1 min-w-0 bg-white rounded-r-2xl">
-                {/* Scroll container with padding */}
-                <div
-                    ref={scrollRef}
-                    className="overflow-x-auto overflow-y-hidden scroll-smooth px-6 py-4"
-                    style={{ WebkitOverflowScrolling: "touch" }}
-                >
-                    {/* Flex wrapper for the cards */}
-                    <div className="flex flex-nowrap gap-4" role="list">
-                        {items.map((item, idx) => (
-                            <div
-                                key={idx}
-                                className="relative flex-shrink-0 min-w-[200px] max-w-[200px] h-auto p-4 rounded-xl border border-gray-200
-                                    shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out
+      <div className="flex-grow-1 min-w-0 bg-white rounded-r-2xl">
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto overflow-y-hidden scroll-smooth px-4 py-3" // Reduced horizontal padding
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {/* Flex wrapper for the cards */}
+          <div className="flex flex-nowrap gap-4" role="list">
+            {" "}
+            {/* Reduced gap */}
+            {items.map((item, idx) => (
+              <div
+                key={idx}
+                className="relative flex-shrink-0 
+                                    min-w-[220px] max-w-[220px] h-auto p-3 
+                                    rounded-xl border border-gray-200
+                                    shadow-md hover:shadow-lg transition-all duration-300 ease-in-out
                                     transform hover:-translate-y-0.5 bg-white flex flex-col justify-between
                                     border-t-4"
-                                style={{
-                                    borderColor: cardBorderColor,
-                                }}
-                                role="listitem"
-                                tabIndex={0}
-                            >
-                                {/* Card Title */}
-                                <div className="flex items-center mb-3 border-b pb-2 border-gray-100">
-                                    <h3 className="font-bold text-gray-900 line-clamp-2 text-md">
-                                        {item.labName ?? "N/A"}
-                                    </h3>
-                                </div>
-
-                                {/* Details Section */}
-                                <div className="space-y-2 text-xs text-gray-700">
-                                    <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5 font-semibold text-gray-800">
-                                            <span className="text-indigo-500">
-                                                {IconMapping.registrations}
-                                            </span>
-                                            <span>Registrations</span>
-                                        </span>
-                                        <span className="font-bold text-lg text-indigo-700">
-                                            {formatAmount(item.totalRegistrations ?? 0)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5">
-                                            <span className="text-green-500">
-                                                {IconMapping.parameters}
-                                            </span>
-                                            <span>Parameters</span>
-                                        </span>
-                                        <span className="font-semibold text-green-700">
-                                            {formatAmount(item.totalParameters ?? 0)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5">
-                                            <span className="text-gray-400">
-                                                {IconMapping.pending}
-                                            </span>
-                                            <span>Pending</span>
-                                        </span>
-                                        <span className="font-semibold text-gray-900">
-                                            {formatAmount((item.totalParameters - item.totalHodReviewed - item.totalMailReviewed - item.totalQaReviewed) ?? 0)}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Review Status - Separated for clarity */}
-                                <div className="mt-4 pt-2 border-t border-gray-200 space-y-2 text-xs text-gray-600">
-                                    <h4 className='text-sm font-bold text-gray-500 mb-1'>Reviewed By</h4>
-                                    <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5">
-                                            <span className="text-yellow-500">
-                                                {IconMapping.mailReviewed}
-                                            </span>
-                                            <span>Mail</span>
-                                        </span>
-                                        <span className="font-semibold text-yellow-600">
-                                            {formatAmount(item.totalMailReviewed ?? 0)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5">
-                                            <span className="text-blue-500">
-                                                {IconMapping.qaReviewed}
-                                            </span>
-                                            <span>QA</span>
-                                        </span>
-                                        <span className="font-semibold text-blue-600">
-                                            {formatAmount(item.totalQaReviewed ?? 0)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5">
-                                            <span className="text-teal-500">
-                                                {IconMapping.hodReviewed}
-                                            </span>
-                                            <span>HO</span>
-                                        </span>
-                                        <span className="font-semibold text-teal-600">
-                                            {formatAmount(item.totalHodReviewed ?? 0)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                style={{
+                  borderColor: cardBorderColor,
+                }}
+                role="listitem"
+                tabIndex={0}
+              >
+                {/* Card Title */}
+                <div className="flex items-center mb-3 border-b pb-2 border-gray-100">
+                  <h3 className="font-bold text-base text-gray-900 line-clamp-2">
+                    {" "}
+                    {/* Reduced font size */}
+                    {item.lab ?? "N/A"}
+                  </h3>
                 </div>
-            </div>
-        </div>
-    );
-};
 
+                {/* --- Group 1: Samples Overview (Reduced spacing/font) --- */}
+                <div className="space-y-2 text-xs text-gray-700">
+                  <h4 className="text-[10px] font-bold uppercase text-indigo-500 pb-1 border-b border-indigo-100">
+                    Samples Status
+                  </h4>
+                  {/* Total Samples */}
+                  <div className="flex items-center justify-between font-bold text-gray-900">
+                    <span className="flex items-center gap-2">
+                      <span className="text-indigo-500">
+                        {IconMapping.samples}
+                      </span>
+                      Total Samples
+                    </span>
+                    <span>{formatAmount(item.samples ?? 0)}</span>
+                  </div>
+                  {/* Released */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-green-600">
+                      <span className="text-green-500">
+                        {IconMapping.released}
+                      </span>
+                      Released
+                    </span>
+                    <span className="font-semibold">
+                      {formatAmount(item.released ?? 0)}
+                    </span>
+                  </div>
+                  {/* Pending */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-red-600">
+                      <span className="text-red-500">
+                        {IconMapping.pending}
+                      </span>
+                      Pending
+                    </span>
+                    <span className="font-semibold">
+                      {formatAmount(item.pendings ?? 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* --- Group 2: TAT Breakdown --- */}
+                <div className="mt-3 pt-2 space-y-2 text-xs text-gray-700 border-t border-gray-200">
+                  <h4 className="text-[10px] font-bold uppercase text-blue-500 pb-1 border-b border-blue-100">
+                    TAT Breakdown
+                  </h4>
+                  {/* Released Before TAT */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      {IconMapping.beforeTat}
+                      Released Before TAT
+                    </span>
+                    <span className="font-medium text-green-700">
+                      {formatAmount(item.releasedBeforeTat ?? 0)}
+                    </span>
+                  </div>
+                  {/* Released On TAT */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      {IconMapping.onTat}
+                      Released On TAT
+                    </span>
+                    <span className="font-medium text-blue-700">
+                      {formatAmount(item.releasedOnTat ?? 0)}
+                    </span>
+                  </div>
+                  {/* Released After TAT */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      {IconMapping.afterTat}
+                      Released After TAT
+                    </span>
+                    <span className="font-medium text-orange-700">
+                      {formatAmount(item.releasedAfterTat ?? 0)}
+                    </span>
+                  </div>
+                  {/* Pending Beyond TAT */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-red-600">
+                      {IconMapping.beyondTat}
+                      Pending Beyond TAT
+                    </span>
+                    <span className="font-medium text-red-700">
+                      {formatAmount(item.pendingBeyondTat ?? 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* --- Group 3: Value & Billing --- */}
+                <div className="mt-3 pt-2 space-y-2 text-xs text-gray-700 border-t border-gray-200">
+                  <h4 className="text-[10px] font-bold uppercase text-blue-500 pb-1 border-b border-blue-100">
+                    Value & Billing
+                  </h4>
+                  {/* Total Reg Value */}
+                  <div className="flex items-center justify-between font-bold text-gray-900">
+                    <span className="flex items-center gap-2">
+                      <span className="text-blue-500">
+                        {IconMapping.totalValue}
+                      </span>
+                      Total Value
+                    </span>
+                    <span>₹{formatAmount(item.totalRegValue ?? 0)}</span>
+                  </div>
+                  {/* Pending Reg Value */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-red-600">
+                      <span className="text-red-500">
+                        {IconMapping.pendingValue}
+                      </span>
+                      Pending Value
+                    </span>
+                    <span className="font-semibold">
+                      ₹{formatAmount(item.pendingRegValue ?? 0)}
+                    </span>
+                  </div>
+                  {/* Pending Billed */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-blue-500">
+                        {IconMapping.billed}
+                      </span>
+                      Pending Billed
+                    </span>
+                    <span className="font-medium">
+                      {formatAmount(item.pendingBilled ?? 0)}
+                    </span>
+                  </div>
+                  {/* Pending Invoiced */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-yellow-500">
+                        {IconMapping.invoiced}
+                      </span>
+                      Pending Invoiced
+                    </span>
+                    <span className="font-medium">
+                      {formatAmount(item.pendingInvoiced ?? 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function LabAnalysis({
   data = [],
   labSummaryData = [],
-  filters,
-  setFilters,
-  // We infer the loading state from the absence of data, but it's cleaner to get it from App.jsx's totalLoading state.
-  // We'll update this component to receive a `loading` prop for a cleaner approach.
+  // Removed: filters, setFilters props
 }) {
-    
-    // Instead of local state/cache, we'll derive fetching status from the props
-    // A fetch is considered *in progress* if both data arrays are empty,
-    // AND the App component's loading state is true (which is not passed, but let's assume it should be).
-    // Given the current structure, we have to rely on the data props.
-    // If the data is empty on initial load/fetch, we'll see the "No data found" message quickly.
-    
-    // For now, we'll define a simple isFetching based on prop values, assuming App.jsx handles the primary loading indicator.
-    // If you need a more explicit loader here for *just* the LabAnalysis content, you should pass a 'loading' prop from App.jsx.
-    // Since we are removing the internal caching/fetching state, we'll rely on the parent's global loader for now.
-    // The "No data found" check should be sufficient.
-    
-    const finalSummary = labSummaryData;
-    const finalData = data;
-    
-    // The 'loading' state is now an issue because we removed the internal logic.
-    // I will *temporarily* re-add a simple loading check that *assumes* the parent
-    // passed in `null` or `[]` during a fetch, but for a real-world app, you should
-    // pass `loading` from `App.jsx`.
-    // Let's create a *mock* loading state based on the current data state.
-    const isFetching = finalData.length === 0 && finalSummary.length === 0 && filters.pageNumber === 1;
+  const finalSummary = labSummaryData;
+  const rawData = data;
 
-  // --- Summary Logic (Unchanged) ---
+  // --- Client-side Pagination Logic (from InquiryList.jsx) ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  useEffect(() => {
+    // Reset to page 1 when new data is received (e.g., filter change in parent)
+    setCurrentPage(1);
+  }, [rawData]);
+
+  const totalPages = Math.ceil(rawData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = rawData.slice(startIndex, startIndex + itemsPerPage);
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  };
+  // -----------------------------------------------------------------
+
   const aggregateSummary = useMemo(() => {
-    
-    const totalParameters = finalSummary.reduce(
-      (sum, item) => sum + (item.totalParameters || 0),
+    // Aggregation logic
+    const totalSamples = finalSummary.reduce(
+      (sum, item) => sum + (item.samples || 0),
       0
     );
-    const byHod = finalSummary.reduce(
-      (sum, item) => sum + (item.totalHodReviewed || 0),
+    const totalReleased = finalSummary.reduce(
+      (sum, item) => sum + (item.released || 0),
       0
     );
-    const byQa = finalSummary.reduce(
-      (sum, item) => sum + (item.totalQaReviewed || 0),
+    const totalPending = finalSummary.reduce(
+      (sum, item) => sum + (item.pendings || 0),
       0
     );
-    const byMail = finalSummary.reduce(
-      (sum, item) => sum + (item.totalMailReviewed || 0),
+    const pendingBeyondTat = finalSummary.reduce(
+      (sum, item) => sum + (item.pendingBeyondTat || 0),
       0
     );
-
-    const totalPending = totalParameters - (byHod + byMail + byQa);
+    const pendingValue = finalSummary.reduce(
+      (sum, item) => sum + (item.pendingRegValue || 0),
+      0
+    );
 
     return {
-      totalPending: totalPending, 
-      totalQuantity: totalParameters,
-      byHod,
-      byQa,
-      byMail
+      totalSamples: totalSamples,
+      totalReleased: totalReleased,
+      totalPending: totalPending,
+      pendingBeyondTat: pendingBeyondTat,
+      pendingValue: pendingValue,
     };
   }, [finalSummary]);
 
   const finalKpiSummary =
     finalSummary.length > 0
       ? aggregateSummary
-      : { totalPending: 0, totalQuantity: 0, byHod: 0, byQa: 0, byMail: 0 };
-      
-  const showPagination = filters && setFilters; 
+      : {
+          totalSamples: 0,
+          totalPending: 0,
+          totalReleased: 0,
+          pendingBeyondTat: 0,
+          pendingValue: 0,
+        };
 
-  if (finalData.length === 0 && finalSummary.length === 0 && !isFetching) {
+  // Check for no data found
+  if (!rawData.length && !finalSummary.length) {
     return (
       <div className="text-center text-gray-600 py-20 text-xl font-medium rounded-2xl bg-white shadow-xl">
-        <span className="mr-2">❌</span> No lab analysis data found for the selected filters.
+        <span className="mr-2">❌</span> No lab analysis data found for the
+        selected filters.
       </div>
     );
   }
 
   return (
     <div>
-      {/* Lab Summary Card - uses labSummaryData prop directly */}
-      <LabSummaryKpiCard summaryData={finalSummary} />
-      <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl">
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-3xl font-extrabold text-gray-900 leading-tight">
+      <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl mb-8">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-extrabold text-gray-900 leading-tight">
             Lab Analysis Report
             <span className="block text-lg font-medium text-gray-500 mt-1">
               Summary and Detailed Log
             </span>
           </h2>
         </div>
-        
-        {/* Loader check - use the one in App.jsx or pass a 'loading' prop */}
-        {/* Using a placeholder loader check here based on filters to avoid passing new props */}
-        {finalData.length === 0 && finalSummary.length === 0 && filters.pageNumber !== 1 ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full"></div>
-            <p className="ml-3 text-lg text-gray-600">Loading analysis data...</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 my-8">
+          {/* Card 1: Total Samples */}
+          <LabAnalysisSummaryCard
+            title="Samples"
+            value={formatAmount(finalKpiSummary.totalSamples)}
+            color="blue"
+            icon={<HiBeaker className="w-5 h-5" />}
+          />
+
+          {/* Card 2: Total Value */}
+          <LabAnalysisSummaryCard
+            title="Released Samples"
+            value={`₹${formatAmount(finalKpiSummary.totalReleased)}`}
+            color="green"
+            icon={<HiCheckCircle className="w-5 h-5" />}
+          />
+
+          {/* Card 3: Pending Samples */}
+          <LabAnalysisSummaryCard
+            title="Pending Samples"
+            value={formatAmount(finalKpiSummary.totalPending) || 0}
+            color="red"
+            icon={<HiClock className="w-5 h-5" />}
+          />
+
+          <LabAnalysisSummaryCard
+            title="Pending Value"
+            value={formatAmount(finalKpiSummary.pendingValue) || 0}
+            color="orange"
+            icon={<MdPaid className="w-5 h-5" />}
+          />
+
+          {/* Card 5: Pending Beyond TAT */}
+          <LabAnalysisSummaryCard
+            title="Pending Beyond TAT"
+            value={formatAmount(finalKpiSummary.pendingBeyondTat)}
+            color="teal"
+            icon={<MdHourglassFull className="w-5 h-5" />}
+          />
+        </div>
+
+        <LabSummaryKpiCard summaryData={finalSummary} />
+      </div>
+      <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl">
+        {/* Total Rows Display */}
+        <div className="flex justify-between items-center pb-4">
+          <span className="block text-sm font-medium text-gray-500 mt-1">
+            Total Logs: {rawData.length}
+          </span>
+        </div>
+
+        {/* --- Pagination TOP --- */}
+        {totalPages > 1 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            goToPage={goToPage}
+            getPageNumbers={getPageNumbers}
+          />
+        )}
+
+        {/* 3. Main Content: Table - uses paginatedData */}
+        {paginatedData.length > 0 ? (
+          <LabAnalysisTable data={paginatedData} />
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
-              <LabAnalysisSummaryCard
-                title="Parameters"
-                value={formatAmount(finalKpiSummary.totalQuantity)}
-                color="teal"
-                icon={<Activity className="w-5 h-5" />}
-              />
-
-              <LabAnalysisSummaryCard
-                title="Pending"
-                value={formatAmount(finalKpiSummary.totalPending) || 0}
-                color="red"
-                icon={<Clock2 className="w-5 h-5" />}
-              />
-
-              {/* Verified by HO Card */}
-              <LabAnalysisSummaryCard
-                title="Reviewed by HOD"
-                value={formatAmount(finalKpiSummary.byHod)}
-                color="green"
-                icon={<CheckCircle2 className="w-5 h-5" />}
-              />
-
-              {/* Verified by QA Card */}
-              <LabAnalysisSummaryCard
-                title="Reviewed by QA"
-                value={formatAmount(finalKpiSummary.byQa)}
-                color="blue"
-                icon={<FlaskConical className="w-5 h-5" />}
-              />
-
-              {/* Verified by Email Card */}
-              <LabAnalysisSummaryCard
-                title="Reviewed by Email"
-                value={formatAmount(finalKpiSummary.byMail)}
-                color="yellow"
-                icon={<Mail className="w-5 h-5" />}
-              />
+          // This case handles when the rawData is loaded but the current page is empty (e.g., if total pages > 0 but the last page is clicked)
+          rawData.length > 0 && (
+            <div className="text-center text-gray-600 py-10 my-4 text-xl font-medium rounded-2xl bg-white shadow-xl border border-gray-200">
+              No logs found on this page.
             </div>
+          )
+        )}
 
-            {/* --- Pagination TOP --- */}
-            {showPagination && (
-              <PaginationControls
-                pageNumber={filters.pageNumber}
-                pageSize={filters.pageSize}
-                currentDataLength={finalData.length}
-                setFilters={setFilters}
-              />
-            )}
-
-            {/* 3. Main Content: Table */}
-            {finalData.length > 0 && <LabAnalysisTable data={finalData} />}
-
-            {/* Only show this if summary is loaded but table data is empty (e.g., last page) */}
-            {finalData.length === 0 && finalSummary.length > 0 && (
-              <div className="text-center text-gray-600 py-10 text-xl font-medium rounded-2xl bg-white shadow-xl border border-gray-200">
-                Detailed log (table) is unavailable for this page or filter
-                combination.
-              </div>
-            )}
-
-            {/* --- Pagination BOTTOM --- */}
-            {showPagination && (
-              <PaginationControls
-                pageNumber={filters.pageNumber}
-                pageSize={filters.pageSize}
-                currentDataLength={finalData.length}
-                setFilters={setFilters}
-              />
-            )}
-          </>
+        {/* --- Pagination BOTTOM --- */}
+        {totalPages > 1 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            goToPage={goToPage}
+            getPageNumbers={getPageNumbers}
+          />
         )}
       </div>
     </div>
