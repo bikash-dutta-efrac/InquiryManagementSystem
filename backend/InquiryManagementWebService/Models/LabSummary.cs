@@ -2,12 +2,17 @@
 {
     public class LabSummary
     {
-        public string LabName { get; set; }
-        public int TotalRegistrations { get; set; }
-        public int TotalSubRegistrations { get; set; }
-        public int TotalParameters { get; set; }
-        public int TotalMailReviewed { get; set; }
-        public int TotalQaReviewed { get; set; }
-        public int TotalHodReviewed { get; set; }
+        public string Lab { get; set; }
+        public int Samples { get; set; }
+        public int Pendings { get; set; }
+        public int Released { get; set; }
+        public int ReleasedBeforeTat { get; set; }
+        public int ReleasedOnTat { get; set; }
+        public int ReleasedAfterTat { get; set; }
+        public int PendingBeyondTat { get; set; }
+        public int PendingInvoiced { get; set; }
+        public int PendingBilled { get; set; }
+        public double TotalRegValue { get; set; }
+        public double PendingRegValue { get; set; }
     }
 }

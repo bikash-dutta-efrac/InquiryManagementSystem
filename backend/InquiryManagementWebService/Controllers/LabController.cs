@@ -1,11 +1,10 @@
 ﻿using InquiryManagementWebService.Models;
 using InquiryManagementWebService.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InquiryManagementWebService.Controllers
 {
-    [Route("api/labs")]
+    [Route("api/lab")]
     [ApiController]
     public class LabController : Controller
     {
@@ -16,12 +15,12 @@ namespace InquiryManagementWebService.Controllers
             _labRepository = labRepository;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> GetLabParameters([FromBody] LabRequest request)
+        [HttpPost("samples")]
+        public async Task<IActionResult> GetLabParameters([FromBody] SampleSummaryRequest request)
         {
             try
             {
-                var response = await _labRepository.GetLabParameters(request);
+                var response = await _labRepository.GetSampleSummary(request);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -30,8 +29,8 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpPost("summary")]
-        public async Task<IActionResult> GetLabSummary([FromBody] LabRequest request)
+        [HttpPost("summaries")]
+        public async Task<IActionResult> GetLabSummary([FromBody] SampleSummaryRequest request)
         {
             try
             {
@@ -45,7 +44,7 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost("names")]
-        public async Task<IActionResult> GetLabs([FromBody] LabRequest request)
+        public async Task<IActionResult> GetLabs([FromBody] SampleSummaryRequest request)
         {
             try
             {

@@ -65,15 +65,15 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.LabController",
-    "Method": "GetLabParameters",
-    "RelativePath": "api/labs",
+    "Method": "GetLabs",
+    "RelativePath": "api/lab/names",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
         "Name": "request",
-        "Type": "InquiryManagementWebService.Models.LabRequest",
+        "Type": "InquiryManagementWebService.Models.SampleSummaryRequest",
         "IsRequired": true
       }
     ],
@@ -81,15 +81,15 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.LabController",
-    "Method": "GetLabs",
-    "RelativePath": "api/labs/names",
+    "Method": "GetLabParameters",
+    "RelativePath": "api/lab/samples",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
         "Name": "request",
-        "Type": "InquiryManagementWebService.Models.LabRequest",
+        "Type": "InquiryManagementWebService.Models.SampleSummaryRequest",
         "IsRequired": true
       }
     ],
@@ -98,14 +98,14 @@
   {
     "ContainingType": "InquiryManagementWebService.Controllers.LabController",
     "Method": "GetLabSummary",
-    "RelativePath": "api/labs/summary",
+    "RelativePath": "api/lab/summaries",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
         "Name": "request",
-        "Type": "InquiryManagementWebService.Models.LabRequest",
+        "Type": "InquiryManagementWebService.Models.SampleSummaryRequest",
         "IsRequired": true
       }
     ],

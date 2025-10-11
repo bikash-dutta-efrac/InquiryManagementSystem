@@ -4,8 +4,8 @@ namespace InquiryManagementWebService.Repositories
 {
     public interface ILabRepository
     {
-        Task<IEnumerable<Lab>> GetLabParameters(LabRequest request);
-        Task<IEnumerable<LabSummary>> GetLabSummary(LabRequest request);
-        Task<IEnumerable<string>> GetLabsAsync(LabRequest request);
+        Task<IEnumerable<SampleSummary>> GetSampleSummary(SampleSummaryRequest request);
+        Task<IEnumerable<LabSummary>> GetLabSummary(SampleSummaryRequest request);
+        Task<IEnumerable<string>> GetLabsAsync(SampleSummaryRequest request);
     }
 }

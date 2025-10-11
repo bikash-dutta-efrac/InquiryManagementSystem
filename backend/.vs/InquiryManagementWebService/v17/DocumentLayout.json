@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "D:\\react-projects\\inquery-ms\\backend\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\samplesummary.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\samplesummary.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\repositories\\labrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\repositories\\labrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -11,20 +15,8 @@
       "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\labsummary.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\lab.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\lab.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\labrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\labrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\inquiryrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\inquiryrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\repositories\\inquiryrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\repositories\\inquiryrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\samplesummaryrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\samplesummaryrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\controllers\\labcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -37,6 +29,14 @@
     {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\repositories\\inquiryrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\repositories\\inquiryrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\inquiryrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\inquiryrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\inquiry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -90,124 +90,123 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "LabRequest.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\LabRequest.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\LabRequest.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\LabRequest.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Models\\LabRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T06:24:01.927Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "ILabRepository.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\ILabRepository.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\ILabRepository.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\ILabRepository.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Repositories\\ILabRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAABDAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T04:46:21.071Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "LabController.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\LabController.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Controllers\\LabController.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\LabController.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Controllers\\LabController.cs",
-              "ViewState": "AgIAACkAAAAAAAAAAAAwwDwAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-03T12:30:36.263Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "LabRepository.cs",
               "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\LabRepository.cs",
               "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\LabRepository.cs",
               "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\LabRepository.cs",
               "RelativeToolTip": "InquiryManagementWebService\\Repositories\\LabRepository.cs",
-              "ViewState": "AgIAAL8AAAAAAAAAAAAwwMYAAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAALQAAAAAAAAAAAAowLwAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-03T12:08:50.693Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "InquiryRepository.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
-              "ViewState": "AgIAAKcAAAAAAAAAAAAAALUAAAAUAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T11:46:19.291Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "InquiryRequest.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\InquiryRequest.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\InquiryRequest.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\InquiryRequest.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Models\\InquiryRequest.cs",
-              "ViewState": "AgIAAAcAAAAAAAAAAAA2wA4AAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T11:12:42.243Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Lab.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\Lab.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\Lab.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\Lab.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Models\\Lab.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAtAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "SampleSummary.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\SampleSummary.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\SampleSummary.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\SampleSummary.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Models\\SampleSummary.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAAA4AAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-03T12:09:26.371Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Program.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Program.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Program.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Program.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-16T11:48:35.755Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "SampleSummaryRequest.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\SampleSummaryRequest.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\SampleSummaryRequest.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\SampleSummaryRequest.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Models\\SampleSummaryRequest.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAxwAoAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T06:24:01.927Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ILabRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\ILabRepository.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\ILabRepository.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\ILabRepository.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Repositories\\ILabRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T04:46:21.071Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "LabController.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\LabController.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Controllers\\LabController.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\LabController.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Controllers\\LabController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-03T12:30:36.263Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "LabSummary.cs",
               "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\LabSummary.cs",
               "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\LabSummary.cs",
               "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\LabSummary.cs",
               "RelativeToolTip": "InquiryManagementWebService\\Models\\LabSummary.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAwAAAAAAAAAA==",
+              "ViewState": "AgIAAAQAAAAAAAAAAAA1wA8AAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-04T06:42:20.135Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Program.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Program.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Program.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Program.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAAADEAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 7,
+              "Title": "InquiryRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Repositories\\InquiryRepository.cs",
+              "ViewState": "AgIAAJIAAAAAAAAAAAAAAJ4AAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-16T11:48:35.755Z",
+              "WhenOpened": "2025-09-06T11:46:19.291Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "InquiryRequest.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\InquiryRequest.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\InquiryRequest.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\InquiryRequest.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Models\\InquiryRequest.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAywA4AAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-09T11:12:42.243Z"
             },
             {
               "$type": "Document",

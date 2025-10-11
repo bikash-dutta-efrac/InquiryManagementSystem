@@ -129,7 +129,7 @@
         }
       }
     },
-    "/api/labs": {
+    "/api/lab/samples": {
       "post": {
         "tags": [
           "Lab"
@@ -138,17 +138,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             }
           }
@@ -160,7 +160,7 @@
         }
       }
     },
-    "/api/labs/summary": {
+    "/api/lab/summaries": {
       "post": {
         "tags": [
           "Lab"
@@ -169,17 +169,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             }
           }
@@ -191,7 +191,7 @@
         }
       }
     },
-    "/api/labs/names": {
+    "/api/lab/names": {
       "post": {
         "tags": [
           "Lab"
@@ -200,17 +200,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/LabRequest"
+                "$ref": "#/components/schemas/SampleSummaryRequest"
               }
             }
           }
@@ -316,57 +316,6 @@
         },
         "additionalProperties": false
       },
-      "LabRequest": {
-        "type": "object",
-        "properties": {
-          "fromDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "toDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "month": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "reviewsBy": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "labs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "excludeLabs": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
       "ProjectionRequest": {
         "type": "object",
         "properties": {
@@ -405,6 +354,46 @@
             "nullable": true
           },
           "excludeBDs": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SampleSummaryRequest": {
+        "type": "object",
+        "properties": {
+          "fromDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "toDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "month": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "statusFilter": {
+            "type": "string",
+            "nullable": true
+          },
+          "labs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "excludeLabs": {
             "type": "boolean"
           }
         },
