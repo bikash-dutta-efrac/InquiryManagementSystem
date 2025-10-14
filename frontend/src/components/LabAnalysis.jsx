@@ -41,7 +41,7 @@ const formatDate = (dateString, includeTime = false) => {
     const isoDateString = `${year}-${month}-${day}T${timePart || "00:00:00"}`;
 
     const date = new Date(isoDateString);
-    if (isNaN(date.getTime())) return dateString; // Return original if parsing fails
+    if (isNaN(date.getTime())) return dateString;
 
     const dateOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
     const timeOptions = { hour: "2-digit", minute: "2-digit", hour12: true };
@@ -341,7 +341,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
     samples: <HiBeaker className="w-4 h-4" />,
     released: <HiCheckCircle className="w-4 h-4" />,
     pending: <HiClock className="w-4 h-4" />,
-    beforeTat: <HiCheckCircle className="w-3 h-3 text-green-500" />,
+    beforeTat: <HiCheckCircle className="w-3 h-3 text-green-600" />,
     onTat: <MdAccessTimeFilled className="w-3 h-3 text-blue-500" />,
     afterTat: <MdAccessTimeFilled className="w-3 h-3 text-orange-500" />,
     beyondTat: <MdHourglassFull className="w-3 h-3" />,
@@ -395,7 +395,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                 tabIndex={0}
               >
                 {/* Card Title */}
-                <div className="flex items-center mb-3 border-b pb-2 border-gray-100">
+                <div className="flex items-center mb-3">
                   <h3 className="font-bold text-base text-gray-900 line-clamp-2">
                     {" "}
                     {/* Reduced font size */}
@@ -419,73 +419,68 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                     <span>{formatAmount(item.samples ?? 0)}</span>
                   </div>
                   {/* Released */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pb-1 border-b border-indigo-100">
                     <span className="flex items-center gap-2 text-green-600">
                       <span className="text-green-500">
                         {IconMapping.released}
                       </span>
                       Released
                     </span>
-                    <span className="font-semibold">
+                    <span className="font-semibold text-green-600">
                       {formatAmount(item.released ?? 0)}
                     </span>
                   </div>
+                  <div className="flex items-center justify-between text-[11px] ml-1">
+                    <span className="flex items-center gap-1.5">
+                      Released Before TAT
+                    </span>
+                    <span className="font-medium">
+                      {formatAmount(item.releasedBeforeTat ?? 0)}
+                    </span>
+                  </div>
+                  {/* Released On TAT */}
+                  <div className="flex items-center justify-between text-[11px] ml-1">
+                    <span className="flex items-center gap-1.5">
+                      Released On TAT
+                    </span>
+                    <span className="font-medium">
+                      {formatAmount(item.releasedOnTat ?? 0)}
+                    </span>
+                  </div>
+                  {/* Released After TAT */}
+                  <div className="flex items-center justify-between text-[11px] ml-1">
+                    <span className="flex items-center gap-1.5">
+                      Released After TAT
+                    </span>
+                    <span className="font-medium">
+                      {formatAmount(item.releasedAfterTat ?? 0)}
+                    </span>
+                  </div>
                   {/* Pending */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pb-1 border-b border-indigo-100">
                     <span className="flex items-center gap-2 text-red-600">
                       <span className="text-red-500">
                         {IconMapping.pending}
                       </span>
                       Pending
                     </span>
-                    <span className="font-semibold">
+                    <span className="font-semibold text-red-500">
                       {formatAmount(item.pendings ?? 0)}
                     </span>
                   </div>
-                </div>
-
-                {/* --- Group 2: TAT Breakdown --- */}
-                <div className="mt-3 pt-2 space-y-2 text-xs text-gray-700 border-t border-gray-200">
-                  <h4 className="text-[10px] font-bold uppercase text-blue-500 pb-1 border-b border-blue-100">
-                    TAT Breakdown
-                  </h4>
-                  {/* Released Before TAT */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between text-[11px] ml-1">
                     <span className="flex items-center gap-1.5">
-                      {IconMapping.beforeTat}
-                      Released Before TAT
+                      Pending Before TAT
                     </span>
-                    <span className="font-medium text-green-700">
-                      {formatAmount(item.releasedBeforeTat ?? 0)}
+                    <span className="font-medium">
+                      {formatAmount(item.pendingBeforeTat ?? 0)}
                     </span>
                   </div>
-                  {/* Released On TAT */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between text-[11px] ml-1">
                     <span className="flex items-center gap-1.5">
-                      {IconMapping.onTat}
-                      Released On TAT
-                    </span>
-                    <span className="font-medium text-blue-700">
-                      {formatAmount(item.releasedOnTat ?? 0)}
-                    </span>
-                  </div>
-                  {/* Released After TAT */}
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      {IconMapping.afterTat}
-                      Released After TAT
-                    </span>
-                    <span className="font-medium text-orange-700">
-                      {formatAmount(item.releasedAfterTat ?? 0)}
-                    </span>
-                  </div>
-                  {/* Pending Beyond TAT */}
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-red-600">
-                      {IconMapping.beyondTat}
                       Pending Beyond TAT
                     </span>
-                    <span className="font-medium text-red-700">
+                    <span className="font-medium">
                       {formatAmount(item.pendingBeyondTat ?? 0)}
                     </span>
                   </div>
@@ -518,30 +513,6 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                       ₹{formatAmount(item.pendingRegValue ?? 0)}
                     </span>
                   </div>
-                  {/* Pending Billed */}
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-blue-500">
-                        {IconMapping.billed}
-                      </span>
-                      Pending Billed
-                    </span>
-                    <span className="font-medium">
-                      {formatAmount(item.pendingBilled ?? 0)}
-                    </span>
-                  </div>
-                  {/* Pending Invoiced */}
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-yellow-500">
-                        {IconMapping.invoiced}
-                      </span>
-                      Pending Invoiced
-                    </span>
-                    <span className="font-medium">
-                      {formatAmount(item.pendingInvoiced ?? 0)}
-                    </span>
-                  </div>
                 </div>
               </div>
             ))}
@@ -555,17 +526,15 @@ const LabSummaryKpiCard = ({ summaryData }) => {
 export default function LabAnalysis({
   data = [],
   labSummaryData = [],
-  // Removed: filters, setFilters props
+  sampleOverview = null,
 }) {
   const finalSummary = labSummaryData;
   const rawData = data;
 
-  // --- Client-side Pagination Logic (from InquiryList.jsx) ---
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
   useEffect(() => {
-    // Reset to page 1 when new data is received (e.g., filter change in parent)
     setCurrentPage(1);
   }, [rawData]);
 
@@ -590,52 +559,8 @@ export default function LabAnalysis({
     for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   };
-  // -----------------------------------------------------------------
+  
 
-  const aggregateSummary = useMemo(() => {
-    // Aggregation logic
-    const totalSamples = finalSummary.reduce(
-      (sum, item) => sum + (item.samples || 0),
-      0
-    );
-    const totalReleased = finalSummary.reduce(
-      (sum, item) => sum + (item.released || 0),
-      0
-    );
-    const totalPending = finalSummary.reduce(
-      (sum, item) => sum + (item.pendings || 0),
-      0
-    );
-    const pendingBeyondTat = finalSummary.reduce(
-      (sum, item) => sum + (item.pendingBeyondTat || 0),
-      0
-    );
-    const pendingValue = finalSummary.reduce(
-      (sum, item) => sum + (item.pendingRegValue || 0),
-      0
-    );
-
-    return {
-      totalSamples: totalSamples,
-      totalReleased: totalReleased,
-      totalPending: totalPending,
-      pendingBeyondTat: pendingBeyondTat,
-      pendingValue: pendingValue,
-    };
-  }, [finalSummary]);
-
-  const finalKpiSummary =
-    finalSummary.length > 0
-      ? aggregateSummary
-      : {
-          totalSamples: 0,
-          totalPending: 0,
-          totalReleased: 0,
-          pendingBeyondTat: 0,
-          pendingValue: 0,
-        };
-
-  // Check for no data found
   if (!rawData.length && !finalSummary.length) {
     return (
       <div className="text-center text-gray-600 py-20 text-xl font-medium rounded-2xl bg-white shadow-xl">
@@ -656,11 +581,11 @@ export default function LabAnalysis({
             </span>
           </h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 my-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 my-8">
           {/* Card 1: Total Samples */}
           <LabAnalysisSummaryCard
             title="Samples"
-            value={formatAmount(finalKpiSummary.totalSamples)}
+            value={formatAmount(sampleOverview.totalSamples)}
             color="blue"
             icon={<HiBeaker className="w-5 h-5" />}
           />
@@ -668,7 +593,7 @@ export default function LabAnalysis({
           {/* Card 2: Total Value */}
           <LabAnalysisSummaryCard
             title="Released Samples"
-            value={`₹${formatAmount(finalKpiSummary.totalReleased)}`}
+            value={`${formatAmount(sampleOverview.totalReleased)}`}
             color="green"
             icon={<HiCheckCircle className="w-5 h-5" />}
           />
@@ -676,25 +601,18 @@ export default function LabAnalysis({
           {/* Card 3: Pending Samples */}
           <LabAnalysisSummaryCard
             title="Pending Samples"
-            value={formatAmount(finalKpiSummary.totalPending) || 0}
+            value={formatAmount(sampleOverview.totalPending) || 0}
             color="red"
             icon={<HiClock className="w-5 h-5" />}
           />
 
           <LabAnalysisSummaryCard
             title="Pending Value"
-            value={formatAmount(finalKpiSummary.pendingValue) || 0}
+            value={`₹${formatAmount(sampleOverview.totalPendingRegVal)}` || 0}
             color="orange"
             icon={<MdPaid className="w-5 h-5" />}
           />
 
-          {/* Card 5: Pending Beyond TAT */}
-          <LabAnalysisSummaryCard
-            title="Pending Beyond TAT"
-            value={formatAmount(finalKpiSummary.pendingBeyondTat)}
-            color="teal"
-            icon={<MdHourglassFull className="w-5 h-5" />}
-          />
         </div>
 
         <LabSummaryKpiCard summaryData={finalSummary} />

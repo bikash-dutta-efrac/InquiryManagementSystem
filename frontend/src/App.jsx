@@ -71,6 +71,7 @@ export default function App() {
   const { 
     sampleSummaries,
     labSummaries,
+    sampleOverview,
     loading: labAnalysisLoading, 
     totalCount 
   } = useLabAnalysis(
@@ -378,7 +379,8 @@ export default function App() {
                 {/* 🟢 PASS FILTERS, SETFILTERS, AND totalCount */}
                 <LabAnalysis 
                     data={sampleSummaries} 
-                    labSummaryData={labSummaries} 
+                    labSummaryData={labSummaries}
+                    sampleOverview={sampleOverview}
                     filters={filters}
                     setFilters={onFiltersChange}
                     totalCount={totalCount}

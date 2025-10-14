@@ -24,29 +24,26 @@ import {
 } from "react-icons/md";
 
 function formatAmount(num) {
-  if (num < 100) return num;
-  if (num < 100000) {
-    let k = num / 1000;
-    let str = k.toFixed(2);
-    if (str.length > 5) {
-      str = Math.round(k).toString();
+  if (num === null || num === undefined) return 0;
+  const number = parseFloat(num);
+  if (number < 1000) return number.toFixed(0);
+  const si = [
+    { value: 1, symbol: "" },
+    { value: 1e3, symbol: "K" },
+    { value: 1e5, symbol: "L" },
+    { value: 1e7, symbol: "Cr" },
+    { value: 1e9, symbol: "B" },
+  ];
+  const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+  let i;
+  for (i = si.length - 1; i > 0; i--) {
+    if (number >= si[i].value) {
+      break;
     }
-    if (str.length > 5) {
-      str = str.slice(0, 5);
-    }
-    return `${str}K`;
-  } else {
-    let lakhs = num / 100000;
-    let str = lakhs.toFixed(2);
-    if (str.length > 5) {
-      str = Math.round(lakhs).toString();
-    }
-    if (str.length > 5) {
-      str = str.slice(0, 5);
-    }
-    return `${str}L`;
   }
+  return (number / si[i].value).toFixed(2).replace(rx, "$1") + si[i].symbol;
 }
+
 
 function KpiCard1({ title, value, chip, icon, gradient }) {
   return (

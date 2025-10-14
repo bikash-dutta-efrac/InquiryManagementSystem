@@ -23,6 +23,16 @@ function buildRequestBody(filters = {}) {
   };
 }
 
+export async function getSampleOverview(filters = {}) {
+  const body = buildRequestBody(filters);
+
+  const response = await axios.post(`${API_BASE_URL}/lab/sample-overview`, body, {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  return response.data;
+}
+
 export async function getLabSummaries(filters = {}) {
   const body = buildRequestBody(filters);
 
