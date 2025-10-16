@@ -58,7 +58,7 @@ const CustomSelect = ({
     <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
-        // 🚨 ADDED HEIGHT FOR ALIGNMENT: h-[54px] to align with date/month inputs
+        // 圷 ADDED HEIGHT FOR ALIGNMENT: h-[54px] to align with date/month inputs
         className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition-shadow cursor-pointer h-[54px]"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -167,7 +167,6 @@ const ExcludeToggle = ({ enabled, onChange }) => {
 };
 
 export default function Filters({
-  data = [],
   onChange,
   onResetAll,
   disabled,
@@ -175,14 +174,18 @@ export default function Filters({
 }) {
   const today = new Date();
 
+  // 🟢 NEW: Define the start date for "All Data"
+  const allDataRangeStart = new Date(2025, 3, 1).toISOString().split("T")[0]; // April is month index 3 (0-based)
+  const defaultToDate = today.toISOString().split("T")[0];
+
   const defaultRange = {
     start: today.toISOString().split("T")[0],
-    end: today.toISOString().split("T")[0],
+    end: defaultToDate,
   };
   const defaultMonth = (today.getMonth() + 1).toString();
   const defaultYear = today.getFullYear().toString();
 
-  const [filterType, setFilterType] = useState("range");
+  const [filterType, setFilterType] = useState("all"); // 🟢 UPDATED: Default to "all"
   const [range, setRange] = useState(defaultRange);
   const [month, setMonth] = useState(defaultMonth);
   const [year, setYear] = useState(defaultYear);
@@ -262,6 +265,16 @@ export default function Filters({
     };
 
     const nextFilterType = nextState.filterType ?? filterType;
+    
+    if (nextFilterType === "all") { // 🟢 NEW: "All Data" case
+        return {
+            ...base,
+            filterType: "all",
+            fromDate: allDataRangeStart,
+            toDate: defaultToDate,
+        };
+    }
+
     if (nextFilterType === "range") {
       const nextRange = nextState.range ?? range;
       if (nextRange.start && nextRange.end) {
@@ -289,9 +302,10 @@ export default function Filters({
   const emit = (next = {}) => {
     const nextLabStatusFilter = next.labStatusFilter ?? labStatusFilter;
     const isLab = next.queryType === "labAnalysis" || isLabAnalysisView;
+    const nextFilterType = next.filterType ?? filterType; // Use the next filterType
 
     const payload = {
-      filterType,
+      filterType: nextFilterType,
       range,
       month,
       year,
@@ -320,7 +334,7 @@ export default function Filters({
 
   // Reset logic
   const handleReset = () => {
-    setFilterType("range");
+    setFilterType("all"); // 🟢 UPDATED: Reset to "all"
     setRange(defaultRange);
     setMonth(defaultMonth);
     setYear(defaultYear);
@@ -336,7 +350,7 @@ export default function Filters({
     setLabNames([]);
     onResetAll?.();
     emit({
-      filterType: "range",
+      filterType: "all", // 🟢 UPDATED: Reset to "all"
       range: defaultRange,
       month: defaultMonth,
       year: defaultYear,
@@ -353,7 +367,7 @@ export default function Filters({
     });
   };
 
-  // 🔹 Debounced fetch utility
+  // 隼 Debounced fetch utility
   const useDebouncedEffect = (effect, deps, delay) => {
     useEffect(() => {
       const handler = setTimeout(() => effect(), delay);
@@ -533,9 +547,10 @@ export default function Filters({
             
             {/* Left side: Toggles and Inputs */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
-                {/* Filter Type Tabs (Date Range / Month & Year) - Always visible */}
+                {/* Filter Type Tabs (All Data / Date Range / Month & Year) - Always visible */}
                 <div className="flex gap-2 bg-white rounded-2xl p-2 shadow-inner border border-gray-200 flex-shrink-0">
-                    {["range", "month"].map((ft) => (
+                    {/* 🟢 NEW: "All Data" Tab */}
+                    {["all", "range", "month"].map((ft) => (
                     <button
                         key={ft}
                         onClick={() => {
@@ -548,93 +563,96 @@ export default function Filters({
                             : "bg-white text-gray-700 hover:bg-gray-100 hover:text-blue-600"
                         }`}
                     >
-                        {ft === "range" ? "Date Range" : "Month & Year"}
+                        {ft === "all" ? "All Data" : ft === "range" ? "Date Range" : "Month & Year"}
                     </button>
                     ))}
                 </div>
 
                 {/* Date/Month/Year Selectors - Horizontal alignment */}
-                <div className={`flex gap-4 w-full ${filterType === 'range' ? 'max-w-xs' : 'max-w-sm'}`}>
-                    {/* Date Range */}
-                    {filterType === "range" && (
-                        <>
-                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                <input
-                                type="date"
-                                value={range.start}
-                                onChange={(e) => {
-                                    const next = { ...range, start: e.target.value };
-                                    setRange(next);
-                                    emit({ range: next });
-                                }}
-                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                                placeholder="Start Date"
-                                />
-                            </div>
+                {/* 🟢 UPDATED: Only show inputs for 'range' and 'month' */}
+                {(filterType === 'range' || filterType === 'month') && (
+                    <div className={`flex gap-4 w-full ${filterType === 'range' ? 'max-w-xs' : 'max-w-sm'}`}>
+                        {/* Date Range */}
+                        {filterType === "range" && (
+                            <>
+                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                    <input
+                                    type="date"
+                                    value={range.start}
+                                    onChange={(e) => {
+                                        const next = { ...range, start: e.target.value };
+                                        setRange(next);
+                                        emit({ range: next });
+                                    }}
+                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                                    placeholder="Start Date"
+                                    />
+                                </div>
 
-                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                <input
-                                type="date"
-                                value={range.end}
-                                onChange={(e) => {
-                                    const next = { ...range, end: e.target.value };
-                                    setRange(next);
-                                    emit({ range: next });
-                                }}
-                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                                placeholder="End Date"
-                                />
-                            </div>
-                        </>
-                    )}
+                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                    <input
+                                    type="date"
+                                    value={range.end}
+                                    onChange={(e) => {
+                                        const next = { ...range, end: e.target.value };
+                                        setRange(next);
+                                        emit({ range: next });
+                                    }}
+                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                                    placeholder="End Date"
+                                    />
+                                </div>
+                            </>
+                        )}
 
-                    {/* Month & Year */}
-                    {filterType === "month" && (
-                        <>
-                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                <select
-                                value={month}
-                                onChange={(e) => {
-                                    setMonth(e.target.value);
-                                    emit({ month: e.target.value });
-                                }}
-                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium appearance-none"
-                                >
-                                {Array.from({ length: 12 }, (_, i) => (
-                                    <option key={i + 1} value={i + 1}>
-                                    {new Date(0, i).toLocaleString("default", {
-                                        month: "long",
-                                    })}
-                                    </option>
-                                ))}
-                                </select>
-                                <ChevronDown className="w-4 h-4 text-gray-500 ml-auto pointer-events-none" />
-                            </div>
+                        {/* Month & Year */}
+                        {filterType === "month" && (
+                            <>
+                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                    <select
+                                    value={month}
+                                    onChange={(e) => {
+                                        setMonth(e.target.value);
+                                        emit({ month: e.target.value });
+                                    }}
+                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium appearance-none"
+                                    >
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                        <option key={i + 1} value={i + 1}>
+                                        {new Date(0, i).toLocaleString("default", {
+                                            month: "long",
+                                        })}
+                                        </option>
+                                    ))}
+                                    </select>
+                                    <ChevronDown className="w-4 h-4 text-gray-500 ml-auto pointer-events-none" />
+                                </div>
 
-                            <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                <input
-                                type="number"
-                                placeholder="Year"
-                                value={year}
-                                onChange={(e) => {
-                                    const currentYear = new Date().getFullYear();
-                                    const val = e.target.value;
-                                    if (val <= currentYear) {
-                                    setYear(val);
-                                    emit({ year: val });
-                                    }
-                                }}
-                                className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                                max={new Date().getFullYear()}
-                                />
-                            </div>
-                        </>
-                    )}
-                </div>
+                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
+                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                                    <input
+                                    type="number"
+                                    placeholder="Year"
+                                    value={year}
+                                    onChange={(e) => {
+                                        const currentYear = new Date().getFullYear();
+                                        const val = e.target.value;
+                                        if (val <= currentYear) {
+                                        setYear(val);
+                                        emit({ year: val });
+                                        }
+                                    }}
+                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                                    max={new Date().getFullYear()}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
 
@@ -645,7 +663,7 @@ export default function Filters({
                 <div className="relative">
                     <button
                     onClick={() => setSortOpen(!sortOpen)}
-                    // 🚨 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
+                    // 圷 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 h-[54px]"
                     >
                     {sortOrder === "newest" ? (
@@ -693,7 +711,7 @@ export default function Filters({
                 {/* Reset */}
                 <button
                     onClick={handleReset}
-                    // 🚨 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
+                    // 圷 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
                     className="flex items-center gap-2 text-sm px-4 py-2 bg-gray-800 text-white rounded-2xl shadow-lg hover:bg-gray-700 transition-colors duration-200 transform hover:scale-105 h-[54px]"
                 >
                     <RefreshCcw className="w-4 h-4" />
@@ -708,7 +726,7 @@ export default function Filters({
         {/* ========================================================= */}
         <div className="bg-gray-50 shadow-2xl rounded-3xl p-6 border border-gray-200">
           <div
-            // 🚨 UPDATED GRID: Use `grid-cols-3` for general view and `grid-cols-4` for lab view 
+            // 圷 UPDATED GRID: Use `grid-cols-3` for general view and `grid-cols-4` for lab view 
             // to evenly distribute filters across the full width.
             className={`grid grid-cols-1 md:grid-cols-2 ${
               isLabAnalysisView ? "lg:grid-cols-4" : "lg:grid-cols-3"
@@ -765,7 +783,7 @@ export default function Filters({
                       <span>Status Filter</span>
                     </span>
                   </div>
-                  {/* 🚨 ALIGNMENT FIX: Used h-[54px] to match CustomSelect height */}
+                  {/* 圷 ALIGNMENT FIX: Used h-[54px] to match CustomSelect height */}
                   <div className="flex gap-2 bg-white rounded-2xl p-1 shadow-inner border border-gray-200 h-[54px]">
                     {statusOptions.map((status) => (
                       <button

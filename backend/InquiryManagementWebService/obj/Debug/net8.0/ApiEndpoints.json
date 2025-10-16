@@ -81,7 +81,39 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.LabController",
-    "Method": "GetLabParameters",
+    "Method": "GetSampleDetailsById",
+    "RelativePath": "api/lab/sample-details",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "regNo",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.LabController",
+    "Method": "GetSampleOverview",
+    "RelativePath": "api/lab/sample-overview",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.SampleSummaryRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.LabController",
+    "Method": "GetSampleSummary",
     "RelativePath": "api/lab/samples",
     "HttpMethod": "POST",
     "IsController": true,

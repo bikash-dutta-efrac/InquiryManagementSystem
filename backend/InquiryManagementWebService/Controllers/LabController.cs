@@ -15,12 +15,40 @@ namespace InquiryManagementWebService.Controllers
             _labRepository = labRepository;
         }
 
+        [HttpPost("sample-overview")]
+        public async Task<IActionResult> GetSampleOverview([FromBody] SampleSummaryRequest request)
+        {
+            try
+            {
+                var response = await _labRepository.GetSampleOverview(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         [HttpPost("samples")]
-        public async Task<IActionResult> GetLabParameters([FromBody] SampleSummaryRequest request)
+        public async Task<IActionResult> GetSampleSummary([FromBody] SampleSummaryRequest request)
         {
             try
             {
                 var response = await _labRepository.GetSampleSummary(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("sample-details")]
+        public async Task<IActionResult> GetSampleDetailsById([FromBody] string regNo)
+        {
+            try
+            {
+                var response = await _labRepository.GetSampleDetailsById(regNo);
                 return Ok(response);
             }
             catch (Exception ex)

@@ -5,6 +5,7 @@ import InquiryOverview from "./components/InquiryOverview";
 import SideMenus from "./components/SideMenus";
 import BdProjection from "./components/BdProjection";
 import LabAnalysis from "./components/LabAnalysis"; 
+import SampleAnalysis from "./components/SampleAnalysis"; // <-- ADDED IMPORT
 const GraphicalAnalysis = React.lazy(() =>
   import("./components/GraphicalAnalysis")
 );
@@ -32,11 +33,15 @@ export default function App() {
   const minDate = new Date();
   minDate.setFullYear(today.getFullYear() - 20);
 
+  // 🟢 NEW: Define the start date for "All Data"
+  const allDataRangeStart = new Date(2025, 3, 1); // April is month index 3 (0-based)
+  const defaultToDate = today.toISOString().split("T")[0]; // Current date
+
   const defaultFilters = {
-    filterType: "range",
+    filterType: "all", // 🟢 UPDATED: Default to "all"
     range: {
-      start: today.toISOString().split("T")[0],
-      end: today.toISOString().split("T")[0],
+      start: allDataRangeStart.toISOString().split("T")[0], // 🟢 UPDATED: Use All Data start
+      end: defaultToDate, // Current Date
     },
     month: (today.getMonth() + 1).toString(),
     year: today.getFullYear().toString(),
@@ -71,7 +76,7 @@ export default function App() {
   const { 
     sampleSummaries,
     labSummaries,
-    sampleOverview,
+    sampleOverview,
     loading: labAnalysisLoading, 
     totalCount 
   } = useLabAnalysis(
@@ -83,7 +88,7 @@ export default function App() {
     async (fetchParams) => {
       setError(null);
       
-      if (fetchParams.dateField === "labAnalysis") {
+      if (fetchParams.dateField === "labAnalysis" || fetchParams.dateField === "sampleAnalysis") {
          return; 
       }
       
@@ -102,8 +107,8 @@ export default function App() {
   );
 
   useEffect(() => {
-    // Only call safeFetch for non-labAnalysis views. LabAnalysis fetch is driven by the useLabAnalysis hook.
-    if (queryType !== 'labAnalysis') {
+    // Only call safeFetch for non-analysis views.
+    if (queryType !== 'labAnalysis' && queryType !== 'sampleAnalysis') {
         safeFetch(filters);
     }
   }, [filters, safeFetch, queryType]);
@@ -124,7 +129,7 @@ export default function App() {
       reviewsBy, 
       labStatusFilter, 
       pageNumber, // Discarded as per user request
-      pageSize,   // Discarded as per user request
+      pageSize,   // Discarded as per user request
       ...restOfNewFilterState 
     } = newFilterState;
     
@@ -141,7 +146,11 @@ export default function App() {
     if (queryType === 'labAnalysis') {
         newFilters.labStatusFilter = labStatusFilter !== undefined ? labStatusFilter : newFilters.labStatusFilter;
         newFilters.reviewsBy = reviewsBy !== undefined ? reviewsBy : newFilters.reviewsBy;
-    }
+    } else if (queryType === 'sampleAnalysis') {
+        // SampleAnalysis does not need filters, but we ensure they are not used
+        newFilters.labStatusFilter = null;
+        newFilters.reviewsBy = null;
+    }
 
     // 5. Common field updates (sortOrder, dateField)
     newFilters.dateField = queryType;
@@ -176,20 +185,16 @@ export default function App() {
       if (newFilterState.month) newFilters.month = Number(newFilterState.month);
       newFilters.fromDate = null;
       newFilters.toDate = null;
+    } else if (newFilterState.filterType === "all") { // 🟢 NEW: "All Data" logic
+      newFilters.fromDate = defaultFilters.range.start;
+      newFilters.toDate = defaultFilters.range.end;
+      newFilters.month = null;
+      newFilters.year = null;
     }
 
-    // 7. Handle non-labAnalysis specific filters (verticals, bds, clients)
-    if (queryType !== 'labAnalysis') {
-        newFilters.bdNames = newFilterState.bdNames || [];
-        newFilters.clientNames = newFilterState.clientNames || [];
-        newFilters.verticals = newFilterState.verticals || [];
-        newFilters.excludeVerticals = newFilterState.excludeVerticals;
-        newFilters.excludeBds = newFilterState.excludeBds;
-        newFilters.excludeClients = newFilterState.excludeClients;
-        // 🔽 REMOVED OLD STATUS CLEARING
-        newFilters.labStatusFilter = null; 
-        newFilters.reviewsBy = null;
-    } else {
+
+    // 7. Handle non-labAnalysis/sampleAnalysis specific filters
+    if (queryType === 'labAnalysis') {
         newFilters.labNames = newFilterState.labNames,
         newFilters.excludeLabs = newFilterState.excludeLabs,
         newFilters.bdNames = [];
@@ -198,6 +203,27 @@ export default function App() {
         newFilters.excludeVerticals = false;
         newFilters.excludeBds = false;
         newFilters.excludeClients = false;
+    } else if (queryType === 'sampleAnalysis') {
+        // Ensure no filters are applied for SampleAnalysis
+        newFilters.bdNames = [];
+        newFilters.clientNames = [];
+        newFilters.verticals = [];
+        newFilters.labNames = [];
+        newFilters.excludeVerticals = false;
+        newFilters.excludeBds = false;
+        newFilters.excludeClients = false;
+        newFilters.excludeLabs = false;
+    } else { // Standard Inquiry/BD Projection
+        newFilters.bdNames = newFilterState.bdNames || [];
+        newFilters.clientNames = newFilterState.clientNames || [];
+        newFilters.verticals = newFilterState.verticals || [];
+        newFilters.excludeVerticals = newFilterState.excludeVerticals;
+        newFilters.excludeBds = newFilterState.excludeBds;
+        newFilters.excludeClients = newFilterState.excludeClients;
+        newFilters.labStatusFilter = null; 
+        newFilters.reviewsBy = null;
+        newFilters.labNames = [];
+        newFilters.excludeLabs = false;
     }
 
 
@@ -213,9 +239,8 @@ export default function App() {
     let updatedFilters = { 
         ...filters, 
         dateField,
-        // pageNumber: 1 and pageSize no longer managed here
     };
-    if (dateField === 'labAnalysis') {
+    if (dateField === 'labAnalysis' || dateField === 'sampleAnalysis') {
         updatedFilters = {
             ...updatedFilters,
             verticals: [],
@@ -224,7 +249,7 @@ export default function App() {
             excludeVerticals: false,
             excludeBds: false,
             excludeClients: false,
-            // 🔽 ENSURE LAB STATUS IS RESET ON LAB VIEW CHANGE
+            // 🔽 ENSURE LAB STATUS IS RESET ON LAB/SAMPLE VIEW CHANGE
             labStatusFilter: null,
             reviewsBy: null,
         };
@@ -237,13 +262,14 @@ export default function App() {
   const handleResetAll = () => {
     setError(null);
     setFilters({
+      // 🟢 UPDATED: Reset to "all" filter type
+      filterType: defaultFilters.filterType, 
       fromDate: defaultFilters.range.start,
       toDate: defaultFilters.range.end,
       sortOrder: defaultFilters.sortOrder,
       // 🔽 UPDATED: Use new status filter state
       labStatusFilter: defaultFilters.labStatusFilter, 
       reviewsBy: null,
-      // Pagination state is no longer reset here
     });
   };
 
@@ -353,18 +379,19 @@ export default function App() {
         )}
 
         <div className="py-4 px-4">
+          {/* Filters are always shown */}
           <div className="max-w-6xl mx-auto mb-6">
-            <Filters
-              data={inquiries}
-              onChange={onFiltersChange}
-              onResetAll={handleResetAll}
-              disabled={totalLoading}
-              queryType={queryType}
-            />
+            {queryType !== "sampleAnalysis" && (
+            <Filters
+                onChange={onFiltersChange}
+                onResetAll={handleResetAll}
+                disabled={totalLoading}
+                queryType={queryType}
+            />
+            )}
           </div>
 
           <div>
-            {/* If a sub-view is active AND we are not in special full-page views (BD/Lab Analysis), show the sub-view */}
             {subView && queryType !== "bdProjection" && queryType !== "labAnalysis" ? (
               <div className="max-w-7xl mx-auto px-2 relative">
                 <SubInquiryList
@@ -376,20 +403,21 @@ export default function App() {
               </div>
             ) : queryType === "labAnalysis" ? (
               <div className="max-w-7xl mx-auto px-2 relative">
-                {/* 🟢 PASS FILTERS, SETFILTERS, AND totalCount */}
                 <LabAnalysis 
                     data={sampleSummaries} 
                     labSummaryData={labSummaries}
-                    sampleOverview={sampleOverview}
+                    sampleOverview={sampleOverview}
                     filters={filters}
                     setFilters={onFiltersChange}
                     totalCount={totalCount}
                 />
               </div>
+            ) : queryType === "sampleAnalysis" ? (
+              <div className="max-w-7xl mx-auto px-2 relative">
+                <SampleAnalysis /> 
+              </div>
             ) : (
-              // 2. STANDARD / BD PROJECTION VIEWS
               <>
-                {/* Inquiry Overview (Hidden for Lab Analysis) */}
                 <div className="max-w-7xl mx-auto mb-8 px-2 relative">
                   {queryType !== "bdProjection" && queryType !== "labAnalysis" && (
                     <InquiryOverview
@@ -401,7 +429,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* View Toggle (Hidden for Lab Analysis) */}
                 <div className="flex justify-center my-8">
                   {queryType !== "bdProjection" && queryType !== "labAnalysis" && (
                     <div className="relative flex items-center bg-white rounded-full p-2 shadow-lg border border-gray-200 transition-all duration-300">
@@ -432,7 +459,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Main Content Area (List/Graph/Projection) */}
                 <div className="max-w-7xl mx-auto px-2 relative">
                   {queryType === "bdProjection" ? (
                     <BdProjection

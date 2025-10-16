@@ -12,164 +12,300 @@ namespace InquiryManagementWebService.Repositories
             _connectionString = configuration["Connnectionstrings:MyConnection"];
         }
 
-        public async Task<IEnumerable<SampleSummary>> GetSampleSummary(SampleSummaryRequest request)
+        public async Task<SampleOverview> GetSampleOverview(SampleSummaryRequest request)
         {
-
             var query = @"
-;WITH RegisBase AS
+;WITH RegisRanker AS
 (
-    SELECT 
-        r1.TRN2REFNO AS RegisNo,
-        CASE 
-            WHEN MAX(r2.TRN1CANCEL) = 'Y' THEN 0
-            ELSE 
-                CASE WHEN MAX(i.QUOTUSD) = 'Y' 
+    SELECT
+        i.QUOTNO,
+        r2.TRN2REFNO,
+        i.QUOTAMT,
+        i.QUOTDISCOUNTAXAMT,
+        i.QUOTUSD,
+        i.USDRATE,
+        i.QUOTSEMPLECHARGE,
+        i.QUOTMISC,
+        i.QUOTHCC,
+        r2.TRN2TESTRATE,
+        r1.TRN1DATE,
+        r1.TRN1CANCEL,
+        ROW_NUMBER() OVER (PARTITION BY i.QUOTNO ORDER BY r1.TRN1DATE, r2.TRN2REFNO) AS RegRank
+    FROM OQUOTMST i
+    INNER JOIN TRN205 r2 ON r2.TRN2QOTNO = i.QUOTNO -- TRN205 is r2
+    LEFT JOIN TRN105 r1 ON r1.TRN1REFNO = r2.TRN2REFNO -- TRN105 is r1
+    WHERE r2.TRN2REFNO IS NOT NULL
+      AND ((@FromDate IS NULL OR r1.TRN1DATE >= @FromDate) AND (@ToDate IS NULL OR r1.TRN1DATE <= @ToDate))
+      AND (@Year IS NULL OR YEAR(r1.TRN1DATE) = @Year)
+      AND (@Month IS NULL OR MONTH(r1.TRN1DATE) = @Month)
+),
+-- 2. RegisBase CTE: Groups the data and calculates the *Total* RegisVal for each distinct registration.
+RegisBase AS
+(
+    SELECT
+        r.TRN2REFNO AS RegisNo,
+        
+        -- Calculate RegisVal
+        CASE
+            WHEN MAX(r.TRN1CANCEL) = 'Y' THEN 0
+            ELSE
+                CASE WHEN MAX(r.QUOTUSD) = 'Y'
                      THEN (
-                            (
-                                SUM(CAST(NULLIF(r1.TRN2TESTRATE, '') AS DECIMAL(18,2))) 
-                                * ( (MIN(i.QUOTAMT) - MIN(ISNULL(i.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(i.QUOTAMT),0) )
-                            )
-                            + MIN(ISNULL(i.QUOTSEMPLECHARGE,0)) 
-                            + MIN(ISNULL(i.QUOTMISC,0)) 
-                            + MIN(ISNULL(i.QUOTHCC,0))
-                          ) * MAX(i.USDRATE)  
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           ) * MAX(r.USDRATE)
                      ELSE (
-                            (
-                                SUM(CAST(NULLIF(r1.TRN2TESTRATE, '') AS DECIMAL(18,2))) 
-                                * ( (MIN(i.QUOTAMT) - MIN(ISNULL(i.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(i.QUOTAMT),0) )
-                            )
-                            + MIN(ISNULL(i.QUOTSEMPLECHARGE,0)) 
-                            + MIN(ISNULL(i.QUOTMISC,0)) 
-                            + MIN(ISNULL(i.QUOTHCC,0))
-                          )
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           )
                 END
         END AS RegisVal
-    FROM OQUOTMST i
-    INNER JOIN TRN205 r1 ON r1.TRN2QOTNO = i.QUOTNO
-    LEFT JOIN TRN105 r2  ON r2.TRN1REFNO = r1.TRN2REFNO
-    GROUP BY r1.TRN2REFNO
+    FROM RegisRanker r
+    GROUP BY r.TRN2REFNO, r.QUOTNO
 ),
+-- 3. SampleData CTE: Combines transactional and billing details for all samples
 SampleData AS
 (
+    -- Part 1: Regular Lab Samples (TRN205 - T2, TRN105 - t05)
     SELECT DISTINCT
-        BILLNO,
-        CONVERT(NVARCHAR(10), BILLAUTHDATE, 103) AS InvoiceDate,
         T2.TRN2REFNO AS RegistrationNo,
         T2.TRN2PRODALIAS AS SampleName,
-        REPLACE(OCM1.codedesc, ' ', '') AS Lab,
-        FORMAT(
-            DATEADD(SECOND, DATEDIFF(SECOND, 0, t05.TRN1TIME), t05.TRN1DATE), 
-            'dd/MM/yyyy HH:mm:ss'
-        ) AS RegistrationDateTime,
-        CONVERT(NVARCHAR(10), T2.Trn2Pardate, 103) AS LabTatDate,
-        T2.Trn2Pardate AS TatDate,
-        CONVERT(NVARCHAR(10),T2.TRN2MdateofReport,103) As MailingDate,
-        CASE 
-            WHEN T2.TRN2COMPLETIONDT IS NOT NULL THEN 
-                FORMAT(T2.TRN2COMPLETIONDT, 'dd/MM/yyyy HH:mm:ss')
-            ELSE 
-                ''
-        END AS AnalysisCompletionDateTime,
+        OCM1.codedesc AS Lab,
         T2.TRN2COMPLETIONDT,
-        T2.TRN2HODReview AS HodReview
+        T2.TRN2HODReview AS HodReview,
+        -- Status at the sample level
+        CASE WHEN T2.TRN2COMPLETIONDT IS NOT NULL AND T2.TRN2HODReview = 'Y' THEN 'Released' ELSE 'Pending' END AS Status
     FROM TRN205 AS T2
-        INNER JOIN oheadmst AS HM 
-            ON HM.headPlantCd = T2.TRN2PLANTCD 
-            AND HM.headcd = T2.TRN2HEADER
-        LEFT JOIN OCODEMST AS OCM2 
-            ON OCM2.CODEPLANTCD = T2.TRN2PLANTCD 
-            AND OCM2.CODECD = T2.TRN2_PLATFORM 
-            AND OCM2.CODETYPE = 'PM'
-        INNER JOIN OCODEMST AS OCM 
-            ON OCM.CODEPLANTCD = T2.TRN2PLANTCD 
-            AND OCM.CODECD = T2.TRN2GROUPCD 
-            AND OCM.CODETYPE = 'GM'
-        INNER JOIN OCODEMST AS OCM1 
-            ON OCM1.CODEPLANTCD = T2.TRN2PLANTCD 
-            AND OCM1.CODECD = T2.TRN2DEPARTCD 
-            AND OCM1.CODETYPE = 'DM'
-        INNER JOIN TRN105 AS t05 
-            ON t05.TRN1PLANTCD = T2.TRN2PLANTCD 
-            AND t05.TRN1REFNO = T2.TRN2REFNO
-        LEFT JOIN billmst 
-            ON BILLARNO = TRN2REFNO 
-            AND TRN1PLANTCD = BILLPLANTCD
-    WHERE 
+        INNER JOIN oheadmst AS HM ON HM.headPlantCd = T2.TRN2PLANTCD AND HM.headcd = T2.TRN2HEADER
+        INNER JOIN OCODEMST AS OCM1 ON OCM1.CODEPLANTCD = T2.TRN2PLANTCD AND OCM1.CODECD = T2.TRN2DEPARTCD AND OCM1.CODETYPE = 'DM'
+        INNER JOIN TRN105 AS t05 ON t05.TRN1PLANTCD = T2.TRN2PLANTCD AND t05.TRN1REFNO = T2.TRN2REFNO
+    WHERE
         t05.TRN1PLANTCD = 'P001'
         AND (
                 (t05.TRN1Date >= @FromDate AND t05.TRN1Date <= @ToDate)
                 OR
-                (@Month IS NOT NULL AND @Year IS NOT NULL 
-                 AND MONTH(t05.TRN1Date) = @Month 
+                (@Month IS NOT NULL AND @Year IS NOT NULL
+                 AND MONTH(t05.TRN1Date) = @Month
                  AND YEAR(t05.TRN1Date) = @Year)
             )
         AND (
-            @Labs IS NULL 
+            @Labs IS NULL
             OR (
-                (@ExcludeLabs = 0 AND REPLACE(OCM1.codedesc, ' ', '') IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
+                (@ExcludeLabs = 0 AND OCM1.codedesc IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
                 OR
-                (@ExcludeLabs = 1 AND REPLACE(OCM1.codedesc, ' ', '') NOT IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
+                (@ExcludeLabs = 1 AND OCM1.codedesc NOT IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
             )
         )
 
     UNION ALL
 
+    -- Part 2: Training Records (Assumed always 'Pending' for status counting)
     SELECT DISTINCT
-        b.BLMNBILLNO AS BILLNO,
-        CONVERT(NVARCHAR(10), BLMNDATE, 103) AS InvoiceDate,
         TRN4REFNO AS RegistrationNo,
         TRN4REMARKS AS SampleName,
         'Training' AS Lab,
-        FORMAT(CONVERT(DATETIME, t.TRN4DATE), 'dd/MM/yyyy HH:mm:ss') AS RegistrationDateTime,
-        '' AS LabTatDate,
-        NULL AS TatDate,
-        '' AS MailingDate,
-        '' AS AnalysisCompletionDateTime,
         NULL AS TRN2COMPLETIONDT,
-        NULL AS HodReview
+        NULL AS HodReview,
+        'Pending' AS Status
     FROM BILLMAIN b
-        INNER JOIN TRN4STUDEND t 
-            ON b.blmncustcd = t.TRN4PARTYCD
-    WHERE 
+    INNER JOIN TRN4STUDEND t ON b.blmncustcd = t.TRN4PARTYCD
+    WHERE
         trn4plantcd = 'P001'
         AND (
                 (t.TRN4Date >= @FromDate AND t.TRN4Date <= @ToDate)
                 OR
-                (@Month IS NOT NULL AND @Year IS NOT NULL 
-                 AND MONTH(t.TRN4Date) = @Month 
+                (@Month IS NOT NULL AND @Year IS NOT NULL
+                 AND MONTH(t.TRN4Date) = @Month
                  AND YEAR(t.TRN4Date) = @Year)
             )
         AND (
-            @Labs IS NULL 
+            @Labs IS NULL
             OR (
                 (@ExcludeLabs = 0 AND 'Training' IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
                 OR
                 (@ExcludeLabs = 1 AND 'Training' NOT IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
             )
         )
-)
-, FinalData AS
+),
+-- 4. RegistrationStatus CTE: Determines the overall status and total value for each unique registration
+RegistrationStatus AS
 (
-    SELECT 
-        s.*,
-        CAST(
-            r.RegisVal / NULLIF(COUNT(*) OVER (PARTITION BY s.RegistrationNo), 0) 
-            AS DECIMAL(18,2)
-        ) AS DistributedRegisVal,
-        CASE 
+    SELECT
+        s.RegistrationNo,
+        -- If the MIN status across all samples is 'Pending', the overall status is 'Pending'.
+        MIN(s.Status) AS OverallStatus,
+        MAX(r.RegisVal) AS TotalRegVal
+    FROM SampleData s
+    LEFT JOIN RegisBase r ON s.RegistrationNo = r.RegisNo
+    GROUP BY s.RegistrationNo
+)
+-- 5. FINAL OVERVIEW SELECT: Aggregates the unique registration count and value
+SELECT
+    COUNT(rs.RegistrationNo) AS TotalSamples, -- Unique Registrations
+    SUM(CASE WHEN rs.OverallStatus = 'Released' THEN 1 ELSE 0 END) AS TotalReleased,
+    SUM(CASE WHEN rs.OverallStatus = 'Pending' THEN 1 ELSE 0 END) AS TotalPending,
+    SUM(rs.TotalRegVal) AS TotalRegValue, -- NEW COLUMN: Sum of all unique registration values
+    SUM(CASE WHEN rs.OverallStatus = 'Pending' THEN rs.TotalRegVal ELSE 0 END) AS TotalPendingRegVal
+FROM
+    RegistrationStatus rs;
+";
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+
+                int? commandTimeout = 60;
+
+                var labs = request.Labs?.Any() == true ? string.Join(",", request.Labs) : null;
+
+                return await connection.QueryFirstAsync<SampleOverview>(query, new
+                {
+                    FromDate = request.FromDate,
+                    ToDate = request.ToDate,
+                    Month = request.Month,
+                    Year = request.Year,
+                    StatusFilter = request.StatusFilter,
+                    Labs = labs,
+                    ExcludeLabs = request.ExcludeLabs ? 1 : 0
+                }, commandTimeout: commandTimeout);
+            }
+        }
+
+        public async Task<IEnumerable<SampleSummary>> GetSampleSummary(SampleSummaryRequest request)
+        {
+
+            var query = @"
+;WITH RegisRanker AS
+(
+    SELECT
+        i.QUOTNO,
+        r2.TRN2REFNO,
+        i.QUOTAMT,
+        i.QUOTDISCOUNTAXAMT,
+        i.QUOTUSD,
+        i.USDRATE,
+        i.QUOTSEMPLECHARGE,
+        i.QUOTMISC,
+        i.QUOTHCC,
+        r2.TRN2TESTRATE,
+        r1.TRN1DATE,
+        r1.TRN1CANCEL,
+        ROW_NUMBER() OVER (PARTITION BY i.QUOTNO ORDER BY r1.TRN1DATE, r2.TRN2REFNO) AS RegRank
+    FROM OQUOTMST i
+    INNER JOIN TRN205 r2 ON r2.TRN2QOTNO = i.QUOTNO
+    LEFT JOIN TRN105 r1 ON r1.TRN1REFNO = r2.TRN2REFNO
+    WHERE r2.TRN2REFNO IS NOT NULL
+      AND ((@FromDate IS NULL OR r1.TRN1DATE >= @FromDate) AND (@ToDate IS NULL OR r1.TRN1DATE <= @ToDate))
+      AND (@Year IS NULL OR YEAR(r1.TRN1DATE) = @Year)
+      AND (@Month IS NULL OR MONTH(r1.TRN1DATE) = @Month)
+),
+RegisBase AS
+(
+    SELECT
+        r.TRN2REFNO AS RegisNo,
+        CASE
+            WHEN MAX(r.TRN1CANCEL) = 'Y' THEN 0
+            ELSE
+                CASE WHEN MAX(r.QUOTUSD) = 'Y'
+                     THEN (
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           ) * MAX(r.USDRATE)
+                     ELSE (
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           )
+                END
+        END AS RegisVal
+    FROM RegisRanker r
+    GROUP BY r.TRN2REFNO, r.QUOTNO
+),
+SampleData AS
+(
+    SELECT DISTINCT
+        T2.TRN2REFNO AS RegistrationNo,
+        FORMAT(
+            DATEADD(SECOND, DATEDIFF(SECOND, 0, t05.TRN1TIME), t05.TRN1DATE),
+            'dd/MM/yyyy HH:mm:ss'
+        ) AS RegistrationDateTime,
+        T2.TRN2PRODALIAS AS SampleName,
+        T2.TRN2COMPLETIONDT,
+        T2.TRN2HODReview AS HodReview
+    FROM TRN205 AS T2
+    INNER JOIN TRN105 AS t05 ON t05.TRN1PLANTCD = T2.TRN2PLANTCD AND t05.TRN1REFNO = T2.TRN2REFNO
+    WHERE
+        t05.TRN1PLANTCD = 'P001'
+        AND (
+            (t05.TRN1Date >= @FromDate AND t05.TRN1Date <= @ToDate)
+            OR
+            (@Month IS NOT NULL AND @Year IS NOT NULL
+             AND MONTH(t05.TRN1Date) = @Month
+             AND YEAR(t05.TRN1Date) = @Year)
+        )
+),
+StatusData AS
+(
+    SELECT
+        s.RegistrationNo,
+        s.RegistrationDateTime,
+        s.SampleName,
+        CASE
             WHEN s.TRN2COMPLETIONDT IS NOT NULL AND s.HodReview = 'Y' THEN 'Released'
             ELSE 'Pending'
-        END AS Status
+        END AS IndividualStatus
     FROM SampleData s
-    LEFT JOIN RegisBase r 
-        ON s.RegistrationNo = r.RegisNo
+),
+Grouped AS
+(
+    SELECT
+        s.RegistrationNo,
+        MAX(s.RegistrationDateTime) AS RegistrationDateTime,
+        STRING_AGG(s.SampleName, ', ') AS SampleNames,
+        CASE
+            WHEN SUM(CASE WHEN s.IndividualStatus = 'Pending' THEN 1 ELSE 0 END) > 0 THEN 'Pending'
+            ELSE 'Released'
+        END AS Status
+    FROM StatusData s
+    GROUP BY s.RegistrationNo
 )
-SELECT *
-FROM FinalData
-WHERE 
-    @StatusFilter IS NULL 
-    OR Status = @StatusFilter
-ORDER BY RegistrationNo, SampleName;
+SELECT
+    g.RegistrationNo,
+    g.RegistrationDateTime AS RegistrationDate,
+    g.SampleNames AS SampleName,
+    g.Status,
+    r.RegisVal
+FROM Grouped g
+LEFT JOIN RegisBase r ON g.RegistrationNo = r.RegisNo
+WHERE
+    @StatusFilter IS NULL OR g.Status = @StatusFilter
+ORDER BY g.RegistrationNo;
 
             ";
 
@@ -193,201 +329,312 @@ ORDER BY RegistrationNo, SampleName;
             }
         }
 
+
+        public async Task<IEnumerable<SampleDetails>> GetSampleDetailsById(string regNo)
+        {
+
+            var query = @"
+;WITH RegisRanker AS
+(
+    SELECT
+        i.QUOTNO,
+        r2.TRN2REFNO,
+        i.QUOTAMT,
+        i.QUOTDISCOUNTAXAMT,
+        i.QUOTUSD,
+        i.USDRATE,
+        i.QUOTSEMPLECHARGE,
+        i.QUOTMISC,
+        i.QUOTHCC,
+        r2.TRN2TESTRATE,
+        r1.TRN1DATE,
+        r1.TRN1CANCEL,
+        ROW_NUMBER() OVER (PARTITION BY i.QUOTNO ORDER BY r1.TRN1DATE, r2.TRN2REFNO) AS RegRank
+    FROM OQUOTMST i
+    INNER JOIN TRN205 r2 ON r2.TRN2QOTNO = i.QUOTNO
+    LEFT JOIN TRN105 r1 ON r1.TRN1REFNO = r2.TRN2REFNO
+    WHERE r2.TRN2REFNO IS NOT NULL
+),
+RegisBase AS
+(
+    SELECT
+        r.TRN2REFNO AS RegisNo,
+        CASE
+            WHEN MAX(r.TRN1CANCEL) = 'Y' THEN 0
+            ELSE
+                CASE WHEN MAX(r.QUOTUSD) = 'Y'
+                     THEN (
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           ) * MAX(r.USDRATE)
+                     ELSE (
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           )
+                END
+        END AS RegisVal
+    FROM RegisRanker r
+    GROUP BY r.TRN2REFNO, r.QUOTNO
+),
+SampleCount AS
+(
+    SELECT
+        TRN2REFNO,
+        COUNT(*) AS SampleCnt
+    FROM TRN205
+    WHERE TRN2REFNO IS NOT NULL
+    GROUP BY TRN2REFNO
+)
+SELECT 
+    t1.TRN1REFNO + '   -' AS RegistrationNo, 
+    CONVERT(NVARCHAR(10), t1.TRN1DATE, 103) AS RegistrationDate, 
+    CONVERT(NVARCHAR(10), t2.TRN2REPODT, 103) AS ReportIssueDate, 
+    t2.TRN2PRODALIAS AS SampleName, 
+    CASE
+            WHEN T2.TRN2COMPLETIONDT IS NOT NULL THEN
+                FORMAT(T2.TRN2COMPLETIONDT, 'dd/MM/yyyy HH:mm:ss')
+            ELSE
+                ''
+        END AS AnalysisCompletionDateTime,
+    CONVERT(NVARCHAR(10), t2.TRN2MdateofReport, 103) AS MailingDate,
+    t2.TRN2HEADER AS ParaCode, 
+    p.headdesc AS Parameter, 
+    L.CODEDESC AS Lab,
+    CAST(r.RegisVal / NULLIF(s.SampleCnt, 0) AS DECIMAL(18,2)) AS DistributedRegisVal,
+    CASE 
+        WHEN t2.TRN2COMPLETIONDT IS NOT NULL AND t2.TRN2REPODT IS NULL THEN 'Pending from QA End' 
+        WHEN t2.TRN2REPODT IS NOT NULL AND t2.TRN2MdateofReport IS NULL THEN 'Report not Released' 
+        WHEN t2.TRN2COMPLETIONDT IS NULL THEN 'Pending from Lab End' 
+        WHEN t2.TRN2MdateofReport IS NOT NULL THEN 'Report Delivered' 
+    END AS [Status] 
+FROM 
+    trn105 t1
+INNER JOIN trn205 t2 ON t1.TRN1REFNO = t2.TRN2REFNO
+INNER JOIN OHEADMST p ON t2.TRN2HEADER = p.headcd
+INNER JOIN OCODEMST L ON t2.TRN2DEPARTCD = L.CODECD AND L.CODETYPE = 'DM'
+LEFT JOIN RegisBase r ON t2.TRN2REFNO = r.RegisNo
+LEFT JOIN SampleCount s ON t2.TRN2REFNO = s.TRN2REFNO
+WHERE 
+    t1.TRN1PLANTCD = 'P001' 
+    AND t1.TRN1DATE BETWEEN '2025-04-01 00:00:00.000' AND '2026-03-31 00:00:00.000'
+    AND (@RegNo IS NULL OR t1.TRN1REFNO = @RegNo)
+ORDER BY 
+    t1.TRN1REFNO, t2.TRN2PRODALIAS;
+
+            ";
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+
+                int? commandTimeout = 60;
+
+
+                return await connection.QueryAsync<SampleDetails>(query, new
+                {
+                   RegNo = regNo
+                }, commandTimeout: commandTimeout);
+            }
+        }
+
         public async Task<IEnumerable<LabSummary>> GetLabSummary(SampleSummaryRequest request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var query = @"
-;WITH RegisBase AS
+;WITH RegisRanker AS
 (
-    SELECT 
-        r1.TRN2REFNO AS RegisNo,
-        CASE 
-            WHEN MAX(r2.TRN1CANCEL) = 'Y' THEN 0
-            ELSE 
-                CASE WHEN MAX(i.QUOTUSD) = 'Y' 
+    SELECT
+        i.QUOTNO,
+        r2.TRN2REFNO,
+        i.QUOTAMT,
+        i.QUOTDISCOUNTAXAMT,
+        i.QUOTUSD,
+        i.USDRATE,
+        i.QUOTSEMPLECHARGE,
+        i.QUOTMISC,
+        i.QUOTHCC,
+        r2.TRN2TESTRATE,
+        r1.TRN1DATE,
+        r1.TRN1CANCEL,
+        ROW_NUMBER() OVER (PARTITION BY i.QUOTNO ORDER BY r1.TRN1DATE, r2.TRN2REFNO) AS RegRank
+    FROM OQUOTMST i
+    INNER JOIN TRN205 r2 ON r2.TRN2QOTNO = i.QUOTNO -- TRN205 is r2
+    LEFT JOIN TRN105 r1 ON r1.TRN1REFNO = r2.TRN2REFNO -- TRN105 is r1
+    WHERE r2.TRN2REFNO IS NOT NULL
+      AND ((@FromDate IS NULL OR r1.TRN1DATE >= @FromDate) AND (@ToDate IS NULL OR r1.TRN1DATE <= @ToDate))
+      AND (@Year IS NULL OR YEAR(r1.TRN1DATE) = @Year)
+      AND (@Month IS NULL OR MONTH(r1.TRN1DATE) = @Month)
+),
+-- 2. RegisBase CTE: Groups the data and calculates the *Total* RegisVal for each distinct registration.
+RegisBase AS
+(
+    SELECT
+        r.TRN2REFNO AS RegisNo,
+        
+        -- Calculate RegisVal using the pre-aggregated fields
+        CASE
+            WHEN MAX(r.TRN1CANCEL) = 'Y' THEN 0
+            ELSE
+                CASE WHEN MAX(r.QUOTUSD) = 'Y'
                      THEN (
-                            (
-                                SUM(CAST(NULLIF(r1.TRN2TESTRATE, '') AS DECIMAL(18,2))) 
-                                * ( (MIN(i.QUOTAMT) - MIN(ISNULL(i.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(i.QUOTAMT),0) )
-                            )
-                            + MIN(ISNULL(i.QUOTSEMPLECHARGE,0)) 
-                            + MIN(ISNULL(i.QUOTMISC,0)) 
-                            + MIN(ISNULL(i.QUOTHCC,0))
-                          ) * MAX(i.USDRATE)  
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           ) * MAX(r.USDRATE)
                      ELSE (
-                            (
-                                SUM(CAST(NULLIF(r1.TRN2TESTRATE, '') AS DECIMAL(18,2))) 
-                                * ( (MIN(i.QUOTAMT) - MIN(ISNULL(i.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(i.QUOTAMT),0) )
-                            )
-                            + MIN(ISNULL(i.QUOTSEMPLECHARGE,0)) 
-                            + MIN(ISNULL(i.QUOTMISC,0)) 
-                            + MIN(ISNULL(i.QUOTHCC,0))
-                          )
+                               (
+                                   SUM(CAST(NULLIF(r.TRN2TESTRATE, '') AS DECIMAL(18,2)))
+                                   * ( (MIN(r.QUOTAMT) - MIN(ISNULL(r.QUOTDISCOUNTAXAMT,0))) / NULLIF(MIN(r.QUOTAMT),0) )
+                               )
+                               + CASE WHEN MIN(r.RegRank) = 1
+                                      THEN MIN(r.QUOTSEMPLECHARGE)
+                                           + MIN(r.QUOTMISC)
+                                           + MIN(r.QUOTHCC)
+                                      ELSE 0 END
+                           )
                 END
         END AS RegisVal
-    FROM OQUOTMST i
-    INNER JOIN TRN205 r1 ON r1.TRN2QOTNO = i.QUOTNO
-    LEFT JOIN TRN105 r2  ON r2.TRN1REFNO = r1.TRN2REFNO
-    GROUP BY r1.TRN2REFNO
+    FROM RegisRanker r
+    GROUP BY r.TRN2REFNO, r.QUOTNO
 ),
-CombinedData AS
+-- 3. SampleData CTE: Combines transactional and billing details for all samples
+SampleData AS
 (
+    -- Part 1: Regular Lab Samples (TRN205 - T2, TRN105 - t05)
     SELECT DISTINCT
         BILLNO,
-        CONVERT(NVARCHAR(10), BILLAUTHDATE, 103) AS InvoiceDate,
         T2.TRN2REFNO AS RegistrationNo,
         T2.TRN2PRODALIAS AS SampleName,
-        REPLACE(OCM1.codedesc, ' ', '') AS Lab,
-        FORMAT(
-            DATEADD(SECOND, DATEDIFF(SECOND, 0, t05.TRN1TIME), t05.TRN1DATE), 
-            'dd/MM/yyyy HH:mm:ss'
-        ) AS RegistrationDateTime,
-        CONVERT(NVARCHAR(10), T2.Trn2Pardate, 103) AS LabTatDate,
+        OCM1.codedesc AS Lab,
+        t05.TRN1DATE AS RegistrationDate, -- Use native date for calculations
         T2.Trn2Pardate AS TatDate,
-        CASE 
-            WHEN T2.TRN2COMPLETIONDT IS NOT NULL THEN 
-                FORMAT(T2.TRN2COMPLETIONDT, 'dd/MM/yyyy HH:mm:ss')
-            ELSE 
-                ''
-        END AS AnalysisCompletionDateTime,
         T2.TRN2COMPLETIONDT,
-        T2.TRN2HODReview AS HodReview
+        T2.TRN2HODReview AS HodReview,
+        -- Calculate status columns
+        CASE WHEN T2.TRN2COMPLETIONDT IS NOT NULL AND T2.TRN2HODReview = 'Y' THEN 'Released' ELSE 'Pending' END AS Status
     FROM TRN205 AS T2
-        INNER JOIN oheadmst AS HM 
-            ON HM.headPlantCd = T2.TRN2PLANTCD 
-            AND HM.headcd = T2.TRN2HEADER
-        LEFT JOIN OCODEMST AS OCM2 
-            ON OCM2.CODEPLANTCD = T2.TRN2PLANTCD 
-            AND OCM2.CODECD = T2.TRN2_PLATFORM 
-            AND OCM2.CODETYPE = 'PM'
-        INNER JOIN OCODEMST AS OCM 
-            ON OCM.CODEPLANTCD = T2.TRN2PLANTCD 
-            AND OCM.CODECD = T2.TRN2GROUPCD 
-            AND OCM.CODETYPE = 'GM'
-        INNER JOIN OCODEMST AS OCM1 
-            ON OCM1.CODEPLANTCD = T2.TRN2PLANTCD 
-            AND OCM1.CODECD = T2.TRN2DEPARTCD 
-            AND OCM1.CODETYPE = 'DM'
-        INNER JOIN TRN105 AS t05 
-            ON t05.TRN1PLANTCD = T2.TRN2PLANTCD 
-            AND t05.TRN1REFNO = T2.TRN2REFNO
-        LEFT JOIN billmst 
-            ON BILLARNO = TRN2REFNO 
-            AND TRN1PLANTCD = BILLPLANTCD
-    WHERE 
+        INNER JOIN oheadmst AS HM ON HM.headPlantCd = T2.TRN2PLANTCD AND HM.headcd = T2.TRN2HEADER
+        INNER JOIN OCODEMST AS OCM1 ON OCM1.CODEPLANTCD = T2.TRN2PLANTCD AND OCM1.CODECD = T2.TRN2DEPARTCD AND OCM1.CODETYPE = 'DM'
+        INNER JOIN TRN105 AS t05 ON t05.TRN1PLANTCD = T2.TRN2PLANTCD AND t05.TRN1REFNO = T2.TRN2REFNO
+        LEFT JOIN billmst ON BILLARNO = TRN2REFNO AND TRN1PLANTCD = BILLPLANTCD
+    WHERE
         t05.TRN1PLANTCD = 'P001'
         AND (
                 (t05.TRN1Date >= @FromDate AND t05.TRN1Date <= @ToDate)
                 OR
-                (@Month IS NOT NULL AND @Year IS NOT NULL 
-                 AND MONTH(t05.TRN1Date) = @Month 
+                (@Month IS NOT NULL AND @Year IS NOT NULL
+                 AND MONTH(t05.TRN1Date) = @Month
                  AND YEAR(t05.TRN1Date) = @Year)
             )
         AND (
-            @Labs IS NULL 
+            @Labs IS NULL
             OR (
-                (@ExcludeLabs = 0 AND REPLACE(OCM1.codedesc, ' ', '') IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
+                (@ExcludeLabs = 0 AND OCM1.codedesc IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
                 OR
-                (@ExcludeLabs = 1 AND REPLACE(OCM1.codedesc, ' ', '') NOT IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
+                (@ExcludeLabs = 1 AND OCM1.codedesc NOT IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
             )
         )
 
     UNION ALL
 
+    -- Part 2: Training Records
     SELECT DISTINCT
         b.BLMNBILLNO AS BILLNO,
-        CONVERT(NVARCHAR(10), BLMNDATE, 103) AS InvoiceDate,
         TRN4REFNO AS RegistrationNo,
         TRN4REMARKS AS SampleName,
         'Training' AS Lab,
-        FORMAT(CONVERT(DATETIME, t.TRN4DATE), 'dd/MM/yyyy HH:mm:ss') AS RegistrationDateTime,
-        '' AS LabTatDate,
+        t.TRN4DATE AS RegistrationDate,
         NULL AS TatDate,
-        '' AS AnalysisCompletionDateTime,
         NULL AS TRN2COMPLETIONDT,
-        NULL AS HodReview
+        NULL AS HodReview,
+        'Pending' AS Status -- Assuming Training is always pending release in this context
     FROM BILLMAIN b
-        INNER JOIN TRN4STUDEND t 
-            ON b.blmncustcd = t.TRN4PARTYCD
-    WHERE 
+    INNER JOIN TRN4STUDEND t ON b.blmncustcd = t.TRN4PARTYCD
+    WHERE
         trn4plantcd = 'P001'
         AND (
                 (t.TRN4Date >= @FromDate AND t.TRN4Date <= @ToDate)
                 OR
-                (@Month IS NOT NULL AND @Year IS NOT NULL 
-                 AND MONTH(t.TRN4Date) = @Month 
+                (@Month IS NOT NULL AND @Year IS NOT NULL
+                 AND MONTH(t.TRN4Date) = @Month
                  AND YEAR(t.TRN4Date) = @Year)
             )
         AND (
-            @Labs IS NULL 
+            @Labs IS NULL
             OR (
                 (@ExcludeLabs = 0 AND 'Training' IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
                 OR
                 (@ExcludeLabs = 1 AND 'Training' NOT IN (SELECT Value FROM dbo.SplitStrings(@Labs, ',')))
             )
         )
+),
+-- 4. FinalData CTE: Joins SampleData with RegisVal and calculates the distributed value
+FinalData AS
+(
+    SELECT
+        s.*,
+        r.RegisVal,
+        -- Calculate distributed value
+        CAST(
+            r.RegisVal / NULLIF(COUNT(s.RegistrationNo) OVER (PARTITION BY s.RegistrationNo), 0)
+            AS DECIMAL(18,2)
+        ) AS DistributedRegisVal
+    FROM SampleData s
+    LEFT JOIN RegisBase r
+        ON s.RegistrationNo = r.RegisNo
 )
+-- 5. FINAL SUMMARY SELECT
 SELECT
-    c.Lab,
-    COUNT(*) AS Samples,
-    SUM(CASE 
-            WHEN c.TRN2COMPLETIONDT IS NULL OR ISNULL(c.HodReview, '') <> 'Y' 
-            THEN 1 ELSE 0 END
-       ) AS Pendings,
-    SUM(CASE 
-            WHEN c.TRN2COMPLETIONDT IS NOT NULL AND c.HodReview = 'Y' 
-            THEN 1 ELSE 0 END
-       ) AS Released,
-    SUM(CASE 
-            WHEN c.TRN2COMPLETIONDT IS NOT NULL 
-                 AND c.HodReview = 'Y' 
-                 AND c.TRN2COMPLETIONDT < c.TatDate 
-            THEN 1 ELSE 0 END
-       ) AS ReleasedBeforeTat,
-    SUM(CASE 
-            WHEN c.TRN2COMPLETIONDT IS NOT NULL 
-                 AND c.HodReview = 'Y' 
-                 AND CONVERT(DATETIME, c.TRN2COMPLETIONDT, 120) = CONVERT(DATETIME, c.TatDate, 120)
-            THEN 1 ELSE 0 END
-       ) AS ReleasedOnTat,
-    SUM(CASE 
-            WHEN c.TRN2COMPLETIONDT IS NOT NULL 
-                 AND c.HodReview = 'Y' 
-                 AND c.TRN2COMPLETIONDT > c.TatDate 
-            THEN 1 ELSE 0 END
-       ) AS ReleasedAfterTat,
-    SUM(CASE 
-            WHEN (c.TRN2COMPLETIONDT IS NULL OR ISNULL(c.HodReview, '') <> 'Y')
-                 AND c.TatDate IS NOT NULL
-                 AND GETDATE() > c.TatDate
-            THEN 1 ELSE 0 END
-       ) AS PendingBeyondTat,
-    SUM(CASE 
-            WHEN (c.TRN2COMPLETIONDT IS NULL OR ISNULL(c.HodReview, '') <> 'Y')
-                 AND c.BILLNO IS NOT NULL
-            THEN 1 ELSE 0 END
-       ) AS PendingInvoiced,
-    SUM(CASE 
-            WHEN (c.TRN2COMPLETIONDT IS NULL OR ISNULL(c.HodReview, '') <> 'Y')
-                 AND c.BILLNO IS NULL
-            THEN 1 ELSE 0 END
-       ) AS PendingBilled,
+    f.Lab,
+    COUNT(f.RegistrationNo) AS Samples, -- Total Samples (Registrations)
+    SUM(CASE WHEN f.Status = 'Pending' THEN 1 ELSE 0 END) AS Pendings,
+    SUM(CASE WHEN f.Status = 'Released' THEN 1 ELSE 0 END) AS Released,
 
-    SUM(CASE 
-            WHEN (c.TRN2COMPLETIONDT IS NULL OR ISNULL(c.HodReview, '') <> 'Y')
-            THEN ISNULL(r.RegisVal, 0)
-            ELSE 0
-        END
-    ) AS PendingRegValue,
+    -- Released TAT Analysis
+    SUM(CASE WHEN f.Status = 'Released' AND DATEDIFF(DAY, f.TRN2COMPLETIONDT, f.TatDate) > 0 THEN 1 ELSE 0 END) AS ReleasedBeforeTat,
+    SUM(CASE WHEN f.Status = 'Released' AND DATEDIFF(DAY, f.TRN2COMPLETIONDT, f.TatDate) = 0 THEN 1 ELSE 0 END) AS ReleasedOnTat,
+    SUM(CASE WHEN f.Status = 'Released' AND DATEDIFF(DAY, f.TRN2COMPLETIONDT, f.TatDate) < 0 THEN 1 ELSE 0 END) AS ReleasedAfterTat,
 
-    SUM(ISNULL(r.RegisVal, 0)) AS TotalRegValue
+    -- Pending TAT Analysis (using RegistrationDate and current date)
+    SUM(CASE WHEN f.Status = 'Pending' AND DATEDIFF(DAY, GETDATE(), f.TatDate) > 0 THEN 1 ELSE 0 END) AS PendingBeforeTat, -- TAT date is in the future relative to today
+    SUM(CASE WHEN f.Status = 'Pending' AND DATEDIFF(DAY, GETDATE(), f.TatDate) <= 0 THEN 1 ELSE 0 END) AS PendingBeyondTat, -- TAT date is today or in the past relative to today (i.e., missed TAT)
+    
+    -- Additional Pending metrics (assuming no direct way to track Invoiced/Billed status at sample level from provided columns)
+    -- Setting these to 0 or based on the general BILLNO presence for TRN205 records, if reliable:
+    SUM(CASE WHEN f.Status = 'Pending' AND f.BILLNO IS NOT NULL THEN 1 ELSE 0 END) AS PendingInvoiced,
+    SUM(CASE WHEN f.Status = 'Pending' AND f.BILLNO IS NOT NULL THEN 1 ELSE 0 END) AS PendingBilled, -- Assuming Billed = Invoiced in this context
 
-FROM CombinedData c
-LEFT JOIN RegisBase r 
-    ON c.RegistrationNo = r.RegisNo
-GROUP BY c.Lab
-ORDER BY c.Lab;
+    -- Value Totals
+    SUM(f.DistributedRegisVal) AS TotalRegValue,
+    SUM(CASE WHEN f.Status = 'Pending' THEN f.DistributedRegisVal ELSE 0 END) AS PendingRegValue
+    
+FROM FinalData f
+WHERE
+    @StatusFilter IS NULL OR f.Status = @StatusFilter -- Apply final status filter
+GROUP BY
+    f.Lab
+ORDER BY
+    f.Lab;
 ";
 
                 var labs = request.Labs?.Any() == true ? string.Join(",", request.Labs) : null;
@@ -398,6 +645,7 @@ ORDER BY c.Lab;
                     ToDate = request.ToDate,
                     Month = request.Month,
                     Year = request.Year,
+                    StatusFilter = request.StatusFilter,
                     Labs = labs,
                     ExcludeLabs = request.ExcludeLabs ? 1 : 0
                 });

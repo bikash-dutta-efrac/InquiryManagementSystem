@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.189:5075/api";
+const API_BASE_URL = "http://192.168.3.177:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -30,6 +30,8 @@ export async function getSampleOverview(filters = {}) {
     headers: { "Content-Type": "application/json" },
   });
 
+  console.log(body, response.data)
+
   return response.data;
 }
 
@@ -43,14 +45,21 @@ export async function getLabSummaries(filters = {}) {
   return response.data;
 }
 
-// New Lab Parameters endpoint for fetching paginated detailed lab data
 export async function getSampleSummaries(filters = {}) {
   const body = buildRequestBody(filters);
 
   const response = await axios.post(`${API_BASE_URL}/lab/samples`, body, {
     headers: { "Content-Type": "application/json" },
   });
-  console.log(body, response.data)
+
+  return response.data;
+}
+
+export async function getSampleDetailsByRegNo(regNo) {
+
+  const response = await axios.post(`${API_BASE_URL}/lab/sample-details`, regNo, {
+    headers: { "Content-Type": "application/json" },
+  });
 
   return response.data;
 }
@@ -66,7 +75,6 @@ export async function getLabNames(filters = {}) {
   return response.data;
 }
 
-// Inquiries endpoint
 export async function getInquiries(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries`, body, {
@@ -75,7 +83,6 @@ export async function getInquiries(filters = {}) {
   return response.data;
 }
 
-// Projections endpoint
 export async function getProjections(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/projections`, body, {
@@ -84,7 +91,6 @@ export async function getProjections(filters = {}) {
   return response.data;
 }
 
-// Verticals endpoint
 export async function getVerticals(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries/verticals`, body, {
@@ -93,7 +99,6 @@ export async function getVerticals(filters = {}) {
   return response.data;
 }
 
-// BD Names endpoint
 export async function getBdNames(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries/bdnames`, body, {
@@ -102,7 +107,6 @@ export async function getBdNames(filters = {}) {
   return response.data;
 }
 
-// Client Names endpoint
 export async function getClientNames(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries/clientnames`, body, {

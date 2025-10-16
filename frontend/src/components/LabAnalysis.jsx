@@ -112,7 +112,8 @@ const LabAnalysisSummaryCard = ({ title, value, color = "gray", icon }) => {
   );
 };
 
-// Simplified getStatusBadge logic to use the explicit 'status' field
+// Simplified getStatusBadge logic to use the explicit 'status' field, 
+// but using solid badge colors for the design to match SampleAnalysis.
 const getStatusBadge = (item) => {
   const status =
     item.status?.toUpperCase() || (item.mailingDate ? "RELEASED" : "PENDING");
@@ -120,23 +121,21 @@ const getStatusBadge = (item) => {
   if (status === "RELEASED") {
     return {
       text: "Released",
-      badgeColor: "bg-green-100 text-green-700",
+      badgeColor: "bg-green-500 text-white", // Solid green badge
       icon: <HiCheckCircle className="w-4 h-4" />,
     };
   }
 
-  // Fallback for "PENDING" or any other status
   return {
     text:
       status === "PENDING"
         ? "Pending"
         : status.charAt(0) + status.slice(1).toLowerCase(),
-    badgeColor: "bg-red-100 text-red-700",
+    badgeColor: "bg-red-500 text-white", // Solid red badge
     icon: <HiClock className="w-4 h-4" />,
   };
 };
 
-// PaginationControls component (Copied from InquiryList.jsx)
 const PaginationControls = ({
   currentPage,
   totalPages,
@@ -185,153 +184,130 @@ const PaginationControls = ({
   </div>
 );
 
-// Lab Analysis Table remains mostly the same, accepts paginated data
+// Lab Analysis Table now uses the SampleAnalysis table structure and styling
 const LabAnalysisTable = ({ data }) => {
   return (
-    <div className="bg-white p-6 my-4 rounded-2xl shadow-lg border border-gray-200 overflow-x-auto">
-      <div className="min-w-full">
-        {/* Header Row for larger screens - 7 columns */}
-        <div className="hidden lg:grid grid-cols-[2fr_2.5fr_1fr_1fr_1fr_1fr_1fr_1.5fr] gap-4 py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[1000px]">
-          <div className="col-span-1">Registration No.</div>
-          <div className="col-span-1">Sample Name / Lab</div>
-          <div className="col-span-1">Registration Date</div>
-          <div className="col-span-1">TAT Date</div>
-          <div className="col-span-1">Mailing Date</div>
-          <div className="col-span-1">Completion Date</div>
-          <div className="col-span-1 text-right">Registration Value</div>
-          <div className="col-span-1">Status</div>
-        </div>
+    <div className="bg-white p-6 my-4 rounded-2xl shadow-lg border border-gray-200">
+      
+      {/* Desktop Table View */}
+      <div className="overflow-x-auto rounded-xl shadow-inner hidden lg:block">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-blue-600/90 text-white">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider rounded-tl-xl w-1/5">
+                Registration No.
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider w-2/5">
+                Sample Name
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider w-1/5">
+                Registration Date
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider w-1/10">
+                Reg Value
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider rounded-tr-xl w-1/10">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-100">
+            {data.map((item, index) => {
+              const registrationNo = item.registrationNo || "-";
+              const sampleName = item.sampleName || "-";
+              const regDateTime = formatDate(item.registrationDate);
+              const value = `₹${formatAmount(item.regisVal)}`;
+              const statusBadge = getStatusBadge(item);
 
-        {/* Data Rows */}
-        <div className="divide-y divide-gray-100">
-          {data.map((item, index) => {
-            const registrationNo = item.registrationNo || "-";
-            const sampleName = item.sampleName || "-";
-            const labName = item.lab || "-";
-
-            // New date/time fields
-            const regDateTime = formatDate(item.registrationDateTime, true);
-            const labTatDate = formatDate(item.labTatDate);
-            const mailingDate = formatDate(item.mailingDate);
-            const completionDateTime = formatDate(item.completionDateTime);
-            const value = `₹${formatAmount(item.distributedRegisVal)}`;
-            const statusBadge = getStatusBadge(item);
-
-            return (
-              <div
-                key={registrationNo + index}
-                className="py-5 px-6 hover:bg-gray-50 transition-colors duration-200"
-              >
-                {/* Card layout for small and medium screens (lg:hidden) */}
-                <div className="lg:hidden grid grid-cols-1 gap-6 p-6 mb-4 rounded-2xl shadow-lg bg-white border border-gray-100">
-                  {/* Header Section: Reg. No and Status */}
-                  <div className="flex items-start justify-between border-b pb-4 border-gray-200">
-                    <h3 className="text-base font-extrabold text-gray-900 line-clamp-2 pr-2">
-                      {registrationNo}
-                    </h3>
+              return (
+                <tr key={registrationNo + index} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-normal text-sm font-semibold text-gray-900">
+                    {registrationNo}
+                  </td>
+                  <td className="px-6 py-4 whitespace-normal text-sm text-gray-800">
+                    {sampleName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                    {regDateTime}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700 font-bold">
+                    {value}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusBadge.badgeColor} flex-shrink-0`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${statusBadge.badgeColor}`}
                     >
                       {statusBadge.icon}
                       {statusBadge.text}
                     </span>
-                  </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-                  {/* Sample & Lab */}
-                  <div className="text-sm font-medium text-gray-700 break-words">
-                    <span className="font-semibold text-gray-500 block">
-                      Sample:
-                    </span>
-                    <p className="font-bold text-gray-800">{sampleName}</p>
-                    <span className="font-semibold text-gray-500 block mt-2">
-                      Lab:
-                    </span>
-                    <p className="font-bold text-blue-700">{labName}</p>
-                  </div>
+      {/* Mobile layout - Keeping the original LabAnalysis card-style mobile view but with updated badge styling */}
+      <div className="lg:hidden divide-y divide-gray-100">
+        {data.map((item, index) => {
+          const registrationNo = item.registrationNo || "-";
+          const sampleName = item.sampleName || "-";
+          const regDateTime = formatDate(item.registrationDate);
+          const value = `₹${formatAmount(item.regisVal)}`;
+          const statusBadge = getStatusBadge(item);
 
-                  {/* Date & Value Grid */}
-                  <div className="grid grid-cols-2 gap-4 text-xs font-medium">
-                    <div className="flex flex-col">
-                      <span className="text-gray-500">Reg. Date:</span>
-                      <span className="text-gray-900 font-semibold">
-                        {regDateTime}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500">TAT Date:</span>
-                      <span className="text-gray-600 font-semibold">
-                        {labTatDate}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500">Completion Date:</span>
-                      <span className="text-gray-600 font-semibold">
-                        {completionDateTime.split(" ")[0]}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-right">
-                        Reg. Value:
-                      </span>
-                      <span className="text-gray-700 font-semibold text-right">
-                        {value}
-                      </span>
-                    </div>
-                  </div>
+          return (
+            <div
+              key={registrationNo + index}
+              className="py-5 px-6 hover:bg-gray-50 transition-colors duration-200"
+            >
+              <div className="grid grid-cols-1 gap-4 p-4 mb-4 rounded-xl shadow-lg bg-white border border-gray-100">
+                {/* Header Section */}
+                <div className="flex items-start justify-between border-b pb-3 border-gray-200">
+                  <h3 className="text-base font-extrabold text-gray-900 line-clamp-2 pr-2">
+                    {registrationNo}
+                  </h3>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${statusBadge.badgeColor}`}
+                  >
+                    {statusBadge.icon}
+                    {statusBadge.text}
+                  </span>
                 </div>
 
-                {/* Grid layout for large screens */}
-                <div className="hidden lg:grid grid-cols-[2fr_2.5fr_1fr_1fr_1fr_1fr_1fr_1.5fr] gap-4 items-center">
-                  {/* Reg. No */}
-                  <div className="col-span-1 text-xs font-semibold text-gray-900 break-words pr-2">
-                    {registrationNo}
+                {/* Sample Name */}
+                <div>
+                  <span className="block text-gray-500 text-xs font-semibold">
+                    Sample:
+                  </span>
+                  <p className="text-gray-800 font-semibold">{sampleName}</p>
+                </div>
+
+                {/* Registration Date & Value */}
+                <div className="grid grid-cols-2 gap-4 text-xs font-medium">
+                  <div className="flex flex-col">
+                    <span className="text-gray-500">Reg. Date:</span>
+                    <span className="text-gray-900 font-semibold">
+                      {regDateTime}
+                    </span>
                   </div>
-                  {/* Sample Name / Lab */}
-                  <div className="col-span-1 text-sm text-gray-700 break-words pr-2">
-                    <p className="font-semibold text-xs text-gray-800 line-clamp-2">
-                      {sampleName}
-                    </p>
-                    <p className="text-xs text-blue-600 font-medium mt-1">
-                      {labName}
-                    </p>
-                  </div>
-                  {/* Reg. Date */}
-                  <div className="col-span-1 text-xs text-gray-700 whitespace-nowrap">
-                    {regDateTime.split(" ")[0]}
-                  </div>
-                  {/* TAT Date */}
-                  <div className="col-span-1 text-xs text-gray-600 font-medium whitespace-nowrap">
-                    {labTatDate}
-                  </div>
-                  <div className="col-span-1 text-xs text-gray-700 whitespace-nowrap">
-                    {completionDateTime.split(" ")[0]}
-                  </div>
-                  {/* Mailing Date */}
-                  <div className="col-span-1 text-xs text-gray-600 font-medium whitespace-nowrap">
-                    {mailingDate}
-                  </div>
-                  {/* Value */}
-                  <div className="col-span-1 text-sm text-gray-700 font-bold break-words text-right">
-                    {value}
-                  </div>
-                  {/* Status */}
-                  <div className="col-span-1">
-                    <span
-                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${statusBadge.badgeColor}`}
-                    >
-                      {statusBadge.icon}
-                      {statusBadge.text}
+                  <div className="flex flex-col text-right">
+                    <span className="text-gray-500">Reg. Value:</span>
+                    <span className="text-gray-700 font-semibold">
+                      {value}
                     </span>
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
+
 
 const LabSummaryKpiCard = ({ summaryData }) => {
   const items = summaryData || [];
@@ -488,9 +464,6 @@ const LabSummaryKpiCard = ({ summaryData }) => {
 
                 {/* --- Group 3: Value & Billing --- */}
                 <div className="mt-3 pt-2 space-y-2 text-xs text-gray-700 border-t border-gray-200">
-                  <h4 className="text-[10px] font-bold uppercase text-blue-500 pb-1 border-b border-blue-100">
-                    Value & Billing
-                  </h4>
                   {/* Total Reg Value */}
                   <div className="flex items-center justify-between font-bold text-gray-900">
                     <span className="flex items-center gap-2">
@@ -610,7 +583,7 @@ export default function LabAnalysis({
             title="Pending Value"
             value={`₹${formatAmount(sampleOverview.totalPendingRegVal)}` || 0}
             color="orange"
-            icon={<MdPaid className="w-5 h-5" />}
+            icon={<HiCurrencyRupee className="w-5 h-5" />}
           />
 
         </div>

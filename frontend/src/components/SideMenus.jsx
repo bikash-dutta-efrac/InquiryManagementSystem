@@ -7,6 +7,7 @@ import {
 import {
   ChevronsLeft,
   ChevronsRight,
+  TestTube2,
 } from "lucide-react";
 import {
   MdAssignment,
@@ -22,6 +23,7 @@ export default function SideMenus({ activeView, onViewChange, isMinimized = fals
   const analysisMenus = [
     { key: "bdProjection", label: "Bd Projection", icon: HiChartBar },
     { key: "labAnalysis", label: "Lab Analysis", icon: HiBeaker },
+    { key: "sampleAnalysis", label: "Sample Analysis", icon: TestTube2 },
   ];
 
   const renderMenuItem = (menu) => (

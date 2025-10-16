@@ -9,6 +9,7 @@
         public int ReleasedBeforeTat { get; set; }
         public int ReleasedOnTat { get; set; }
         public int ReleasedAfterTat { get; set; }
+        public int PendingBeforeTat { get; set; }
         public int PendingBeyondTat { get; set; }
         public int PendingInvoiced { get; set; }
         public int PendingBilled { get; set; }
