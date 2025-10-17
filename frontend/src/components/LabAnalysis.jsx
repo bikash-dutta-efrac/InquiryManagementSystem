@@ -31,27 +31,38 @@ function formatAmount(num) {
   return (number / si[i].value).toFixed(2).replace(rx, "$1") + si[i].symbol;
 }
 
-// Helper to format date/time strings from "MM/DD/YYYY HH:mm:ss"
 const formatDate = (dateString, includeTime = false) => {
-  if (!dateString) return "-";
+  if (!dateString) return "N/A";
   try {
-    // The format is "MM/DD/YYYY HH:mm:ss"
-    const [datePart, timePart] = dateString.split(" ");
-    const [month, day, year] = datePart.split("/");
-    const isoDateString = `${year}-${month}-${day}T${timePart || "00:00:00"}`;
+    const parts = dateString.split(/[\/ :]/);
+    
+    if (parts.length < 3) return dateString;
+    
+    const date = new Date(
+      parts[2],
+      parts[1] - 1,
+      parts[0],
+      parts[3] || 0,
+      parts[4] || 0,
+      parts[5] || 0
+    );
 
-    const date = new Date(isoDateString);
-    if (isNaN(date.getTime())) return dateString;
-
-    const dateOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
-    const timeOptions = { hour: "2-digit", minute: "2-digit", hour12: true };
-
-    let options = dateOptions;
-    if (includeTime) {
-      options = { ...dateOptions, ...timeOptions };
+    if (isNaN(date.getTime())) {
+      return dateString;
     }
 
-    return date.toLocaleString("en-IN", options).replace(/, /g, " ");
+    const dateOptions = { day: "2-digit", month: "short", year: "numeric" };
+    const timeOptions = includeTime && parts.length > 3
+      ? { hour: "2-digit", minute: "2-digit", hour12: true }
+      : {};
+      
+    const formattedDate = date.toLocaleDateString("en-GB", dateOptions);
+    const formattedTime = (includeTime && parts.length > 3) 
+        ? " " + date.toLocaleTimeString("en-US", timeOptions) 
+        : "";
+
+    return formattedDate + formattedTime;
+
   } catch (e) {
     return dateString;
   }
@@ -112,26 +123,32 @@ const LabAnalysisSummaryCard = ({ title, value, color = "gray", icon }) => {
   );
 };
 
-// Simplified getStatusBadge logic to use the explicit 'status' field, 
-// but using solid badge colors for the design to match SampleAnalysis.
+// Updated getStatusBadge for "Partial Released" color change (using amber/orange)
 const getStatusBadge = (item) => {
-  const status =
-    item.status?.toUpperCase() || (item.mailingDate ? "RELEASED" : "PENDING");
 
-  if (status === "RELEASED") {
+  if (item.status === "Released") {
     return {
       text: "Released",
-      badgeColor: "bg-green-500 text-white", // Solid green badge
+      badgeColor: "bg-green-500 text-white text-[11px]",
       icon: <HiCheckCircle className="w-4 h-4" />,
+    };
+  }
+
+  if (item.status === "PartialReleased") {
+    // Changed color to amber for Partial Released
+    return {
+      text: "Partial Released",
+      badgeColor: "bg-amber-500 text-white text-[11px]",
+      icon: <HiClock className="w-4 h-4" />,
     };
   }
 
   return {
     text:
-      status === "PENDING"
+      item.status === "Pending"
         ? "Pending"
-        : status.charAt(0) + status.slice(1).toLowerCase(),
-    badgeColor: "bg-red-500 text-white", // Solid red badge
+        : item.status.charAt(0) + item.status.slice(1).toLowerCase(),
+    badgeColor: "bg-red-500 text-white text-[11px]",
     icon: <HiClock className="w-4 h-4" />,
   };
 };
@@ -200,11 +217,11 @@ const LabAnalysisTable = ({ data }) => {
               <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider w-2/5">
                 Sample Name
               </th>
-              <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider w-1/5">
+              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider w-1/5">
                 Registration Date
               </th>
               <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider w-1/10">
-                Reg Value
+                Registration Value
               </th>
               <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider rounded-tr-xl w-1/10">
                 Status
@@ -227,7 +244,7 @@ const LabAnalysisTable = ({ data }) => {
                   <td className="px-6 py-4 whitespace-normal text-sm text-gray-800">
                     {sampleName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-gray-500">
                     {regDateTime}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700 font-bold">
@@ -308,6 +325,69 @@ const LabAnalysisTable = ({ data }) => {
   );
 };
 
+const StatusFilterChips = ({ currentFilter, setFilter, data }) => {
+  const statuses = useMemo(() => {
+    const chipColors = {
+        "All": { 
+          name: "All", status: "All", 
+          active: "bg-blue-600 text-white shadow-xs ring-2 ring-blue-300", 
+          inactive: "bg-blue-100 text-blue-600 border border-blue-200 hover:bg-blue-50" 
+        },
+        "Released": { 
+          name: "Released", status: "Released", 
+          active: "bg-green-600 text-white shadow-xs ring-2 ring-green-300", 
+          inactive: "bg-green-100 text-green-600 border border-green-200 hover:bg-green-50" 
+        },
+        "Pending": { 
+          name: "Pending", status: "Pending", 
+          active: "bg-red-600 text-white shadow-xs ring-2 ring-red-300", 
+          inactive: "bg-red-100 text-red-600 border border-red-200 hover:bg-red-50" 
+        },
+        "PartialReleased": { 
+          name: "Partial Released", status: "PartialReleased", 
+          active: "bg-amber-600 text-white shadow-xs ring-2 ring-amber-300", 
+          inactive: "bg-amber-100 text-amber-600 border border-amber-200 hover:bg-amber-50" 
+        },
+    };
+
+    const statusCounts = data.reduce((acc, item) => {
+      acc[item.status] = (acc[item.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const chipData = [
+      { count: data.length, ...chipColors["All"] },
+      { count: statusCounts["Released"] || 0, ...chipColors["Released"] },
+      { count: statusCounts["Pending"] || 0, ...chipColors["Pending"] },
+      { count: statusCounts["PartialReleased"] || 0, ...chipColors["PartialReleased"] },
+    ];
+    
+    // Only show chips with data, except 'All'
+    return chipData.filter(chip => chip.count > 0 || chip.status === "All"); 
+  }, [data]);
+
+  return (
+    <div className="flex flex-wrap gap-3 mb-6 p-1 rounded-xl">
+      {statuses.map((chip) => (
+        <button
+          key={chip.status}
+          onClick={() => setFilter(chip.status)}
+          className={`
+            px-4 py-1.5 rounded-full text-[12px] font-semibold transition-all duration-300 ease-in-out 
+            transform hover:scale-[1.03] focus:outline-none focus:ring-2
+            ${currentFilter === chip.status
+              ? `${chip.active} ring-opacity-50`
+              : `${chip.inactive} focus:ring-2 focus:ring-opacity-50 focus:ring-gray-300`
+            }
+          `}
+        >
+          {chip.name} <span className="font-bold ml-1">{formatAmount(chip.count)}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
 
 const LabSummaryKpiCard = ({ summaryData }) => {
   const items = summaryData || [];
@@ -351,10 +431,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
           className="overflow-x-auto overflow-y-hidden scroll-smooth px-4 py-3" // Reduced horizontal padding
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          {/* Flex wrapper for the cards */}
           <div className="flex flex-nowrap gap-4" role="list">
-            {" "}
-            {/* Reduced gap */}
             {items.map((item, idx) => (
               <div
                 key={idx}
@@ -370,21 +447,16 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                 role="listitem"
                 tabIndex={0}
               >
-                {/* Card Title */}
                 <div className="flex items-center mb-3">
                   <h3 className="font-bold text-base text-gray-900 line-clamp-2">
-                    {" "}
-                    {/* Reduced font size */}
                     {item.lab ?? "N/A"}
                   </h3>
                 </div>
 
-                {/* --- Group 1: Samples Overview (Reduced spacing/font) --- */}
                 <div className="space-y-2 text-xs text-gray-700">
                   <h4 className="text-[10px] font-bold uppercase text-indigo-500 pb-1 border-b border-indigo-100">
                     Samples Status
                   </h4>
-                  {/* Total Samples */}
                   <div className="flex items-center justify-between font-bold text-gray-900">
                     <span className="flex items-center gap-2">
                       <span className="text-indigo-500">
@@ -394,7 +466,6 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                     </span>
                     <span>{formatAmount(item.samples ?? 0)}</span>
                   </div>
-                  {/* Released */}
                   <div className="flex items-center justify-between pb-1 border-b border-indigo-100">
                     <span className="flex items-center gap-2 text-green-600">
                       <span className="text-green-500">
@@ -414,7 +485,6 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                       {formatAmount(item.releasedBeforeTat ?? 0)}
                     </span>
                   </div>
-                  {/* Released On TAT */}
                   <div className="flex items-center justify-between text-[11px] ml-1">
                     <span className="flex items-center gap-1.5">
                       Released On TAT
@@ -423,7 +493,6 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                       {formatAmount(item.releasedOnTat ?? 0)}
                     </span>
                   </div>
-                  {/* Released After TAT */}
                   <div className="flex items-center justify-between text-[11px] ml-1">
                     <span className="flex items-center gap-1.5">
                       Released After TAT
@@ -432,7 +501,6 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                       {formatAmount(item.releasedAfterTat ?? 0)}
                     </span>
                   </div>
-                  {/* Pending */}
                   <div className="flex items-center justify-between pb-1 border-b border-indigo-100">
                     <span className="flex items-center gap-2 text-red-600">
                       <span className="text-red-500">
@@ -462,9 +530,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                   </div>
                 </div>
 
-                {/* --- Group 3: Value & Billing --- */}
                 <div className="mt-3 pt-2 space-y-2 text-xs text-gray-700 border-t border-gray-200">
-                  {/* Total Reg Value */}
                   <div className="flex items-center justify-between font-bold text-gray-900">
                     <span className="flex items-center gap-2">
                       <span className="text-blue-500">
@@ -474,7 +540,6 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                     </span>
                     <span>₹{formatAmount(item.totalRegValue ?? 0)}</span>
                   </div>
-                  {/* Pending Reg Value */}
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-red-600">
                       <span className="text-red-500">
@@ -505,15 +570,27 @@ export default function LabAnalysis({
   const rawData = data;
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("All"); // State for filtering
   const itemsPerPage = 20;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [rawData]);
+  // Memoized filtered data
+  const filteredData = useMemo(() => {
+    if (statusFilter === "All") {
+      return rawData;
+    }
+    // Filter logic
+    return rawData.filter((item) => item.status === statusFilter);
+  }, [rawData, statusFilter]);
 
-  const totalPages = Math.ceil(rawData.length / itemsPerPage);
+
+  useEffect(() => {
+    // Reset page to 1 when rawData or filter changes
+    setCurrentPage(1);
+  }, [rawData, statusFilter]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = rawData.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -555,15 +632,13 @@ export default function LabAnalysis({
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 my-8">
-          {/* Card 1: Total Samples */}
           <LabAnalysisSummaryCard
             title="Samples"
-            value={formatAmount(sampleOverview.totalSamples)}
+            value={sampleOverview.totalSamples}
             color="blue"
             icon={<HiBeaker className="w-5 h-5" />}
           />
 
-          {/* Card 2: Total Value */}
           <LabAnalysisSummaryCard
             title="Released Samples"
             value={`${formatAmount(sampleOverview.totalReleased)}`}
@@ -571,7 +646,6 @@ export default function LabAnalysis({
             icon={<HiCheckCircle className="w-5 h-5" />}
           />
 
-          {/* Card 3: Pending Samples */}
           <LabAnalysisSummaryCard
             title="Pending Samples"
             value={formatAmount(sampleOverview.totalPending) || 0}
@@ -591,14 +665,19 @@ export default function LabAnalysis({
         <LabSummaryKpiCard summaryData={finalSummary} />
       </div>
       <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl">
-        {/* Total Rows Display */}
         <div className="flex justify-between items-center pb-4">
           <span className="block text-sm font-medium text-gray-500 mt-1">
-            Total Logs: {rawData.length}
+            Total Logs: {filteredData.length}
           </span>
         </div>
 
-        {/* --- Pagination TOP --- */}
+        {/* Status Filter Chips (Updated) */}
+        <StatusFilterChips
+          currentFilter={statusFilter}
+          setFilter={setStatusFilter}
+          data={rawData} // Pass rawData to calculate total counts
+        />
+
         {totalPages > 1 && (
           <PaginationControls
             currentPage={currentPage}
@@ -608,19 +687,23 @@ export default function LabAnalysis({
           />
         )}
 
-        {/* 3. Main Content: Table - uses paginatedData */}
         {paginatedData.length > 0 ? (
           <LabAnalysisTable data={paginatedData} />
         ) : (
-          // This case handles when the rawData is loaded but the current page is empty (e.g., if total pages > 0 but the last page is clicked)
-          rawData.length > 0 && (
+          filteredData.length > 0 && (
             <div className="text-center text-gray-600 py-10 my-4 text-xl font-medium rounded-2xl bg-white shadow-xl border border-gray-200">
               No logs found on this page.
             </div>
           )
         )}
+        
+        {/* Render a specific message if no data matches the filter */}
+        {filteredData.length === 0 && rawData.length > 0 && (
+            <div className="text-center text-gray-600 py-10 my-4 text-xl font-medium rounded-2xl bg-white shadow-xl border border-gray-200">
+              No logs match the selected filter **"{statusFilter}"**.
+            </div>
+        )}
 
-        {/* --- Pagination BOTTOM --- */}
         {totalPages > 1 && (
           <PaginationControls
             currentPage={currentPage}

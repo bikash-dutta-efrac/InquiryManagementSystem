@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
@@ -7,7 +7,6 @@ import {
   Briefcase,
   Building2,
   Telescope,
-  ListChecks,
   X,
   RefreshCcw,
   Search,
@@ -174,8 +173,7 @@ export default function Filters({
 }) {
   const today = new Date();
 
-  // 🟢 NEW: Define the start date for "All Data"
-  const allDataRangeStart = new Date(2025, 3, 1).toISOString().split("T")[0]; // April is month index 3 (0-based)
+  const allDataRangeStart = new Date(2025, 3, 1).toISOString().split("T")[0];
   const defaultToDate = today.toISOString().split("T")[0];
 
   const defaultRange = {
@@ -185,14 +183,13 @@ export default function Filters({
   const defaultMonth = (today.getMonth() + 1).toString();
   const defaultYear = today.getFullYear().toString();
 
-  const [filterType, setFilterType] = useState("all"); // 🟢 UPDATED: Default to "all"
+  const [filterType, setFilterType] = useState("range");
   const [range, setRange] = useState(defaultRange);
   const [month, setMonth] = useState(defaultMonth);
   const [year, setYear] = useState(defaultYear);
   const [verticals, setVerticals] = useState([]);
   const [bdNames, setBdNames] = useState([]);
   const [clientNames, setClientNames] = useState([]);
-  const [labStatusFilter, setLabStatusFilter] = useState(null); 
   const [sortOrder, setSortOrder] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [dateField, setDateField] = useState("inqDate");
@@ -216,29 +213,11 @@ export default function Filters({
   const [clientOptions, setClientOptions] = useState([]);
   const [labOptions, setLabOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
-  const statusOptions = ["All", "Pending", "Released"]; 
 
-  // Flag for conditional rendering
   const isLabAnalysisView = queryType === "labAnalysis";
-
-  // -------------------------------------------------------------
-  // HELPER: Maps the UI status name to the SQL reviewsBy string
-  // -------------------------------------------------------------
-  const mapStatusToReviewsBy = (statusName) => {
-    switch (statusName) {
-      case "Pending":
-        return "pending";
-      case "Released":
-        return "released";
-      case "All":
-      default:
-        return null;
-    }
-  };
 
 
   const buildSearchRequest = (nextState = {}) => {
-    const nextLabStatusFilter = nextState.labStatusFilter ?? labStatusFilter; 
 
     const base = {
       dateField: nextState.dateField ?? dateField,
@@ -261,12 +240,11 @@ export default function Filters({
         ? false
         : nextState.excludeLabs ?? excludeLabs,
 
-      reviewsBy: isLabAnalysisView ? mapStatusToReviewsBy(nextLabStatusFilter) : null,
     };
 
     const nextFilterType = nextState.filterType ?? filterType;
     
-    if (nextFilterType === "all") { // 🟢 NEW: "All Data" case
+    if (nextFilterType === "all") {
         return {
             ...base,
             filterType: "all",
@@ -300,7 +278,6 @@ export default function Filters({
 
   // emit helper -> notify parent
   const emit = (next = {}) => {
-    const nextLabStatusFilter = next.labStatusFilter ?? labStatusFilter;
     const isLab = next.queryType === "labAnalysis" || isLabAnalysisView;
     const nextFilterType = next.filterType ?? filterType; // Use the next filterType
 
@@ -313,14 +290,12 @@ export default function Filters({
       bdNames: isLab ? [] : bdNames,
       clientNames: isLab ? [] : clientNames,
       labNames: isLab ? labNames : [],
-      labStatusFilter: nextLabStatusFilter,
       sortOrder,
       dateField,
       excludeVerticals: isLab ? false : excludeVerticals,
       excludeBds: isLab ? false : excludeBds,
       excludeClients: isLab ? false : excludeClients,
       excludeLabs: isLab ? excludeLabs : false,
-      reviewsBy: isLab ? mapStatusToReviewsBy(nextLabStatusFilter) : null,
       ...next,
     };
     onChange?.(payload);
@@ -334,14 +309,13 @@ export default function Filters({
 
   // Reset logic
   const handleReset = () => {
-    setFilterType("all"); // 🟢 UPDATED: Reset to "all"
+    setFilterType("range");
     setRange(defaultRange);
     setMonth(defaultMonth);
     setYear(defaultYear);
     setVerticals([]);
     setBdNames([]);
     setClientNames([]);
-    setLabStatusFilter(null); 
     setSortOrder("newest");
     setDateField("inqDate");
     setExcludeVerticals(false);
@@ -350,7 +324,7 @@ export default function Filters({
     setLabNames([]);
     onResetAll?.();
     emit({
-      filterType: "all", // 🟢 UPDATED: Reset to "all"
+      filterType: "range",
       range: defaultRange,
       month: defaultMonth,
       year: defaultYear,
@@ -388,10 +362,8 @@ export default function Filters({
     excludeVerticals,
     excludeLabs,
     isLabAnalysisView,
-    labStatusFilter, 
   ];
 
-  // Fetch verticals (Conditionally disabled for Lab Analysis view)
   useDebouncedEffect(
     () => {
       if (isLabAnalysisView) {
@@ -537,9 +509,6 @@ export default function Filters({
         }`}
       >
         
-        {/* ========================================================= */}
-        {/* CARD 1 (TOP ROW): Time Range, Sort, and Reset */}
-        {/* ========================================================= */}
         <div className="bg-gray-50 shadow-2xl rounded-3xl p-6 border border-gray-200">
           
           {/* Main flex container for Card 1: Toggles/Inputs on Left, Actions on Right */}
@@ -773,35 +742,6 @@ export default function Filters({
                     onSearchChange={setLabSearchTerm}
                     isExcluded={excludeLabs}
                   />
-                </div>
-
-                {/* Single-Select Status Filter (Col 2/4) - Full Width */}
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-2 h-6">
-                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
-                      <ListChecks className="w-4 h-4 text-gray-400" />
-                      <span>Status Filter</span>
-                    </span>
-                  </div>
-                  {/* 圷 ALIGNMENT FIX: Used h-[54px] to match CustomSelect height */}
-                  <div className="flex gap-2 bg-white rounded-2xl p-1 shadow-inner border border-gray-200 h-[54px]">
-                    {statusOptions.map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => {
-                          setLabStatusFilter(mapStatusToReviewsBy(status));
-                          emit({ labStatusFilter: mapStatusToReviewsBy(status) });
-                        }}
-                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-100 ${
-                          labStatusFilter === mapStatusToReviewsBy(status)
-                            ? "bg-blue-500 text-white shadow-md"
-                            : "bg-white text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Empty columns to fill remaining width (Col 3/4, Col 4/4) */}

@@ -444,10 +444,6 @@
             "format": "int32",
             "nullable": true
           },
-          "statusFilter": {
-            "type": "string",
-            "nullable": true
-          },
           "labs": {
             "type": "array",
             "items": {

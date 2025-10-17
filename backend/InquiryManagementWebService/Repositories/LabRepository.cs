@@ -177,7 +177,6 @@ FROM
                     ToDate = request.ToDate,
                     Month = request.Month,
                     Year = request.Year,
-                    StatusFilter = request.StatusFilter,
                     Labs = labs,
                     ExcludeLabs = request.ExcludeLabs ? 1 : 0
                 }, commandTimeout: commandTimeout);
@@ -289,7 +288,8 @@ Grouped AS
         MAX(s.RegistrationDateTime) AS RegistrationDateTime,
         STRING_AGG(s.SampleName, ', ') AS SampleNames,
         CASE
-            WHEN SUM(CASE WHEN s.IndividualStatus = 'Pending' THEN 1 ELSE 0 END) > 0 THEN 'Pending'
+            WHEN COUNT(DISTINCT s.IndividualStatus) > 1 THEN 'PartialReleased'  -- ✅ mixed statuses
+            WHEN MAX(s.IndividualStatus) = 'Pending' THEN 'Pending'
             ELSE 'Released'
         END AS Status
     FROM StatusData s
@@ -303,10 +303,7 @@ SELECT
     r.RegisVal
 FROM Grouped g
 LEFT JOIN RegisBase r ON g.RegistrationNo = r.RegisNo
-WHERE
-    @StatusFilter IS NULL OR g.Status = @StatusFilter
 ORDER BY g.RegistrationNo;
-
             ";
 
             using (var connection = new SqlConnection(_connectionString))
@@ -322,7 +319,6 @@ ORDER BY g.RegistrationNo;
                     ToDate = request.ToDate,
                     Month = request.Month,
                     Year = request.Year,
-                    StatusFilter = request.StatusFilter,
                     Labs = labs,
                     ExcludeLabs = request.ExcludeLabs ? 1 : 0
                 }, commandTimeout: commandTimeout);
@@ -629,8 +625,6 @@ SELECT
     SUM(CASE WHEN f.Status = 'Pending' THEN f.DistributedRegisVal ELSE 0 END) AS PendingRegValue
     
 FROM FinalData f
-WHERE
-    @StatusFilter IS NULL OR f.Status = @StatusFilter -- Apply final status filter
 GROUP BY
     f.Lab
 ORDER BY
@@ -645,7 +639,6 @@ ORDER BY
                     ToDate = request.ToDate,
                     Month = request.Month,
                     Year = request.Year,
-                    StatusFilter = request.StatusFilter,
                     Labs = labs,
                     ExcludeLabs = request.ExcludeLabs ? 1 : 0
                 });

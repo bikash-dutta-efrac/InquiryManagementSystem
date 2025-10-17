@@ -6,7 +6,6 @@
         public DateTime? ToDate { get; set; }
         public int? Month { get; set; }
         public int? Year { get; set; }
-        public string? StatusFilter { get; set; }
         public List<string>? Labs { get; set; }
         public bool ExcludeLabs { get; set; }
     }

@@ -12,14 +12,11 @@ function buildRequestBody(filters = {}) {
     bdNames: filters.bdNames || [],
     clientNames: filters.clientNames || [],
     labs: filters.labNames || [],
-    statusFilter: filters.labStatusFilter || null,
     dateField: filters.dateField || "inqDate",
     excludeVerticals: filters.excludeVerticals,
     excludeBds: filters.excludeBds,
     excludeClients: filters.excludeClients,
-    excludeLabs: filters.excludeLabs,
-    pageNumber: filters.pageNumber || 1,
-    pageSize: filters.pageSize || 50,
+    excludeLabs: filters.excludeLabs
   };
 }
 
@@ -66,7 +63,6 @@ export async function getSampleDetailsByRegNo(regNo) {
 
 export async function getLabNames(filters = {}) {
   const body = buildRequestBody(filters);
-
 
   const response = await axios.post(`${API_BASE_URL}/lab/names`, body, {
     headers: { "Content-Type": "application/json" },

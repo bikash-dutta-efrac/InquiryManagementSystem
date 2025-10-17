@@ -4,7 +4,7 @@
     {
         public string RegistrationNo { get; set; }
         public string SampleName { get; set; }
-        public string RegistrationDateTime { get; set; }
+        public string RegistrationDate { get; set; }
         public decimal? RegisVal { get; set; }
         public string Status { get; set; }
     }

@@ -33,15 +33,14 @@ export default function App() {
   const minDate = new Date();
   minDate.setFullYear(today.getFullYear() - 20);
 
-  // 🟢 NEW: Define the start date for "All Data"
-  const allDataRangeStart = new Date(2025, 3, 1); // April is month index 3 (0-based)
-  const defaultToDate = today.toISOString().split("T")[0]; // Current date
+  const defaultFromDate = today.toISOString().split("T")[0];
+  const defaultToDate = today.toISOString().split("T")[0];
 
   const defaultFilters = {
-    filterType: "all", // 🟢 UPDATED: Default to "all"
+    filterType: "range",
     range: {
-      start: allDataRangeStart.toISOString().split("T")[0], // 🟢 UPDATED: Use All Data start
-      end: defaultToDate, // Current Date
+      start: defaultFromDate,
+      end: defaultToDate,
     },
     month: (today.getMonth() + 1).toString(),
     year: today.getFullYear().toString(),
@@ -55,7 +54,6 @@ export default function App() {
     excludeLabs: false,
     sortOrder: "newest",
     dateField: "inqDate",
-    labStatusFilter: null, 
   };
 
   const [filters, setFilters] = useState({
@@ -63,7 +61,6 @@ export default function App() {
     fromDate: defaultFilters.range.start,
     toDate: defaultFilters.range.end,
     sortOrder: defaultFilters.sortOrder,
-    labStatusFilter: defaultFilters.labStatusFilter,
   });
 
   const { inquiries, loading, fetchInquiries } = useInquiries(defaultFilters);
@@ -72,7 +69,6 @@ export default function App() {
     queryType === "bdProjection" ? filters : null
   );
   
-  // 🟢 UPDATE HOOK TO GET totalCount
   const { 
     sampleSummaries,
     labSummaries,
@@ -141,16 +137,7 @@ export default function App() {
         ...newFilters,
         ...restOfNewFilterState,
     };
-    
-    // 4. Handle labAnalysis specific filters (which are stripped in restOfNewFilterState)
-    if (queryType === 'labAnalysis') {
-        newFilters.labStatusFilter = labStatusFilter !== undefined ? labStatusFilter : newFilters.labStatusFilter;
-        newFilters.reviewsBy = reviewsBy !== undefined ? reviewsBy : newFilters.reviewsBy;
-    } else if (queryType === 'sampleAnalysis') {
-        // SampleAnalysis does not need filters, but we ensure they are not used
-        newFilters.labStatusFilter = null;
-        newFilters.reviewsBy = null;
-    }
+   
 
     // 5. Common field updates (sortOrder, dateField)
     newFilters.dateField = queryType;
@@ -185,8 +172,8 @@ export default function App() {
       if (newFilterState.month) newFilters.month = Number(newFilterState.month);
       newFilters.fromDate = null;
       newFilters.toDate = null;
-    } else if (newFilterState.filterType === "all") { // 🟢 NEW: "All Data" logic
-      newFilters.fromDate = defaultFilters.range.start;
+    } else if (newFilterState.filterType === "all") {
+      newFilters.fromDate = new Date(2025, 3, 1).toISOString().split("T")[0];
       newFilters.toDate = defaultFilters.range.end;
       newFilters.month = null;
       newFilters.year = null;
@@ -220,8 +207,6 @@ export default function App() {
         newFilters.excludeVerticals = newFilterState.excludeVerticals;
         newFilters.excludeBds = newFilterState.excludeBds;
         newFilters.excludeClients = newFilterState.excludeClients;
-        newFilters.labStatusFilter = null; 
-        newFilters.reviewsBy = null;
         newFilters.labNames = [];
         newFilters.excludeLabs = false;
     }
@@ -262,13 +247,10 @@ export default function App() {
   const handleResetAll = () => {
     setError(null);
     setFilters({
-      // 🟢 UPDATED: Reset to "all" filter type
       filterType: defaultFilters.filterType, 
       fromDate: defaultFilters.range.start,
       toDate: defaultFilters.range.end,
       sortOrder: defaultFilters.sortOrder,
-      // 🔽 UPDATED: Use new status filter state
-      labStatusFilter: defaultFilters.labStatusFilter, 
       reviewsBy: null,
     });
   };
