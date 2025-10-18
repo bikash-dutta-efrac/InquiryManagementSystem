@@ -171,7 +171,7 @@ FROM
 
                 var labs = request.Labs?.Any() == true ? string.Join(",", request.Labs) : null;
 
-                return await connection.QueryFirstAsync<SampleOverview>(query, new
+                var mainResponse = await connection.QueryFirstAsync<SampleOverview>(query, new
                 {
                     FromDate = request.FromDate,
                     ToDate = request.ToDate,
@@ -180,6 +180,37 @@ FROM
                     Labs = labs,
                     ExcludeLabs = request.ExcludeLabs ? 1 : 0
                 }, commandTimeout: commandTimeout);
+
+                const string DateFormat = "yyyy-MM-dd";
+                DateTime fromDate = DateTime.Parse("2025-04-01");
+                DateTime toDate = DateTime.Parse("2025-04-01");
+
+                if (request.FromDate != null && request.ToDate != null)
+                {
+                    toDate = request.FromDate.Value.AddDays(-1);
+                }
+                else
+                {
+                    var year = request.Year.Value;
+                    var month = request.Month.Value;
+
+                    DateTime firstDayOfMonth = new DateTime(year, month, 1);
+                    toDate = firstDayOfMonth.AddDays(-1);
+                }
+
+                var openingResponse = await connection.QueryFirstAsync<SampleOverview>(query, new
+                {
+                    FromDate = fromDate.ToString(DateFormat),
+                    ToDate = toDate.ToString(DateFormat),
+                    Month = "",
+                    Year = "",
+                    Labs = labs,
+                    ExcludeLabs = request.ExcludeLabs ? 1 : 0
+                }, commandTimeout: commandTimeout);
+
+                mainResponse.TotalOpeningPending = openingResponse.TotalPending;
+
+                return mainResponse;
             }
         }
 
@@ -286,7 +317,7 @@ Grouped AS
     SELECT
         s.RegistrationNo,
         MAX(s.RegistrationDateTime) AS RegistrationDateTime,
-        STRING_AGG(s.SampleName, ', ') AS SampleNames,
+        MIN(s.SampleName) AS SampleName,
         CASE
             WHEN COUNT(DISTINCT s.IndividualStatus) > 1 THEN 'PartialReleased'  -- ✅ mixed statuses
             WHEN MAX(s.IndividualStatus) = 'Pending' THEN 'Pending'
@@ -298,7 +329,7 @@ Grouped AS
 SELECT
     g.RegistrationNo,
     g.RegistrationDateTime AS RegistrationDate,
-    g.SampleNames AS SampleName,
+    g.SampleName AS SampleName,
     g.Status,
     r.RegisVal
 FROM Grouped g
