@@ -1,5 +1,21 @@
 [
   {
+    "ContainingType": "InquiryManagementWebService.Controllers.BusinessController",
+    "Method": "GetSampleOverview",
+    "RelativePath": "api/business/bd-business-overview",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.BdBusinessSummaryRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
     "Method": "GetInquiriesAsync",
     "RelativePath": "api/inquiries",

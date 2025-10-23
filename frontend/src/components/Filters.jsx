@@ -11,6 +11,7 @@ import {
   RefreshCcw,
   Search,
   FlaskConical,
+  Filter,
 } from "lucide-react";
 import {
   getBdNames,
@@ -18,8 +19,6 @@ import {
   getVerticals,
   getLabNames,
 } from "../services/api.js";
-
-// Mapping from UI status names to SQL parameter keys - REMOVED
 
 const CustomSelect = ({
   options,
@@ -57,13 +56,12 @@ const CustomSelect = ({
     <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
-        // 圷 ADDED HEIGHT FOR ALIGNMENT: h-[54px] to align with date/month inputs
-        className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition-shadow cursor-pointer h-[54px]"
+        className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 group"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {icon}
-          <span className="text-sm font-semibold text-gray-500">{label}</span>
+          <span className="text-sm font-medium text-gray-700">{label}</span>
         </div>
         <ChevronDown
           className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
@@ -73,25 +71,25 @@ const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg animate-fade-in-down max-h-64 overflow-y-auto">
-          <div className="p-2 border-b border-gray-200 sticky top-0 bg-white z-10">
+        <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl animate-fade-in-down max-h-64 overflow-hidden">
+          <div className="p-3 border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
             <div className="relative">
               <input
                 type="text"
-                className="w-full p-2 pl-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             </div>
           </div>
-          <ul className="py-1">
+          <ul className="py-1 overflow-y-auto max-h-52 custom-scrollbar">
             {options.length > 0 ? (
               options.map((option) => (
                 <li
                   key={option}
-                  className="py-2 px-4 cursor-pointer text-sm font-medium hover:bg-gray-100 transition-colors duration-150"
+                  className="py-2.5 px-4 cursor-pointer text-sm font-medium hover:bg-blue-50 transition-colors duration-150"
                   onClick={() => handleToggle(option)}
                 >
                   <div className="flex items-center justify-between">
@@ -107,13 +105,26 @@ const CustomSelect = ({
                       {option}
                     </span>
                     {isSelected(option) && (
-                      <X className="w-4 h-4 text-gray-500" />
+                      <svg
+                        className="w-4 h-4 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
                     )}
                   </div>
                 </li>
               ))
             ) : (
-              <li className="py-2 px-4 text-sm text-gray-500 text-center">
+              <li className="py-3 px-4 text-sm text-gray-500 text-center italic">
                 No options found
               </li>
             )}
@@ -135,27 +146,29 @@ const ExcludeToggle = ({ enabled, onChange }) => {
       type="button"
       onClick={handleClick}
       aria-pressed={enabled}
-      className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors duration-500 transform-gpu ${
-        enabled ? "bg-red-500" : "bg-blue-500"
-      } focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+      className={`relative inline-flex items-center h-6 w-12 rounded-full transition-all duration-300 transform-gpu ${
+        enabled
+          ? "bg-gradient-to-r from-red-500 to-red-600"
+          : "bg-gradient-to-r from-blue-500 to-cyan-600"
+      } focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md hover:shadow-lg ${
         enabled ? "focus:ring-red-500" : "focus:ring-blue-500"
       }`}
     >
       <span className="sr-only">Toggle include/exclude</span>
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${
           enabled ? "translate-x-6" : "translate-x-1"
         }`}
       />
       <span
-        className={`absolute right-2 text-white text-[10px] font-bold transition-opacity duration-300 ${
+        className={`absolute right-1.5 text-white text-[9px] font-bold transition-opacity duration-300 ${
           enabled ? "opacity-100" : "opacity-0"
         }`}
       >
         EX
       </span>
       <span
-        className={`absolute left-2 text-white text-[10px] font-bold transition-opacity duration-300 ${
+        className={`absolute left-1.5 text-white text-[9px] font-bold transition-opacity duration-300 ${
           enabled ? "opacity-0" : "opacity-100"
         }`}
       >
@@ -165,12 +178,7 @@ const ExcludeToggle = ({ enabled, onChange }) => {
   );
 };
 
-export default function Filters({
-  onChange,
-  onResetAll,
-  disabled,
-  queryType,
-}) {
+export default function Filters({ onChange, onResetAll, disabled, queryType }) {
   const today = new Date();
 
   const allDataRangeStart = new Date(2025, 3, 1).toISOString().split("T")[0];
@@ -195,19 +203,16 @@ export default function Filters({
   const [dateField, setDateField] = useState("inqDate");
   const [labNames, setLabNames] = useState([]);
 
-  // exclude toggles
   const [excludeVerticals, setExcludeVerticals] = useState(false);
   const [excludeBds, setExcludeBds] = useState(false);
   const [excludeClients, setExcludeClients] = useState(false);
   const [excludeLabs, setExcludeLabs] = useState(false);
 
-  // Search terms
   const [verticalSearchTerm, setVerticalSearchTerm] = useState("");
   const [bdSearchTerm, setBdSearchTerm] = useState("");
   const [clientSearchTerm, setClientSearchTerm] = useState("");
   const [labSearchTerm, setLabSearchTerm] = useState("");
 
-  // Options
   const [verticalOptions, setVerticalOptions] = useState([]);
   const [bdOptions, setBdOptions] = useState([]);
   const [clientOptions, setClientOptions] = useState([]);
@@ -216,9 +221,7 @@ export default function Filters({
 
   const isLabAnalysisView = queryType === "labAnalysis";
 
-
   const buildSearchRequest = (nextState = {}) => {
-
     const base = {
       dateField: nextState.dateField ?? dateField,
       bdNames: isLabAnalysisView ? [] : nextState.bdNames ?? bdNames,
@@ -239,18 +242,17 @@ export default function Filters({
       excludeLabs: !isLabAnalysisView
         ? false
         : nextState.excludeLabs ?? excludeLabs,
-
     };
 
     const nextFilterType = nextState.filterType ?? filterType;
-    
+
     if (nextFilterType === "all") {
-        return {
-            ...base,
-            filterType: "all",
-            fromDate: allDataRangeStart,
-            toDate: defaultToDate,
-        };
+      return {
+        ...base,
+        filterType: "all",
+        fromDate: allDataRangeStart,
+        toDate: defaultToDate,
+      };
     }
 
     if (nextFilterType === "range") {
@@ -276,10 +278,9 @@ export default function Filters({
     return base;
   };
 
-  // emit helper -> notify parent
   const emit = (next = {}) => {
     const isLab = next.queryType === "labAnalysis" || isLabAnalysisView;
-    const nextFilterType = next.filterType ?? filterType; // Use the next filterType
+    const nextFilterType = next.filterType ?? filterType;
 
     const payload = {
       filterType: nextFilterType,
@@ -307,7 +308,6 @@ export default function Filters({
     emit({ sortOrder: order });
   };
 
-  // Reset logic
   const handleReset = () => {
     setFilterType("range");
     setRange(defaultRange);
@@ -322,6 +322,7 @@ export default function Filters({
     setExcludeBds(false);
     setExcludeClients(false);
     setLabNames([]);
+    setExcludeLabs(false);
     onResetAll?.();
     emit({
       filterType: "range",
@@ -331,17 +332,17 @@ export default function Filters({
       bdNames: [],
       clientNames: [],
       verticals: [],
-      labStatusFilter: null, 
+      labStatusFilter: null,
       sortOrder: "newest",
       dateField: "inqDate",
       excludeVerticals: false,
       excludeBds: false,
       excludeClients: false,
       labNames: [],
+      excludeLabs: false,
     });
   };
 
-  // 隼 Debounced fetch utility
   const useDebouncedEffect = (effect, deps, delay) => {
     useEffect(() => {
       const handler = setTimeout(() => effect(), delay);
@@ -349,7 +350,6 @@ export default function Filters({
     }, [...deps, delay]);
   };
 
-  // The dependency list for fetching options.
   const optionsDeps = [
     filterType,
     range.start,
@@ -394,7 +394,6 @@ export default function Filters({
     400
   );
 
-  // Fetch BD names (Conditionally disabled for Lab Analysis view)
   useDebouncedEffect(
     () => {
       if (isLabAnalysisView) {
@@ -423,7 +422,6 @@ export default function Filters({
     400
   );
 
-  // Fetch Client names (Conditionally disabled for Lab Analysis view)
   useDebouncedEffect(
     () => {
       if (isLabAnalysisView) {
@@ -454,7 +452,6 @@ export default function Filters({
     400
   );
 
-  // Fetch Lab names (Conditionally enabled for Lab Analysis view)
   useDebouncedEffect(
     () => {
       if (!isLabAnalysisView) {
@@ -485,7 +482,6 @@ export default function Filters({
     400
   );
 
-  // Filtered options for custom selects
   const filteredVerticalOptions = verticalOptions.filter((v) =>
     v.toLowerCase().includes(verticalSearchTerm.toLowerCase())
   );
@@ -498,220 +494,232 @@ export default function Filters({
   const filteredLabOptions = labOptions.filter((c) =>
     c.toLowerCase().includes(labSearchTerm.toLowerCase())
   );
-  
+
   return (
     <>
       <style>{style}</style>
       <fieldset
         disabled={disabled}
-        className={`relative transition-all duration-300 font-inter space-y-4 mb-8 ${ 
+        className={`relative transition-all duration-300 font-inter space-y-6 mb-8 ${
           disabled ? "opacity-50 pointer-events-none" : ""
         }`}
       >
-        
-        <div className="bg-gray-50 shadow-2xl rounded-3xl p-6 border border-gray-200">
-          
-          {/* Main flex container for Card 1: Toggles/Inputs on Left, Actions on Right */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            
-            {/* Left side: Toggles and Inputs */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
-                {/* Filter Type Tabs (All Data / Date Range / Month & Year) - Always visible */}
-                <div className="flex gap-2 bg-white rounded-2xl p-2 shadow-inner border border-gray-200 flex-shrink-0">
-                    {/* 🟢 NEW: "All Data" Tab */}
-                    {["all", "range", "month"].map((ft) => (
-                    <button
-                        key={ft}
-                        onClick={() => {
-                        setFilterType(ft);
-                        emit({ filterType: ft });
-                        }}
-                        className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-100 ${
-                        filterType === ft
-                            ? "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white shadow-gradient-blue animate-tab-pulse"
-                            : "bg-white text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-                        }`}
-                    >
-                        {ft === "all" ? "All Data" : ft === "range" ? "Date Range" : "Month & Year"}
-                    </button>
-                    ))}
+        {/* MAIN FILTER CARD */}
+        <div className="bg-white shadow-lg rounded-2xl p-6 border border-gray-100">
+          {/* Header with Icon */}
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md">
+              <Filter className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                Search Filters
+              </h2>
+              <p className="text-xs text-gray-500">
+                Customize your search criteria
+              </p>
+            </div>
+          </div>
+
+          {/* Main filter controls container */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
+            {/* Left side: Filter Type + Date/Month Inputs */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 w-full lg:w-auto">
+              {/* Filter Type Tabs */}
+              <div className="flex gap-1.5 bg-gray-100 rounded-xl p-1.5 shadow-inner border border-gray-200 flex-shrink-0">
+                {["all", "range", "month"].map((ft) => (
+                  <button
+                    key={ft}
+                    onClick={() => {
+                      setFilterType(ft);
+                      emit({ filterType: ft });
+                    }}
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-100 ${
+                      filterType === ft
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg"
+                        : "bg-white text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                    }`}
+                  >
+                    {ft === "all"
+                      ? "All Data"
+                      : ft === "range"
+                      ? "Date Range"
+                      : "Month & Year"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Date/Month/Year Selectors */}
+              {(filterType === "range" || filterType === "month") && (
+                <div className="flex gap-3 w-full sm:w-auto">
+                  {filterType === "range" && (
+                    <>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600 block mb-2 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                          Start Date
+                        </label>
+                        <div className="flex-1 sm:w-40 flex items-center bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 hover:border-blue-400 hover:shadow-md transition-all">
+                          <input
+                            type="date"
+                            value={range.start}
+                            onChange={(e) => {
+                              const next = { ...range, start: e.target.value };
+                              setRange(next);
+                              emit({ range: next });
+                            }}
+                            className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                            placeholder="Start Date"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-gray-600 block mb-2 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                          End Date
+                        </label>
+                        <div className="flex-1 sm:w-40 flex items-center bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 hover:border-blue-400 hover:shadow-md transition-all">
+                          <input
+                            type="date"
+                            value={range.end}
+                            onChange={(e) => {
+                              const next = { ...range, end: e.target.value };
+                              setRange(next);
+                              emit({ range: next });
+                            }}
+                            className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                            placeholder="End Date"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {filterType === "month" && (
+                    <>
+                      <div className="flex-1 sm:w-40 flex items-center bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 hover:border-blue-400 hover:shadow-md transition-all">
+                        <Calendar className="w-4 h-4 text-blue-600 mr-2 flex-shrink-0" />
+                        <select
+                          value={month}
+                          onChange={(e) => {
+                            setMonth(e.target.value);
+                            emit({ month: e.target.value });
+                          }}
+                          className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium appearance-none pr-6"
+                        >
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {new Date(0, i).toLocaleString("default", {
+                                month: "long",
+                              })}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-gray-500 ml-auto pointer-events-none flex-shrink-0" />
+                      </div>
+
+                      <div className="flex-1 sm:w-32 flex items-center bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 hover:border-blue-400 hover:shadow-md transition-all">
+                        <Calendar className="w-4 h-4 text-blue-600 mr-2 flex-shrink-0" />
+                        <input
+                          type="number"
+                          placeholder="Year"
+                          value={year}
+                          onChange={(e) => {
+                            const currentYear = new Date().getFullYear();
+                            const val = e.target.value;
+                            if (val <= currentYear) {
+                              setYear(val);
+                              emit({ year: val });
+                            }
+                          }}
+                          className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
+                          max={new Date().getFullYear()}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
-
-                {/* Date/Month/Year Selectors - Horizontal alignment */}
-                {/* 🟢 UPDATED: Only show inputs for 'range' and 'month' */}
-                {(filterType === 'range' || filterType === 'month') && (
-                    <div className={`flex gap-4 w-full ${filterType === 'range' ? 'max-w-xs' : 'max-w-sm'}`}>
-                        {/* Date Range */}
-                        {filterType === "range" && (
-                            <>
-                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                    <input
-                                    type="date"
-                                    value={range.start}
-                                    onChange={(e) => {
-                                        const next = { ...range, start: e.target.value };
-                                        setRange(next);
-                                        emit({ range: next });
-                                    }}
-                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                                    placeholder="Start Date"
-                                    />
-                                </div>
-
-                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                    <input
-                                    type="date"
-                                    value={range.end}
-                                    onChange={(e) => {
-                                        const next = { ...range, end: e.target.value };
-                                        setRange(next);
-                                        emit({ range: next });
-                                    }}
-                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                                    placeholder="End Date"
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {/* Month & Year */}
-                        {filterType === "month" && (
-                            <>
-                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                    <select
-                                    value={month}
-                                    onChange={(e) => {
-                                        setMonth(e.target.value);
-                                        emit({ month: e.target.value });
-                                    }}
-                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium appearance-none"
-                                    >
-                                    {Array.from({ length: 12 }, (_, i) => (
-                                        <option key={i + 1} value={i + 1}>
-                                        {new Date(0, i).toLocaleString("default", {
-                                            month: "long",
-                                        })}
-                                        </option>
-                                    ))}
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-gray-500 ml-auto pointer-events-none" />
-                                </div>
-
-                                <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm p-3 hover:shadow-md transition-shadow">
-                                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                    <input
-                                    type="number"
-                                    placeholder="Year"
-                                    value={year}
-                                    onChange={(e) => {
-                                        const currentYear = new Date().getFullYear();
-                                        const val = e.target.value;
-                                        if (val <= currentYear) {
-                                        setYear(val);
-                                        emit({ year: val });
-                                        }
-                                    }}
-                                    className="bg-transparent outline-none text-sm w-full text-gray-800 font-medium"
-                                    max={new Date().getFullYear()}
-                                    />
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
+              )}
             </div>
 
-
-            {/* Right side: Sort and Reset Buttons */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-                {/* Sort Dropdown - ONLY visible when NOT in Lab Analysis view */}
-                {!isLabAnalysisView && (
+            {/* Right side: Sort and Reset */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {!isLabAnalysisView && (
                 <div className="relative">
-                    <button
+                  <button
                     onClick={() => setSortOpen(!sortOpen)}
-                    // 圷 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
-                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 h-[54px]"
-                    >
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 hover:border-blue-400 hover:bg-gray-50 transition-all duration-200"
+                  >
                     {sortOrder === "newest" ? (
-                        <ArrowDownWideNarrow className="w-5 h-5 text-blue-500" />
+                      <ArrowDownWideNarrow className="w-4 h-4 text-blue-600" />
                     ) : (
-                        <ArrowUpWideNarrow className="w-5 h-5 text-blue-500" />
+                      <ArrowUpWideNarrow className="w-4 h-4 text-blue-600" />
                     )}
-                    <span className="text-sm font-medium">
-                        {sortOrder === "newest" ? "Newest First" : "Oldest First"}
+                    <span className="text-sm font-medium hidden sm:inline">
+                      {sortOrder === "newest" ? "Newest" : "Oldest"}
                     </span>
                     <ChevronDown
-                        className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
                         sortOpen ? "rotate-180" : ""
-                        }`}
+                      }`}
                     />
-                    </button>
+                  </button>
 
-                    {sortOpen && (
-                    <div className="absolute mt-2 right-0 bg-white border border-gray-200 shadow-xl rounded-xl w-40 overflow-hidden z-20 animate-fade-in-up">
-                        <button
+                  {sortOpen && (
+                    <div className="absolute mt-2 right-0 bg-white border border-gray-100 shadow-xl rounded-xl w-44 overflow-hidden z-20 animate-fade-in-down">
+                      <button
                         onClick={() => handleSort("newest")}
-                        className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
-                            sortOrder === "newest"
+                        className={`flex items-center gap-2 px-4 py-2.5 w-full text-left text-sm transition-colors duration-150 ${
+                          sortOrder === "newest"
                             ? "bg-blue-50 font-semibold text-blue-700"
-                            : "text-gray-700 hover:bg-gray-100"
+                            : "text-gray-700 hover:bg-gray-50"
                         }`}
-                        >
+                      >
                         <ArrowDownWideNarrow className="w-4 h-4" /> Newest First
-                        </button>
-                        <button
+                      </button>
+                      <button
                         onClick={() => handleSort("oldest")}
-                        className={`flex items-center gap-2 px-4 py-2 w-full text-left transition-colors duration-150 ${
-                            sortOrder === "oldest"
+                        className={`flex items-center gap-2 px-4 py-2.5 w-full text-left text-sm transition-colors duration-150 ${
+                          sortOrder === "oldest"
                             ? "bg-blue-50 font-semibold text-blue-700"
-                            : "text-gray-700 hover:bg-gray-100"
+                            : "text-gray-700 hover:bg-gray-50"
                         }`}
-                        >
+                      >
                         <ArrowUpWideNarrow className="w-4 h-4" /> Oldest First
-                        </button>
+                      </button>
                     </div>
-                    )}
+                  )}
                 </div>
-                )}
+              )}
 
-                {/* Reset */}
-                <button
-                    onClick={handleReset}
-                    // 圷 ALIGNMENT FIX: Used h-10 (40px) to match the other inputs/buttons
-                    className="flex items-center gap-2 text-sm px-4 py-2 bg-gray-800 text-white rounded-2xl shadow-lg hover:bg-gray-700 transition-colors duration-200 transform hover:scale-105 h-[54px]"
-                >
-                    <RefreshCcw className="w-4 h-4" />
-                    Reset
-                </button>
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 text-sm px-4 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+              >
+                <RefreshCcw className="w-4 h-4" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* CARD 2 (BOTTOM ROW): Specific Filters (Verticals/BDs/Clients OR Labs/Status) */}
-        {/* ========================================================= */}
-        <div className="bg-gray-50 shadow-2xl rounded-3xl p-6 border border-gray-200">
+        {/* SPECIFIC FILTERS CARD */}
+        <div className="bg-white shadow-lg rounded-2xl p-6 border border-gray-100">
           <div
-            // 圷 UPDATED GRID: Use `grid-cols-3` for general view and `grid-cols-4` for lab view 
-            // to evenly distribute filters across the full width.
             className={`grid grid-cols-1 md:grid-cols-2 ${
               isLabAnalysisView ? "lg:grid-cols-4" : "lg:grid-cols-3"
-            } gap-4`}
+            } gap-6`}
           >
-
-            {/* Labs and Status Filter - Only for Lab Analysis View */}
             {isLabAnalysisView && (
               <>
-                {/* Labs (Col 1/4) - Full Width */}
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-semibold text-gray-600 flex items-center gap-2">
+                      <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
                       <span>Labs</span>
                       {loadingOptions && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent"></div>
                       )}
                     </span>
                     <ExcludeToggle
@@ -728,7 +736,7 @@ export default function Filters({
                         ? "Select Labs"
                         : `${labNames.length} selected`
                     }`}
-                    icon={<FlaskConical className="w-4 h-4 text-gray-400" />}
+                    icon={<FlaskConical className="w-4 h-4 text-blue-600" />}
                     options={filteredLabOptions}
                     selected={labNames}
                     onToggle={(option) => {
@@ -744,21 +752,19 @@ export default function Filters({
                   />
                 </div>
 
-                {/* Empty columns to fill remaining width (Col 3/4, Col 4/4) */}
-                <div className="lg:col-span-2 hidden lg:block"></div> 
+                <div className="lg:col-span-2 hidden lg:block"></div>
               </>
             )}
 
-            {/* Verticals, BD Names, Client Names - ONLY for Non-Lab Analysis View */}
             {!isLabAnalysisView && (
               <>
-                {/* Verticals (Col 1/3) - Full Width */}
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-semibold text-gray-600 flex items-center gap-2">
+                      <Telescope className="w-3.5 h-3.5 text-blue-600" />
                       <span>Verticals</span>
                       {loadingOptions && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent"></div>
                       )}
                     </span>
                     <ExcludeToggle
@@ -775,7 +781,7 @@ export default function Filters({
                         ? "Select Verticals"
                         : `${verticals.length} selected`
                     }`}
-                    icon={<Telescope className="w-4 h-4 text-gray-400" />}
+                    icon={<Telescope className="w-4 h-4 text-blue-600" />}
                     options={filteredVerticalOptions}
                     selected={verticals}
                     onToggle={(option) => {
@@ -791,13 +797,13 @@ export default function Filters({
                   />
                 </div>
 
-                {/* BD Names (Col 2/3) - Full Width */}
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-semibold text-gray-600 flex items-center gap-2">
+                      <Briefcase className="w-3.5 h-3.5 text-blue-600" />
                       <span>BD Names</span>
                       {loadingOptions && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent"></div>
                       )}
                     </span>
                     <ExcludeToggle
@@ -814,7 +820,7 @@ export default function Filters({
                         ? "Select BDs"
                         : `${bdNames.length} selected`
                     }`}
-                    icon={<Briefcase className="w-4 h-4 text-gray-400" />}
+                    icon={<Briefcase className="w-4 h-4 text-blue-600" />}
                     options={filteredBdOptions}
                     selected={bdNames}
                     onToggle={(option) => {
@@ -830,13 +836,13 @@ export default function Filters({
                   />
                 </div>
 
-                {/* Client Names (Col 3/3) - Full Width */}
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-semibold text-gray-600 flex items-center gap-2">
+                      <Building2 className="w-3.5 h-3.5 text-blue-600" />
                       <span>Client Names</span>
                       {loadingOptions && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent"></div>
                       )}
                     </span>
                     <ExcludeToggle
@@ -853,7 +859,7 @@ export default function Filters({
                         ? "Select Clients"
                         : `${clientNames.length} selected`
                     }`}
-                    icon={<Building2 className="w-4 h-4 text-gray-400" />}
+                    icon={<Building2 className="w-4 h-4 text-blue-600" />}
                     options={filteredClientOptions}
                     selected={clientNames}
                     onToggle={(option) => {
@@ -877,25 +883,59 @@ export default function Filters({
   );
 }
 
-// CSS for animations and custom styles
 const style = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   
-  .animate-tab-pulse {
-    animation: tab-pulse 0.6s cubic-bezier(0.4, 0, 0.6, 1);
-  }
-
-  @keyframes tab-pulse {
-    0%, 100% {
-      transform: scale(1);
+  @keyframes fade-in-down {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px);
     }
-    50% {
-      transform: scale(1.02);
-      box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+    100% {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 
-  .shadow-gradient-blue {
-    box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
+  .animate-fade-in-down {
+    animation: fade-in-down 0.2s ease-out;
+  }
+
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.2s ease-out;
+  }
+
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Custom scrollbar for dropdowns */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #60a5fa;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #3b82f6;
   }
 `;

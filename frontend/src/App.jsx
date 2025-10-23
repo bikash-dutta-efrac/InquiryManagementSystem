@@ -15,6 +15,7 @@ import useInquiries from "./hooks/useInquiries";
 import useProjections from "./hooks/useProjections";
 import useLabAnalysis from "./hooks/useLabAnalysis"; 
 import { startOfMonth, endOfMonth, format } from "date-fns";
+import BusinessAnalysis from "./components/BusinessAnalysis";
 
 
 export default function App() {
@@ -42,8 +43,8 @@ export default function App() {
       start: defaultFromDate,
       end: defaultToDate,
     },
-    month: (today.getMonth() + 1).toString(),
-    year: today.getFullYear().toString(),
+    month: null,
+    year: null,
     verticals: [],
     bdNames: [],
     clientNames: [],
@@ -363,7 +364,7 @@ export default function App() {
         <div className="py-4 px-4">
           {/* Filters are always shown */}
           <div className="max-w-6xl mx-auto mb-6">
-            {queryType !== "sampleAnalysis" && (
+            {queryType !== "sampleAnalysis" && queryType !== "businessAnalysis" && (
             <Filters
                 onChange={onFiltersChange}
                 onResetAll={handleResetAll}
@@ -395,10 +396,15 @@ export default function App() {
                 />
               </div>
             ) : queryType === "sampleAnalysis" ? (
-              <div className="max-w-7xl mx-auto px-2 relative">
+              <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
                 <SampleAnalysis /> 
               </div>
-            ) : (
+            ) : queryType === "businessAnalysis" ? (
+              <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
+                <BusinessAnalysis /> 
+              </div>
+            )
+              : (
               <>
                 <div className="max-w-7xl mx-auto mb-8 px-2 relative">
                   {queryType !== "bdProjection" && queryType !== "labAnalysis" && (

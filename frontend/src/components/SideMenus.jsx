@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   MdAssignment,
+  MdBusiness,
 } from "react-icons/md";
 
 export default function SideMenus({ activeView, onViewChange, isMinimized = false, onToggleMinimize }) {
@@ -24,6 +25,7 @@ export default function SideMenus({ activeView, onViewChange, isMinimized = fals
     { key: "bdProjection", label: "Bd Projection", icon: HiChartBar },
     { key: "labAnalysis", label: "Lab Analysis", icon: HiBeaker },
     { key: "sampleAnalysis", label: "Sample Analysis", icon: TestTube2 },
+    { key: "businessAnalysis", label: "Business Analysis", icon: MdBusiness },
   ];
 
   const renderMenuItem = (menu) => (
@@ -54,7 +56,7 @@ export default function SideMenus({ activeView, onViewChange, isMinimized = fals
 
   return (
     <div
-      className={`fixed top-0 left-0 bg-linear-to-b from-cyan-700 via-blue-500 to-indigo-600 text-white ${
+      className={`fixed top-0 left-0 bg-gradient-to-b from-blue-600 to-cyan-600 opacity-95" text-white ${
               isMinimized ? "w-25" : "w-56"
             } min-h-screen p-6 flex flex-col space-y-8 shadow-2xl transition-all duration-300 z-50`}
         >

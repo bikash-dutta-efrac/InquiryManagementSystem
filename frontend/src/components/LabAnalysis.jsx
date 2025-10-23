@@ -1,17 +1,17 @@
 import { useMemo, useState, useEffect } from "react";
 import {
-  FlaskConical, // Replacement for HiBeaker
-  Clock, // Replacement for HiClock
-  CheckCircle, // Replacement for HiCheckCircle
+  FlaskConical,
+  Clock,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
+  XCircle,
+  Search,
 } from "lucide-react";
-import { HiCheck, HiClock } from "react-icons/hi2";
 import { MdCheckCircle, MdPending } from "react-icons/md";
 import { IoTime } from "react-icons/io5";
 
-// Helper functions (formatAmount, formatDate, getDayBeforeMonthStart, getPreviousDate, colorMap) remain the same
 function formatAmount(num) {
   if (num === null || num === undefined) return 0;
   const number = parseFloat(num);
@@ -23,7 +23,6 @@ function formatAmount(num) {
     { value: 1e7, symbol: "Cr" },
     { value: 1e9, symbol: "B" },
   ];
-  // Corrected regex for JavaScript context
   const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
   let i;
   for (i = si.length - 1; i > 0; i--) {
@@ -477,11 +476,11 @@ const LabSummaryKpiCard = ({ summaryData }) => {
               Total
             </div>
             {/* Column 3: Released Count (1) */}
-            <div className="col-span-1 text-center text-xs font-bold uppercase tracking-wider text-cyan-300">
+            <div className="col-span-1 text-center text-xs font-bold uppercase tracking-wider">
               Released
             </div>
             {/* NEW Column 4: Pending Count (1) - Added after Released */}
-            <div className="col-span-1 text-center text-xs font-bold uppercase tracking-wider text-orange-300">
+            <div className="col-span-1 text-center text-xs font-bold uppercase tracking-wider">
               Pending
             </div>
             {/* Column 5: Released TAT Status (3) */}
@@ -493,7 +492,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
               Pending TAT Status
             </div>
             {/* Column 7: Values (2) */}
-            <div className="col-span-2 text-center text-xs font-bold uppercase tracking-wider border-l-2 border-blue-500 pl-2 text-sky-300">
+            <div className="col-span-2 text-center text-xs font-bold uppercase tracking-wider border-l-2 border-blue-500 pl-2">
               Values
             </div>
           </div>
@@ -502,19 +501,19 @@ const LabSummaryKpiCard = ({ summaryData }) => {
           <div className="grid grid-cols-12 gap-3 px-6 py-2 bg-blue-50/50 border-b border-blue-100 text-[10px] font-semibold text-blue-900 uppercase">
             <div className="col-span-2"></div>
             <div className="col-span-1 text-center">Samples</div>
-            <div className="col-span-1 text-center text-cyan-700">
+            <div className="col-span-1 text-center text-green-600">
               Count & %
             </div>
-            <div className="col-span-1 text-center text-orange-700">
+            <div className="col-span-1 text-center text-red-600">
               Count & %
             </div>
-            <div className="col-span-1 text-center text-blue-700">Before</div>
-            <div className="col-span-1 text-center text-blue-700">On</div>
-            <div className="col-span-1 text-center text-amber-700">After</div>
-            <div className="col-span-1 text-center text-orange-700">Before</div>
-            <div className="col-span-1 text-center text-red-700">Beyond</div>
-            <div className="col-span-1 text-center text-blue-700">Total</div>
-            <div className="col-span-1 text-center text-sky-700">Pending</div>
+            <div className="col-span-1 text-center text-cyan-700">Before</div>
+            <div className="col-span-1 text-center text-cyan-700">On</div>
+            <div className="col-span-1 text-center text-cyan-800">After</div>
+            <div className="col-span-1 text-center text-cyan-800">Before</div>
+            <div className="col-span-1 text-center text-red-600">Beyond</div>
+            <div className="col-span-1 text-center text-blue-600">Total</div>
+            <div className="col-span-1 text-center text-red-600">Pending</div>
           </div>
 
           {/* Data Rows */}
@@ -573,7 +572,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
 
                 {/* Released Count (1) - ATTRACTIVE STACK */}
                 <div className="col-span-1 flex flex-col items-center justify-center text-center">
-                  <span className="px-2 py-1 text-cyan-800 font-bold text-sm group-hover:text-white">
+                  <span className="px-2 py-1 text-green-600 font-bold text-sm group-hover:text-white">
                     {formatAmount(item.released ?? 0)}
                   </span>
                   <span className="text-xs font-semibold text-gray-500 mt-0.5 group-hover:text-white/90">
@@ -583,7 +582,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
 
                 {/* Pending Count (1) - ATTRACTIVE STACK */}
                 <div className="col-span-1 flex flex-col items-center justify-center text-center">
-                  <span className="px-2 py-1 text-orange-800 font-bold text-sm group-hover:text-white">
+                  <span className="px-2 py-1 text-red-600 font-bold text-sm group-hover:text-white">
                     {formatAmount(item.pendings ?? 0)}
                   </span>
                   <span className="text-xs font-semibold text-gray-500 mt-0.5 group-hover:text-white/90">
@@ -593,7 +592,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
 
                 {/* Released TAT Status (3 total: 1+1+1) - ATTRACTIVE STACK */}
                 <div className="col-span-1 flex flex-col items-center justify-center text-center border-l border-blue-100 pl-2">
-                  <span className="px-2 py-1 text-blue-700 font-bold text-[13px] group-hover:text-white">
+                  <span className="px-2 py-1 text-cyan-700 font-bold text-[13px] group-hover:text-white">
                     {formatAmount(item.releasedBeforeTat ?? 0)}
                   </span>
                   <span className="text-xs font-semibold text-gray-500 mt-0.5 group-hover:text-white/90">
@@ -601,7 +600,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                   </span>
                 </div>
                 <div className="col-span-1 flex flex-col items-center justify-center text-center">
-                  <span className="px-2 py-1 text-blue-700 font-bold text-[13px] group-hover:text-white">
+                  <span className="px-2 py-1 text-cyan-700 font-bold text-[13px] group-hover:text-white">
                     {formatAmount(item.releasedOnTat ?? 0)}
                   </span>
                   <span className="text-xs font-semibold text-gray-500 mt-0.5 group-hover:text-white/90">
@@ -609,7 +608,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                   </span>
                 </div>
                 <div className="col-span-1 flex flex-col items-center justify-center text-center">
-                  <span className="px-2 py-1 text-amber-800 font-bold text-[13px] group-hover:text-white">
+                  <span className="px-2 py-1 text-cyan-800 font-bold text-[13px] group-hover:text-white">
                     {formatAmount(item.releasedAfterTat ?? 0)}
                   </span>
                   <span className="text-xs font-semibold text-gray-500 mt-0.5 group-hover:text-white/90">
@@ -619,7 +618,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
 
                 {/* Pending TAT Status (2 total: 1+1) - ATTRACTIVE STACK */}
                 <div className="col-span-1 flex flex-col items-center justify-center text-center border-l border-blue-100 pl-2">
-                  <span className="px-2 py-1 text-orange-800 font-bold text-[13px] group-hover:text-white">
+                  <span className="px-2 py-1 text-cyan-800 font-bold text-[13px] group-hover:text-white">
                     {formatAmount(item.pendingBeforeTat ?? 0)}
                   </span>
                   <span className="text-xs font-semibold text-gray-500 mt-0.5 group-hover:text-white/90">
@@ -627,7 +626,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                   </span>
                 </div>
                 <div className="col-span-1 flex flex-col items-center justify-center text-center">
-                  <span className="px-2 py-1 text-red-800 font-bold text-[13px] group-hover:text-white">
+                  <span className={`px-2 py-1 ${item.pendingBeyondTat < 6 ? "text-cyan-800" : "text-red-600"} font-bold text-[13px] group-hover:text-white`}>
                     {formatAmount(item.pendingBeyondTat ?? 0)}
                   </span>
                   <span className="text-xs font-semibold text-gray-500 mt-0.5 group-hover:text-white/90">
@@ -642,7 +641,7 @@ const LabSummaryKpiCard = ({ summaryData }) => {
                   </span>
                 </div>
                 <div className="col-span-1 flex items-center justify-center">
-                  <span className="px-2 py-1 text-sky-800 font-bold text-sm group-hover:text-white">
+                  <span className={`px-2 py-1 ${item.pendingRegValue === 0 ? "text-green-600" : "text-red-600"} font-bold text-sm group-hover:text-white`}>
                     ₹{formatAmount(item.pendingRegValue ?? 0)}
                   </span>
                 </div>
@@ -854,7 +853,23 @@ const LabSummaryKpiCard = ({ summaryData }) => {
     </div>
   );
 };
-// --- END OF UPDATED COMPONENT ---
+
+const NoDataFoundView = () => (
+  <div className="flex flex-col justify-center items-center py-20 bg-white rounded-xl shadow-lg border border-gray-200">
+    <div className="flex flex-col items-center">
+      <div className="relative mb-6 w-20 h-20">
+        <Search className="w-16 h-16 text-gray-300 absolute top-0 left-0" />
+        <XCircle className="w-8 h-8 text-red-500 absolute bottom-0 right-0 p-1 bg-white rounded-full border-2 border-white" />
+      </div>
+      <span className="text-xl font-medium text-gray-600">
+        No Data Found
+      </span>
+      <span className="text-sm text-gray-400 mt-2 max-w-md text-center">
+        We couldn’t find any data matching your filters. Try adjusting your filter selection.
+      </span>
+    </div>
+  </div>
+);
 
 export default function LabAnalysis({
   data = [],
@@ -920,50 +935,14 @@ export default function LabAnalysis({
 
   if (!rawData.length && !finalSummary.length) {
     return (
-      <div className="text-center text-gray-600 py-20 text-xl font-medium rounded-2xl bg-white shadow-xl">
-        <span className="mr-2">✖</span> No lab analysis data found for the
-        selected filters.
-      </div>
+      <NoDataFoundView/>
     );
   }
 
   return (
-    <div className="bg-gray-50 rounded-3xl shadow-2xl mb-8">
-      <div className="relative p-6">
-        <div className="absolute top-0 left-0">
-          <div className="relative group">
-            <div className="relative flex items-center justify-center px-8 py-2 bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 text-white text-medium font-extrabold tracking-wider rounded-br-4xl rounded-tl-3xl shadow-xl border-2 border-sky-400/30 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <span>Lab Analysis</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-sky-100/40 to-blue-100/40 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute bottom-4 left-4 w-12 h-12 bg-gradient-to-br from-blue-100/30 to-sky-100/30 rounded-full blur-lg animate-pulse delay-150"></div>
-
-        <div className="grid p-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 my-10">
-          <LabAnalysisSummaryCard
-            title="Samples"
-            value={safeSampleOverview.totalSamples}
-            color="blue"
-            icon={<FlaskConical className="w-5 h-5" />}
-          />
-
-          <LabAnalysisSummaryCard
-            title="Released Samples"
-            value={`${formatAmount(safeSampleOverview.totalReleased)}`}
-            color="green"
-            icon={<CheckCircle2 className="w-5 h-5" />}
-          />
-
-          <LabAnalysisSummaryCard
-            title="Pending Samples"
-            value={formatAmount(safeSampleOverview.totalPending) || 0}
-            color="red"
-            icon={<Clock className="w-5 h-5" />}
-          />
+    <div>
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8 mb-8">
+        <div className="grid p-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
 
           <LabAnalysisSummaryCard
             title={
@@ -987,11 +966,41 @@ export default function LabAnalysis({
             color="teal"
             icon={<Clock className="w-5 h-5" />}
           />
+
+
+          <LabAnalysisSummaryCard
+            title="Samples"
+            value={safeSampleOverview.totalSamples}
+            color="blue"
+            icon={<FlaskConical className="w-5 h-5" />}
+          />
+
+          <LabAnalysisSummaryCard
+            title="Released Samples"
+            value={safeSampleOverview.totalReleased}
+            color="green"
+            icon={<CheckCircle2 className="w-5 h-5" />}
+          />
+
+          <LabAnalysisSummaryCard
+            title="Pending Samples"
+            value={safeSampleOverview.totalPending}
+            color="red"
+            icon={<Clock className="w-5 h-5" />}
+          />
+
+          <LabAnalysisSummaryCard
+            title={<> Pending <br/> Till Today</>}
+            value={safeSampleOverview.totalPending + safeSampleOverview.totalOpeningPending}
+            color="orange"
+            icon={<Clock className="w-5 h-5" />}
+          />
         </div>
 
         <LabSummaryKpiCard summaryData={finalSummary} />
       </div>
-      <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl">
+
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8 mb-8">
         <div className="bg-white p-4 rounded-2xl shadow-lg border border-gray-200 mb-6">
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 ml-1">
             Filter by Status

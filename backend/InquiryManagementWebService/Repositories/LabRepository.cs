@@ -39,13 +39,11 @@ namespace InquiryManagementWebService.Repositories
       AND (@Year IS NULL OR YEAR(r1.TRN1DATE) = @Year)
       AND (@Month IS NULL OR MONTH(r1.TRN1DATE) = @Month)
 ),
--- 2. RegisBase CTE: Groups the data and calculates the *Total* RegisVal for each distinct registration.
 RegisBase AS
 (
     SELECT
         r.TRN2REFNO AS RegisNo,
         
-        -- Calculate RegisVal
         CASE
             WHEN MAX(r.TRN1CANCEL) = 'Y' THEN 0
             ELSE
@@ -77,17 +75,14 @@ RegisBase AS
     FROM RegisRanker r
     GROUP BY r.TRN2REFNO, r.QUOTNO
 ),
--- 3. SampleData CTE: Combines transactional and billing details for all samples
 SampleData AS
 (
-    -- Part 1: Regular Lab Samples (TRN205 - T2, TRN105 - t05)
     SELECT DISTINCT
         T2.TRN2REFNO AS RegistrationNo,
         T2.TRN2PRODALIAS AS SampleName,
         OCM1.codedesc AS Lab,
         T2.TRN2COMPLETIONDT,
         T2.TRN2HODReview AS HodReview,
-        -- Status at the sample level
         CASE WHEN T2.TRN2COMPLETIONDT IS NOT NULL AND T2.TRN2HODReview = 'Y' THEN 'Released' ELSE 'Pending' END AS Status
     FROM TRN205 AS T2
         INNER JOIN oheadmst AS HM ON HM.headPlantCd = T2.TRN2PLANTCD AND HM.headcd = T2.TRN2HEADER
@@ -113,7 +108,6 @@ SampleData AS
 
     UNION ALL
 
-    -- Part 2: Training Records (Assumed always 'Pending' for status counting)
     SELECT DISTINCT
         TRN4REFNO AS RegistrationNo,
         TRN4REMARKS AS SampleName,
@@ -141,7 +135,6 @@ SampleData AS
             )
         )
 ),
--- 4. RegistrationStatus CTE: Determines the overall status and total value for each unique registration
 RegistrationStatus AS
 (
     SELECT
@@ -153,7 +146,6 @@ RegistrationStatus AS
     LEFT JOIN RegisBase r ON s.RegistrationNo = r.RegisNo
     GROUP BY s.RegistrationNo
 )
--- 5. FINAL OVERVIEW SELECT: Aggregates the unique registration count and value
 SELECT
     COUNT(rs.RegistrationNo) AS TotalSamples, -- Unique Registrations
     SUM(CASE WHEN rs.OverallStatus = 'Released' THEN 1 ELSE 0 END) AS TotalReleased,
@@ -375,6 +367,7 @@ ORDER BY g.RegistrationNo;
         i.QUOTHCC,
         r2.TRN2TESTRATE,
         r1.TRN1DATE,
+        r2.Trn2Pardate AS TatDate,
         r1.TRN1CANCEL,
         ROW_NUMBER() OVER (PARTITION BY i.QUOTNO ORDER BY r1.TRN1DATE, r2.TRN2REFNO) AS RegRank
     FROM OQUOTMST i
@@ -429,6 +422,7 @@ SampleCount AS
 SELECT 
     t1.TRN1REFNO + '   -' AS RegistrationNo, 
     CONVERT(NVARCHAR(10), t1.TRN1DATE, 103) AS RegistrationDate, 
+    CONVERT(NVARCHAR(10), t2.Trn2Pardate, 103) AS TatDate, 
     CONVERT(NVARCHAR(10), t2.TRN2REPODT, 103) AS ReportIssueDate, 
     t2.TRN2PRODALIAS AS SampleName, 
     CASE

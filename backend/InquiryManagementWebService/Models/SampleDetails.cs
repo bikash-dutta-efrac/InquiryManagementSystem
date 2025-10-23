@@ -8,6 +8,7 @@
         public string Parameter { get; set; }
         public string RegistrationDate { get; set; }
         public string? MailingDate { get; set; }
+        public string? TatDate { get; set; }
         public string? AnalysisCompletionDateTime { get; set; }
         public decimal? DistributedRegisVal { get; set; }
         public string Status { get; set; }

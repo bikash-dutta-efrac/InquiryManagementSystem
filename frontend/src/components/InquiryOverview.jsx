@@ -530,7 +530,7 @@ export default function InquiryOverview({ data = [], queryType, onCardClick }) {
   const dailyRegisValues = dailyDates.map((d) => regValMap[d] || 0);
 
   return (
-    <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl mb-4">
+    <div className="bg-slate-50 p-8 ">
       <div className="mb-8">
         {queryType !== "regisDate" && (
           <div

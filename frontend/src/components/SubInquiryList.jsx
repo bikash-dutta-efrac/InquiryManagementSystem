@@ -16,7 +16,7 @@ export default function SubInquiryList({
 
   if (!data.length) {
     return (
-      <div className="bg-white rounded-xl shadow p-6 text-center text-gray-600">
+      <div className="bg-slate-50 p-6 text-center text-gray-600">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
           <button
@@ -109,7 +109,7 @@ export default function SubInquiryList({
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl p-8 animate-fadeIn">
+    <div className="bg-slate-50 p-8 animate-fadeIn">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-gray-800">

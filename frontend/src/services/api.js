@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.167:5075/api";
+const API_BASE_URL = "http://192.168.3.173:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -68,6 +68,14 @@ export async function getLabNames(filters = {}) {
     headers: { "Content-Type": "application/json" },
   });
 
+  return response.data;
+}
+
+export async function getBdBusinessSummary(filters = {}) {
+  const body = buildRequestBody(filters);
+  const response = await axios.post(`${API_BASE_URL}/business/bd-business-overview`, body, {
+    headers: { "Content-Type": "application/json" },
+  });
   return response.data;
 }
 

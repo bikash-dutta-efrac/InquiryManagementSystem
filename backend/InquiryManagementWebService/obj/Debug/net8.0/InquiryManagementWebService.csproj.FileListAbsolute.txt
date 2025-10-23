@@ -188,6 +188,7 @@ D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Microsoft.OpenApi.dll
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Newtonsoft.Json.dll
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -235,10 +236,10 @@ D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\staticwebassets.build.json.cache
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\staticwebassets.development.json
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\InquiryM.8021ED75.Up2Date
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\InquiryManagementWebService.dll
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\refint\InquiryManagementWebService.dll
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\InquiryManagementWebService.pdb
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\InquiryManagementWebService.genruntimeconfig.cache
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\ref\InquiryManagementWebService.dll
-D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

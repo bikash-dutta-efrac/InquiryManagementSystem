@@ -8,6 +8,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IInquiryRepository, InquiryRepository>();
 builder.Services.AddScoped<IProjectionRepository, ProjectionRepository>();
 builder.Services.AddScoped<ILabRepository, LabRepository>();
+builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 
 builder.Services.AddCors(options =>
 {
@@ -18,6 +19,7 @@ builder.Services.AddCors(options =>
                 .WithOrigins(
                     "http://localhost:5173",
                     "http://192.168.3.180:5173",
+                    "http://192.168.3.173:5173",
                     "http://192.168.3.189:5173",
                     "http://192.168.3.193:5173",
                     "http://192.168.3.186:5173",

@@ -174,7 +174,7 @@ export default function InquiryList({ data = [], queryType }) {
   );
 
   return (
-    <div className="bg-gray-50 p-8 rounded-3xl shadow-2xl space-y-8">
+    <div className="bg-slate-50 p-8 space-y-8">
       {/* Header */}
       <div className="flex justify-between items-center">
         <span className="block text-sm font-medium text-gray-500 mt-1">

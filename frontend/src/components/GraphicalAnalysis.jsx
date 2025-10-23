@@ -313,7 +313,7 @@ export default function GraphicalAnalysis({ data = [], queryType }) {
   return (
     <div
       ref={wrapRef}
-      className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-center" // Added items-center for vertical alignment
+      className="bg-slate-50 p-8 grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-center" // Added items-center for vertical alignment
     >
       {/* Existing Charts */}
       {queryType !== "regisDate" && (
