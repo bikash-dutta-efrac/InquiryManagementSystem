@@ -1,7 +1,23 @@
 [
   {
     "ContainingType": "InquiryManagementWebService.Controllers.BusinessController",
-    "Method": "GetSampleOverview",
+    "Method": "GetMtoMBusinessComparison",
+    "RelativePath": "api/business/bd-business-comparison",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.MtoMComparisonRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.BusinessController",
+    "Method": "GetBdBusinessOverview",
     "RelativePath": "api/business/bd-business-overview",
     "HttpMethod": "POST",
     "IsController": true,
@@ -17,7 +33,7 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
-    "Method": "GetInquiriesAsync",
+    "Method": "GetInquiries",
     "RelativePath": "api/inquiries",
     "HttpMethod": "POST",
     "IsController": true,
@@ -33,7 +49,7 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
-    "Method": "GetBdNamesAsync",
+    "Method": "GetBdNames",
     "RelativePath": "api/inquiries/bdnames",
     "HttpMethod": "POST",
     "IsController": true,
@@ -49,7 +65,7 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
-    "Method": "GetClientNamesAsync",
+    "Method": "GetClientNames",
     "RelativePath": "api/inquiries/clientnames",
     "HttpMethod": "POST",
     "IsController": true,
@@ -65,7 +81,7 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.InquiryController",
-    "Method": "GetVerticalsAsync",
+    "Method": "GetVerticals",
     "RelativePath": "api/inquiries/verticals",
     "HttpMethod": "POST",
     "IsController": true,

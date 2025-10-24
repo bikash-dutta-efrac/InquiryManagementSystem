@@ -20,7 +20,7 @@ namespace InquiryManagementWebService.Controllers
         {
             try
             {
-                var response = await _labRepository.GetSampleOverview(request);
+                var response = await _labRepository.GetSampleOverviewAsync(request);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -34,7 +34,7 @@ namespace InquiryManagementWebService.Controllers
         {
             try
             {
-                var response = await _labRepository.GetSampleSummary(request);
+                var response = await _labRepository.GetSampleSummaryAsync(request);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -48,7 +48,7 @@ namespace InquiryManagementWebService.Controllers
         {
             try
             {
-                var response = await _labRepository.GetSampleDetailsById(regNo);
+                var response = await _labRepository.GetSampleDetailsByIdAsync(regNo);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -62,7 +62,7 @@ namespace InquiryManagementWebService.Controllers
         {
             try
             {
-                var response = await _labRepository.GetLabSummary(request);
+                var response = await _labRepository.GetLabSummaryAsync(request);
                 return Ok(response);
             }
             catch (Exception ex)

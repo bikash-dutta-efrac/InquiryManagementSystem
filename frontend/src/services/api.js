@@ -79,6 +79,16 @@ export async function getBdBusinessSummary(filters = {}) {
   return response.data;
 }
 
+export async function getMtoMBusinessComparison(filters = {}) {
+  // const body = buildRequestBody(filters);
+  console.log(filters)
+  const response = await axios.post(`${API_BASE_URL}/business/bd-business-comparison`, filters, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return response.data;
+}
+
+
 export async function getInquiries(filters = {}) {
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries`, body, {

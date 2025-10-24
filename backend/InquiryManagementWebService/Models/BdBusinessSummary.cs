@@ -3,6 +3,7 @@
     public class BdBusinessSummary
     {
         public string BDName { get; set; }
+        public string YearMonth { get; set; }
         public int TotalRegistrations { get; set; }
         public decimal TotalRegisValue { get; set; }
         public int UniqueVerticals { get; set; }

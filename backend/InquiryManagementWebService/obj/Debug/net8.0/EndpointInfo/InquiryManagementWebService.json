@@ -36,6 +36,37 @@
         }
       }
     },
+    "/api/business/bd-business-comparison": {
+      "post": {
+        "tags": [
+          "Business"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MtoMComparisonRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MtoMComparisonRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MtoMComparisonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/inquiries": {
       "post": {
         "tags": [
@@ -421,6 +452,32 @@
           },
           "excludeVerticals": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MtoMComparisonRequest": {
+        "type": "object",
+        "properties": {
+          "fromDate1": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "toDate1": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "fromDate2": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "toDate2": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false

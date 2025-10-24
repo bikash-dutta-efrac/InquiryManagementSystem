@@ -16,7 +16,7 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetInquiriesAsync([FromBody] InquiryRequest request)
+        public async Task<IActionResult> GetInquiries([FromBody] InquiryRequest request)
         {
             try
             {
@@ -30,7 +30,7 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost("verticals")]
-        public async Task<IActionResult> GetVerticalsAsync([FromBody] InquiryRequest request)
+        public async Task<IActionResult> GetVerticals([FromBody] InquiryRequest request)
         {
             try
             {
@@ -44,7 +44,7 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost("bdnames")]
-        public async Task<IActionResult> GetBdNamesAsync([FromBody] InquiryRequest request)
+        public async Task<IActionResult> GetBdNames([FromBody] InquiryRequest request)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost("clientnames")]
-        public async Task<IActionResult> GetClientNamesAsync([FromBody] InquiryRequest request)
+        public async Task<IActionResult> GetClientNames([FromBody] InquiryRequest request)
         {
             try
             {

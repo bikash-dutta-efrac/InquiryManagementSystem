@@ -17,11 +17,25 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost("bd-business-overview")]
-        public async Task<IActionResult> GetSampleOverview([FromBody] BdBusinessSummaryRequest request)
+        public async Task<IActionResult> GetBdBusinessOverview([FromBody] BdBusinessSummaryRequest request)
         {
             try
             {
-                var response = await _businessRepository.GetBdBusinessOverview(request);
+                var response = await _businessRepository.GetBdBusinessOverviewAsync(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("bd-business-comparison")]
+        public async Task<IActionResult> GetMtoMBusinessComparison([FromBody] MtoMComparisonRequest request)
+        {
+            try
+            {
+                var response = await _businessRepository.GetMtoMBusinessComparisonAsync(request);
                 return Ok(response);
             }
             catch (Exception ex)

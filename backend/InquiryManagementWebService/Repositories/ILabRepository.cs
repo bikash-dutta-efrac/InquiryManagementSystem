@@ -4,10 +4,10 @@ namespace InquiryManagementWebService.Repositories
 {
     public interface ILabRepository
     {
-        Task<SampleOverview> GetSampleOverview(SampleSummaryRequest request);
-        Task<IEnumerable<SampleSummary>> GetSampleSummary(SampleSummaryRequest request);
-        Task<IEnumerable<LabSummary>> GetLabSummary(SampleSummaryRequest request);
+        Task<SampleOverview> GetSampleOverviewAsync(SampleSummaryRequest request);
+        Task<IEnumerable<SampleSummary>> GetSampleSummaryAsync(SampleSummaryRequest request);
+        Task<IEnumerable<LabSummary>> GetLabSummaryAsync(SampleSummaryRequest request);
         Task<IEnumerable<string>> GetLabsAsync(SampleSummaryRequest request);
-        Task<IEnumerable<SampleDetails>> GetSampleDetailsById(string regNo);
+        Task<IEnumerable<SampleDetails>> GetSampleDetailsByIdAsync(string regNo);
     }
 }

@@ -12,7 +12,7 @@ namespace InquiryManagementWebService.Repositories
             _connectionString = configuration["Connnectionstrings:MyConnection"];
         }
 
-        public async Task<SampleOverview> GetSampleOverview(SampleSummaryRequest request)
+        public async Task<SampleOverview> GetSampleOverviewAsync(SampleSummaryRequest request)
         {
             var query = @"
 ;WITH RegisRanker AS
@@ -206,7 +206,7 @@ FROM
             }
         }
 
-        public async Task<IEnumerable<SampleSummary>> GetSampleSummary(SampleSummaryRequest request)
+        public async Task<IEnumerable<SampleSummary>> GetSampleSummaryAsync(SampleSummaryRequest request)
         {
 
             var query = @"
@@ -349,7 +349,7 @@ ORDER BY g.RegistrationNo;
         }
 
 
-        public async Task<IEnumerable<SampleDetails>> GetSampleDetailsById(string regNo)
+        public async Task<IEnumerable<SampleDetails>> GetSampleDetailsByIdAsync(string regNo)
         {
 
             var query = @"
@@ -471,7 +471,7 @@ ORDER BY
             }
         }
 
-        public async Task<IEnumerable<LabSummary>> GetLabSummary(SampleSummaryRequest request)
+        public async Task<IEnumerable<LabSummary>> GetLabSummaryAsync(SampleSummaryRequest request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {

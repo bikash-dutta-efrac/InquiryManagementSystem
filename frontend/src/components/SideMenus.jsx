@@ -63,7 +63,7 @@ export default function SideMenus({ activeView, onViewChange, isMinimized = fals
       <div className={`flex ${isMinimized ? "justify-center" : "justify-between"} items-center mb-4`}>
         {!isMinimized && (
           <h2 className="text-xl font-extrabold tracking-wide">
-            Lims Dashboard
+            Lims Capital
           </h2>
         )}
 

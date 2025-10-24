@@ -16,7 +16,7 @@ namespace InquiryManagementWebService.Repositories
 
         }
 
-        public async Task<IEnumerable<BdBusinessSummary>> GetBdBusinessOverview(BdBusinessSummaryRequest request)
+        public async Task<IEnumerable<BdBusinessSummary>> GetBdBusinessOverviewAsync(BdBusinessSummaryRequest request)
         {
             var query = @"
 WITH QuotationsWithReg AS
@@ -206,6 +206,23 @@ ORDER BY f.BDName, YearMonth;
                     ToDate = request.ToDate,
                 });
             }
+        }
+
+
+        public async Task<IEnumerable<BdBusinessSummary>> GetMtoMBusinessComparisonAsync(MtoMComparisonRequest request)
+        {
+            var req1 = new BdBusinessSummaryRequest();
+            var req2= new BdBusinessSummaryRequest();
+            req1.FromDate = request.FromDate1;
+            req1.ToDate = request.ToDate1;
+            req2.FromDate = request.FromDate2;
+            req2.ToDate = request.ToDate2;
+
+
+            var month1Data = await GetBdBusinessOverviewAsync(req1);
+            var month2Data = await GetBdBusinessOverviewAsync(req2);
+
+            return month1Data.Concat(month2Data);
         }
     }
 }
