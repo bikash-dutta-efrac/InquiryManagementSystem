@@ -28,6 +28,7 @@ builder.Services.AddCors(options =>
                     "http://192.168.3.207:5173",
                     "http://192.168.3.177:5173",
                     "http://192.168.3.167:5173",
+                    "http://192.168.3.212:5173",
                     "http://192.168.3.200:5174"
                 )
                 .AllowAnyHeader()

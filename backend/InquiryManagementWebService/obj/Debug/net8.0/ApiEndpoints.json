@@ -190,5 +190,90 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "UpdateProjection",
+    "RelativePath": "api/projections/bd/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.BdProjectionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "DeleteProjection",
+    "RelativePath": "api/projections/bd/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "GetProjectionById",
+    "RelativePath": "api/projections/bd/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "CreateProjection",
+    "RelativePath": "api/projections/bd/create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.BdProjectionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "GetAllProjections",
+    "RelativePath": "api/projections/bd/get-all",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "filter",
+        "Type": "InquiryManagementWebService.Models.BdProjectionFilter",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

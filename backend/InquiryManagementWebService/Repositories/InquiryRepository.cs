@@ -231,12 +231,13 @@ ORDER BY Vertical;
             }
         }
 
-        public async Task<IEnumerable<string>> GetBdNamesAsync(InquiryRequest request)
+        public async Task<IEnumerable<BdDetail>> GetBdNamesAsync(InquiryRequest request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var query = @"
-SELECT DISTINCT bd.CODEDESC AS BDName
+SELECT bd.CODEDESC AS BDName, 
+MAX(bd.CODECD) AS CODECD
 FROM OQUOTMST i
 INNER JOIN OCODEMST bd ON bd.CODECD = i.QUOT_SALESPERSONCD
 INNER JOIN OCUSTMST c ON c.CUSTACCCODE = i.QUOTPARTYCD
@@ -251,13 +252,14 @@ WHERE bd.CODETYPE = 'SP'
       (@DateField = 'inqDate' AND (@FromDate IS NULL OR i.QUOTENQDATE >= @FromDate) AND (@ToDate IS NULL OR i.QUOTENQDATE <= @ToDate))
       OR (@DateField = 'quotDate' AND (@FromDate IS NULL OR i.QuotDate >= @FromDate) AND (@ToDate IS NULL OR i.QuotDate <= @ToDate))
   )
+GROUP BY bd.CODEDESC
 ORDER BY bd.CODEDESC;
 ";
 
                 var verticals = request.Verticals?.Any() == true ? string.Join(",", request.Verticals) : null;
                 var clientNames = request.ClientNames?.Any() == true ? string.Join(",", request.ClientNames) : null;
 
-                return await connection.QueryAsync<string>(query, new
+                return await connection.QueryAsync<BdDetail>(query, new
                 {
                     FromDate = request.FromDate,
                     ToDate = request.ToDate,
@@ -268,12 +270,13 @@ ORDER BY bd.CODEDESC;
             }
         }
 
-        public async Task<IEnumerable<string>> GetClientNamesAsync(InquiryRequest request)
+        public async Task<IEnumerable<ClientDetail>> GetClientNamesAsync(InquiryRequest request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var query = @"
-SELECT DISTINCT c.CUSTNAME AS ClientName
+SELECT c.CUSTNAME AS ClientName,
+MAX(c.CUSTACCCODE) AS CUSTACCCODE
 FROM OQUOTMST i
 INNER JOIN OCUSTMST c ON i.QUOTPARTYCD = c.CUSTACCCODE
 INNER JOIN OCODEMST bd ON bd.CODECD = i.QUOT_SALESPERSONCD
@@ -288,13 +291,14 @@ WHERE bd.CODETYPE = 'SP'
       (@DateField = 'inqDate' AND (@FromDate IS NULL OR i.QUOTENQDATE >= @FromDate) AND (@ToDate IS NULL OR i.QUOTENQDATE <= @ToDate))
       OR (@DateField = 'quotDate' AND (@FromDate IS NULL OR i.QuotDate >= @FromDate) AND (@ToDate IS NULL OR i.QuotDate <= @ToDate))
   )
+GROUP BY c.CUSTNAME
 ORDER BY c.CUSTNAME;
 ";
 
                 var verticals = request.Verticals?.Any() == true ? string.Join(",", request.Verticals) : null;
                 var bdNames = request.BdNames?.Any() == true ? string.Join(",", request.BdNames) : null;
 
-                return await connection.QueryAsync<string>(query, new
+                return await connection.QueryAsync<ClientDetail>(query, new
                 {
                     FromDate = request.FromDate,
                     ToDate = request.ToDate,

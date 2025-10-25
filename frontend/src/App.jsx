@@ -16,6 +16,7 @@ import useProjections from "./hooks/useProjections";
 import useLabAnalysis from "./hooks/useLabAnalysis"; 
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import BusinessAnalysis from "./components/BusinessAnalysis";
+import BDProjectionManager from "./components/BdProjectionManager";
 
 
 export default function App() {
@@ -364,7 +365,7 @@ export default function App() {
         <div className="py-4 px-4">
           {/* Filters are always shown */}
           <div className="max-w-6xl mx-auto mb-6">
-            {queryType !== "sampleAnalysis" && queryType !== "businessAnalysis" && (
+            {queryType !== "sampleAnalysis" && queryType !== "bdProjection" && queryType !== "businessAnalysis" && (
             <Filters
                 onChange={onFiltersChange}
                 onResetAll={handleResetAll}
@@ -402,6 +403,14 @@ export default function App() {
             ) : queryType === "businessAnalysis" ? (
               <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
                 <BusinessAnalysis /> 
+              </div>
+            ) : queryType === "bdProjection" ? (
+//                     <BdProjection
+//                       inquiries={inquiries}
+//                       projections={projections}
+//                     />
+                <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
+                <BDProjectionManager /> 
               </div>
             )
               : (
@@ -447,13 +456,8 @@ export default function App() {
                   )}
                 </div>
 
-                <div className="max-w-7xl mx-auto px-2 relative">
-                  {queryType === "bdProjection" ? (
-                    <BdProjection
-                      inquiries={inquiries}
-                      projections={projections}
-                    />
-                  ) : view === "list" ? (
+                <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
+                  {view === "list" ? (
                     <InquiryList
                       data={sortedInquiries}
                       queryType={queryType}

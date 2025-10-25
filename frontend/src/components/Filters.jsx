@@ -405,7 +405,9 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
         setLoadingOptions(true);
         try {
           const body = buildSearchRequest();
-          const options = await getBdNames(body, { signal: controller.signal });
+          const response = await getBdNames(body, { signal: controller.signal });
+
+          var options = response.map(r => r.bdName);
           setBdOptions(Array.isArray(options) ? options : []);
         } catch (e) {
           if (e.name !== "AbortError")
@@ -433,9 +435,12 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
         setLoadingOptions(true);
         try {
           const body = buildSearchRequest();
-          const options = await getClientNames(body, {
+          const response = await getClientNames(body, {
             signal: controller.signal,
           });
+
+          var options = response.map(r => r.clientName);
+
           setClientOptions(Array.isArray(options) ? options : []);
         } catch (e) {
           if (e.name !== "AbortError")

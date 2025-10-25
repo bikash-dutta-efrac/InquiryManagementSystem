@@ -1157,7 +1157,6 @@ const VerticalClientBreakdownTable = ({
                             prevValue
                           );
                         } else if (isLatestMonthInComparison) {
-                          // Scenario 2: Month Comparison (Month 2 vs Month 1 comparison)
                           const pastMonthData = rowMonthlyValues[0];
                           const pastCount = pastMonthData?.count || 0;
                           const pastValue = pastMonthData?.value || 0;
@@ -1171,7 +1170,6 @@ const VerticalClientBreakdownTable = ({
                             pastValue
                           );
                         }
-                        // ---------------------------------
 
                         return (
                           <td
@@ -1193,13 +1191,13 @@ const VerticalClientBreakdownTable = ({
                                   isLatestMonthInComparison ? (
                                     <ComparisonDisplay
                                       percentageChange={valueChangeToDisplay}
-                                      size="small" // Use small size
+                                      size="small"
                                     />
                                   ) : null}
                                 </div>
                                 {/* Count (Regs) with change display */}
                                 <div className="flex items-center justify-center gap-1">
-                                  <span className="text-[10px] text-emerald-600 font-medium">
+                                  <span className={`text-[11px] ${colorClass.textColor} font-medium`}>
                                     {count} reg{count !== 1 ? "s" : ""}
                                   </span>
                                   {(showMonthOverMonthChange && monthIndex > 0) ||
@@ -1327,7 +1325,7 @@ const VerticalClientBreakdownTable = ({
                             {formatAmount(grandTotalValue)}
                           </span>
                         </div>
-                        <span className="text-[11px] text-blue-800 font-extrabold">
+                        <span className={`text-[11px] text-blue-800 font-extrabold`}>
                           {grandTotalCount} reg
                           {grandTotalCount !== 1 ? "s" : ""}
                         </span>
@@ -1365,12 +1363,12 @@ const BdRow = ({ bdData, monthHeaders, isComparison }) => {
   const verticalColor = {
     header: "text-sky-700",
     iconBg: "bg-sky-500",
-    textColor: "text-sky-500",
+    textColor: "text-sky-700",
   };
   const clientColor = {
     header: "text-cyan-700",
     iconBg: "bg-cyan-500",
-    textColor: "text-cyan-500",
+    textColor: "text-cyan-700",
   };
 
   let regChange = null;

@@ -30,7 +30,6 @@ export default function useFilters(defaultFilters) {
     }
   }, []);
 
-  // Fetch BD names
   const fetchBdNames = useCallback(async (filters = {}) => {
     try {
       const data = await getBdNames(filters);
