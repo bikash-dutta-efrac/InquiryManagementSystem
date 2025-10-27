@@ -90,42 +90,49 @@ const colorMap = {
     border: "border-t-4 border-blue-500",
     bg: "bg-blue-100",
     icon: "text-blue-600",
+    text: "text-blue-700",
     chip: "bg-blue-100 text-blue-800",
   },
   green: {
     border: "border-t-4 border-green-500",
     bg: "bg-green-100",
     icon: "text-green-600",
+    text: "text-green-700",
     chip: "bg-green-100 text-green-800",
   },
   red: {
     border: "border-t-4 border-red-500",
     bg: "bg-red-100",
     icon: "text-red-600",
+    text: "text-red-700",
     chip: "bg-red-100 text-red-800",
   },
   orange: {
     border: "border-t-4 border-orange-500",
     bg: "bg-orange-100",
     icon: "text-orange-600",
+    text: "text-orange-700",
     chip: "bg-orange-100 text-orange-800",
   },
   teal: {
     border: "border-t-4 border-teal-500",
     bg: "bg-teal-100",
     icon: "text-teal-600",
+    text: "text-teal-700",
     chip: "bg-teal-100 text-teal-800",
   },
   gray: {
     border: "border-t-4 border-gray-500",
     bg: "bg-gray-100",
     icon: "text-gray-600",
+    text: "text-gray-700",
     chip: "bg-gray-100 text-gray-600",
   },
   cyan: {
     border: "border-t-4 border-cyan-500",
     bg: "bg-cyan-100",
     icon: "text-cyan-600",
+    text: "text-cyan-700",
     chip: "bg-cyan-100 text-cyan-800",
   },
 };
@@ -251,7 +258,7 @@ const SummaryCard = ({ title, value = null, color = "gray", icon, chips = [], cl
       
       {/* Conditionally render value: only render if value is explicitly passed and not null */}
       {value !== null && (
-          <p className="text-2xl font-bold text-gray-800 mb-2">{value}</p>
+          <p className={`text-3xl mt-6 font-extrabold ${colorClasses.text} mb-2`}>{value}</p>
       )}
 
       {/* Display Chips for Lab Names */}

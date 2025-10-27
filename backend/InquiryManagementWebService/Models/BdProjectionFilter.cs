@@ -2,7 +2,7 @@
 {
     public class BdProjectionFilter
     {
-        public string? CODECD { get; set; }
+        public List<string>? CODECDs { get; set; }
 
         public DateTime? FromDate { get; set; }
 

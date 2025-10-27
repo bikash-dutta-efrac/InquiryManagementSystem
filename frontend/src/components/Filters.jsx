@@ -7,7 +7,6 @@ import {
   Briefcase,
   Building2,
   Telescope,
-  X,
   RefreshCcw,
   Search,
   FlaskConical,
@@ -56,7 +55,7 @@ const CustomSelect = ({
     <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
-        className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 group"
+        className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 group"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2.5">
@@ -76,7 +75,7 @@ const CustomSelect = ({
             <div className="relative">
               <input
                 type="text"
-                className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}

@@ -120,36 +120,17 @@ function formatAmount(num) {
 
 function computeDateRange(type, value, value2 = null) {
   const now = new Date();
-  let fromDate, toDate, fromDate2, toDate2;
 
-  toDate = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    23,
-    59,
-    59,
-    999
-  );
-
-  if (type === "relative") {
-    const monthsBack = parseInt(value);
-
-    if (monthsBack === 0) {
-      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else {
-      fromDate = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1);
-    }
-  } else if (type === "comparison") {
-    // Parse first month (value - Month 1)
+  if (type === "comparison") {
+    // Comparison Mode: Month 1 vs Month 2
+    // Use local Date parsing for chronological sorting and to get year/month index
     const [monthName1, yearStr1] = value.split(" ");
     const date1 = new Date(`${monthName1} 1, ${yearStr1}`);
 
-    // Parse second month (value2 - Month 2)
     const [monthName2, yearStr2] = value2.split(" ");
     const date2 = new Date(`${monthName2} 1, ${yearStr2}`);
 
-    // Determine past and latest dates for correct chronological order (Past vs Latest)
+    // Determine past and latest dates for correct chronological order
     const pastDate = date1.getTime() < date2.getTime() ? date1 : date2;
     const latestDate = date1.getTime() < date2.getTime() ? date2 : date1;
 
@@ -158,39 +139,60 @@ function computeDateRange(type, value, value2 = null) {
     const latestYear = latestDate.getFullYear();
     const latestMonthIndex = latestDate.getMonth();
 
+    // All date constructions below use Date.UTC(...)
     return {
       // fromDate1/toDate1 is always the PAST month
-      fromDate1: new Date(pastYear, pastMonthIndex, 1).toISOString(),
+      // Start of month (1st day at 00:00:00.000Z)
+      fromDate1: new Date(Date.UTC(pastYear, pastMonthIndex, 1)).toISOString(),
+      // End of month (last day at 23:59:59.999Z - The 0 day of the next month)
       toDate1: new Date(
-        pastYear,
-        pastMonthIndex + 1,
-        0,
-        23,
-        59,
-        59,
-        999
+        Date.UTC(pastYear, pastMonthIndex + 1, 0, 23, 59, 59, 999)
       ).toISOString(),
       // fromDate2/toDate2 is always the LATEST month
-      fromDate2: new Date(latestYear, latestMonthIndex, 1).toISOString(),
+      // Start of month (1st day at 00:00:00.000Z)
+      fromDate2: new Date(Date.UTC(latestYear, latestMonthIndex, 1)).toISOString(),
+      // End of month (last day at 23:59:59.999Z)
       toDate2: new Date(
-        latestYear,
-        latestMonthIndex + 1,
-        0,
-        23,
-        59,
-        59,
-        999
+        Date.UTC(latestYear, latestMonthIndex + 1, 0, 23, 59, 59, 999)
       ).toISOString(),
     };
-  } else {
-    // Specific Month logic (value - Month)
-    const [monthName, yearStr] = value.split(" ");
-    const monthIndex = new Date(`${monthName} 1, ${yearStr}`).getMonth();
-    const year = parseInt(yearStr);
-    fromDate = new Date(year, monthIndex, 1);
-    toDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
   }
 
+  // Handle RELATIVE and SPECIFIC MONTH modes (single range return)
+  let fromDate, toDate;
+  const nowYear = now.getFullYear();
+  const nowMonthIndex = now.getMonth();
+  const nowDay = now.getDate();
+
+  if (type === "relative") {
+    // Relative Mode (e.g., Last X Months)
+    const monthsBack = parseInt(value);
+
+    // toDate is always the current day at 23:59:59.999Z UTC
+    toDate = new Date(
+      Date.UTC(nowYear, nowMonthIndex, nowDay, 23, 59, 59, 999)
+    );
+
+    // fromDate is the 1st of the starting month at 00:00:00.000Z UTC
+    const startMonthIndex = nowMonthIndex - monthsBack;
+    fromDate = new Date(Date.UTC(nowYear, startMonthIndex, 1));
+  } else {
+    // Specific Month Mode
+    // Parse the selected month string (e.g., "October 2025")
+    const [monthName, yearStr] = value.split(" ");
+    // Create a temporary local date object to reliably get the month index and year
+    const localDate = new Date(`${monthName} 1, ${yearStr}`);
+    const monthIndex = localDate.getMonth();
+    const year = localDate.getFullYear();
+
+    // fromDate is the 1st of the selected month at 00:00:00.000Z UTC
+    fromDate = new Date(Date.UTC(year, monthIndex, 1));
+
+    // toDate is the last day of the selected month at 23:59:59.999Z UTC
+    toDate = new Date(Date.UTC(year, monthIndex + 1, 0, 23, 59, 59, 999));
+  }
+
+  // Return the single range for 'relative' and 'month' modes
   return { fromDate: fromDate.toISOString(), toDate: toDate.toISOString() };
 }
 
@@ -884,31 +886,37 @@ const SummaryCard = ({
       border: "border-t-4 border-blue-500",
       bg: "bg-blue-100",
       icon: "text-blue-600",
+      text: "text-blue-700"
     },
     green: {
       border: "border-t-4 border-green-500",
       bg: "bg-green-100",
       icon: "text-green-600",
+      text: "text-green-700"
     },
     orange: {
       border: "border-t-4 border-orange-500",
       bg: "bg-orange-100",
       icon: "text-orange-600",
+      text: "text-orange-700"
     },
     red: {
       border: "border-t-4 border-red-500",
       bg: "bg-red-100",
       icon: "text-red-600",
+      text: "text-red-700"
     },
     cyan: {
       border: "border-t-4 border-cyan-500",
       bg: "bg-cyan-100",
       icon: "text-cyan-600",
+      text: "text-cyan-700"
     },
     teal: {
       border: "border-t-4 border-teal-500",
       bg: "bg-teal-100",
       icon: "text-teal-600",
+      text: "text-teal-700"
     },
   };
 
@@ -942,7 +950,7 @@ const SummaryCard = ({
           </div>
         ) : value !== null && value !== undefined ? (
           <div className="flex flex-col justify-end">
-            <p className="text-3xl font-bold text-gray-800">{value}</p>
+            <p className={`text-3xl font-extrabold ${classes.text}`}>{value}</p>
             <div className="mt-1">
               <ComparisonDisplay
                 percentageChange={comparisonChange}

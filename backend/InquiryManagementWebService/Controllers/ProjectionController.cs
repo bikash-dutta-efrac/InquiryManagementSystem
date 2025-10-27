@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InquiryManagementWebService.Controllers
 {
+    using Microsoft.AspNetCore.Mvc;
+
     [ApiController]
     [Route("api/projections")]
     public class ProjectionController : Controller
@@ -14,6 +16,7 @@ namespace InquiryManagementWebService.Controllers
         {
             _projectionRepository = projectionRepository;
         }
+
 
         [HttpPost]
         public async Task<IActionResult> GetProjections([FromBody] ProjectionRequest request)
@@ -98,7 +101,7 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPost("bd/get-all")]
-        public async Task<IActionResult> GetAllProjections(BdProjectionFilter filter)
+        public async Task<IActionResult> GetAllProjections([FromBody] BdProjectionFilter filter)
         {
             try
             {
@@ -110,5 +113,87 @@ namespace InquiryManagementWebService.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+
+        [HttpPost("target/create")]
+        public async Task<IActionResult> CreateTarget([FromBody] BdTarget target)
+        {
+            try
+            {
+                var newId = await _projectionRepository.CreateTargetAsync(target);
+                return Ok(newId);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("target/{id}")]
+        public async Task<IActionResult> GetTargetById(int id)
+        {
+            try
+            {
+                var target = await _projectionRepository.GetTargetByIdAsync(id);
+                if (target == null)
+                    return NotFound($"Target with Id {id} not found.");
+                return Ok(target);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("target/get-all")]
+        public async Task<IActionResult> GetAllTargets([FromBody] BdProjectionFilter filter)
+        {
+            try
+            {
+                var targets = await _projectionRepository.GetAllTargetsAsync(filter);
+                return Ok(targets);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("target/{id}")]
+        public async Task<IActionResult> UpdateTarget(int id, [FromBody] BdTarget target)
+        {
+            try
+            {
+                var rowsAffected = await _projectionRepository.UpdateTargetAsync(id, target);
+
+                if (rowsAffected == 0)
+                    return NotFound($"Target with Id {id} not found.");
+
+                return Ok($"Target {id} updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpDelete("target/{id}")]
+        public async Task<IActionResult> DeleteTarget(int id)
+        {
+            try
+            {
+                var rowsAffected = await _projectionRepository.DeleteTargetAsync(id);
+
+                if (rowsAffected == 0)
+                    return NotFound($"Target with Id {id} not found.");
+
+                return Ok($"Target {id} deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
+
 }

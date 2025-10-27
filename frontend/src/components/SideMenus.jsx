@@ -1,7 +1,6 @@
 import {
   HiUserPlus,
   HiBeaker,
-  HiChartBar,
   HiCurrencyDollar,
 } from "react-icons/hi2";
 import {
@@ -12,6 +11,7 @@ import {
 import {
   MdAssignment,
   MdBusiness,
+  MdTrendingUp,
 } from "react-icons/md";
 
 export default function SideMenus({ activeView, onViewChange, isMinimized = false, onToggleMinimize }) {
@@ -22,7 +22,7 @@ export default function SideMenus({ activeView, onViewChange, isMinimized = fals
   ];
 
   const analysisMenus = [
-    { key: "bdProjection", label: "Bd Projection", icon: HiChartBar },
+    { key: "bdProjection", label: "Bd Projection", icon: MdTrendingUp },
     { key: "labAnalysis", label: "Lab Analysis", icon: HiBeaker },
     { key: "sampleAnalysis", label: "Sample Analysis", icon: TestTube2 },
     { key: "businessAnalysis", label: "Business Analysis", icon: MdBusiness },
@@ -63,7 +63,7 @@ export default function SideMenus({ activeView, onViewChange, isMinimized = fals
       <div className={`flex ${isMinimized ? "justify-center" : "justify-between"} items-center mb-4`}>
         {!isMinimized && (
           <h2 className="text-xl font-extrabold tracking-wide">
-            Lims Capital
+            LIMS DASHBOARD
           </h2>
         )}
 

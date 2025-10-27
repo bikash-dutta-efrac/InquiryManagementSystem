@@ -59,6 +59,7 @@ export default function useFilters(defaultFilters) {
         toDate: defaultFilters.range?.end || null,
         month: defaultFilters.month || null,
         year: defaultFilters.year || null,
+        bdNames: defaultFilters.bdNames || null,
         dateField: defaultFilters.dateField || "inqDate",
       };
 

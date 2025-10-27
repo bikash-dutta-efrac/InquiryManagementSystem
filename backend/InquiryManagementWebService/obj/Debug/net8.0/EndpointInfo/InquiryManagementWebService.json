@@ -522,6 +522,152 @@
           }
         }
       }
+    },
+    "/api/projections/target/create": {
+      "post": {
+        "tags": [
+          "Projection"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdTarget"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdTarget"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdTarget"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/projections/target/{id}": {
+      "get": {
+        "tags": [
+          "Projection"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Projection"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdTarget"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdTarget"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdTarget"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projection"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/projections/target/get-all": {
+      "post": {
+        "tags": [
+          "Projection"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdProjectionFilter"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdProjectionFilter"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdProjectionFilter"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -545,8 +691,11 @@
       "BdProjectionFilter": {
         "type": "object",
         "properties": {
-          "codecd": {
-            "type": "string",
+          "codecDs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "nullable": true
           },
           "fromDate": {
@@ -581,6 +730,37 @@
           "projval": {
             "type": "integer",
             "format": "int64"
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BdTarget": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "codecd": {
+            "type": "string",
+            "nullable": true
+          },
+          "projDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "targetVal": {
+            "type": "string",
+            "nullable": true
+          },
+          "bdName": {
+            "type": "string",
+            "nullable": true
           },
           "remarks": {
             "type": "string",

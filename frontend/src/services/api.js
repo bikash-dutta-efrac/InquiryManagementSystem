@@ -20,90 +20,168 @@ function buildRequestBody(filters = {}) {
   };
 }
 
+// ===================================================================
+// ======================== BD PROJECTIONS ============================
+// ===================================================================
+
 export async function getAllBdProjection(filter = {}) {
-
-  const response = await axios.post(`${API_BASE_URL}/projections/bd/get-all`, filter, {
-    headers: { "Content-Type": "application/json" },
-  });
-
+  const response = await axios.post(
+    `${API_BASE_URL}/projections/bd/get-all`,
+    filter,
+    { headers: { "Content-Type": "application/json" } }
+  );
   return response.data;
 }
 
 export async function createBdProjection(body = {}) {
-
-  const response = await axios.post(`${API_BASE_URL}/projections/bd/create`, body, {
-    headers: { "Content-Type": "application/json" },
-  });
-
+  const response = await axios.post(
+    `${API_BASE_URL}/projections/bd/create`,
+    body,
+    { headers: { "Content-Type": "application/json" } }
+  );
   return response.data;
 }
 
-export async function getSampleOverview(filters = {}) {
-  const body = buildRequestBody(filters);
+export async function updateBdProjection(id, body = {}) {
+  const response = await axios.put(
+    `${API_BASE_URL}/projections/bd/${id}`,
+    body,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+}
 
-  const response = await axios.post(`${API_BASE_URL}/lab/sample-overview`, body, {
+export async function deleteBdProjection(id) {
+  const response = await axios.delete(
+    `${API_BASE_URL}/projections/bd/${id}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+}
+
+export async function getBdProjectionById(id) {
+  const response = await axios.get(`${API_BASE_URL}/projections/bd/${id}`, {
     headers: { "Content-Type": "application/json" },
   });
+  return response.data;
+}
 
+// ===================================================================
+// ========================== BD TARGETS ==============================
+// ===================================================================
+
+export async function getAllBdTargets(filter = {}) {
+  const response = await axios.post(
+    `${API_BASE_URL}/projections/target/get-all`,
+    filter,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+}
+
+export async function createBdTarget(body = {}) {
+  const response = await axios.post(
+    `${API_BASE_URL}/projections/target/create`,
+    body,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+}
+
+export async function updateBdTarget(id, body = {}) {
+  const response = await axios.put(
+    `${API_BASE_URL}/projections/target/${id}`,
+    body,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+}
+
+export async function deleteBdTarget(id) {
+  const response = await axios.delete(
+    `${API_BASE_URL}/projections/target/${id}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+}
+
+export async function getBdTargetById(id) {
+  const response = await axios.get(`${API_BASE_URL}/projections/target/${id}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return response.data;
+}
+
+// ===================================================================
+// ======================== LAB & BUSINESS ============================
+// ===================================================================
+
+export async function getSampleOverview(filters = {}) {
+  const body = buildRequestBody(filters);
+  const response = await axios.post(
+    `${API_BASE_URL}/lab/sample-overview`,
+    body,
+    { headers: { "Content-Type": "application/json" } }
+  );
   return response.data;
 }
 
 export async function getLabSummaries(filters = {}) {
   const body = buildRequestBody(filters);
-
   const response = await axios.post(`${API_BASE_URL}/lab/summaries`, body, {
     headers: { "Content-Type": "application/json" },
   });
-
   return response.data;
 }
 
 export async function getSampleSummaries(filters = {}) {
   const body = buildRequestBody(filters);
-
   const response = await axios.post(`${API_BASE_URL}/lab/samples`, body, {
     headers: { "Content-Type": "application/json" },
   });
-
   return response.data;
 }
 
 export async function getSampleDetailsByRegNo(regNo) {
-
-  const response = await axios.post(`${API_BASE_URL}/lab/sample-details`, regNo, {
-    headers: { "Content-Type": "application/json" },
-  });
-
+  const response = await axios.post(
+    `${API_BASE_URL}/lab/sample-details`,
+    regNo,
+    { headers: { "Content-Type": "application/json" } }
+  );
   return response.data;
 }
 
 export async function getLabNames(filters = {}) {
   const body = buildRequestBody(filters);
-
   const response = await axios.post(`${API_BASE_URL}/lab/names`, body, {
     headers: { "Content-Type": "application/json" },
   });
-
   return response.data;
 }
 
 export async function getBdBusinessSummary(filters = {}) {
   const body = buildRequestBody(filters);
-  const response = await axios.post(`${API_BASE_URL}/business/bd-business-overview`, body, {
-    headers: { "Content-Type": "application/json" },
-  });
+  const response = await axios.post(
+    `${API_BASE_URL}/business/bd-business-overview`,
+    body,
+    { headers: { "Content-Type": "application/json" } }
+  );
   return response.data;
 }
 
 export async function getMtoMBusinessComparison(filters = {}) {
-  // const body = buildRequestBody(filters);
-  console.log(filters)
-  const response = await axios.post(`${API_BASE_URL}/business/bd-business-comparison`, filters, {
-    headers: { "Content-Type": "application/json" },
-  });
+  console.log(filters);
+  const response = await axios.post(
+    `${API_BASE_URL}/business/bd-business-comparison`,
+    filters,
+    { headers: { "Content-Type": "application/json" } }
+  );
   return response.data;
 }
 
+// ===================================================================
+// ============================ INQUIRIES =============================
+// ===================================================================
 
 export async function getInquiries(filters = {}) {
   const body = buildRequestBody(filters);
