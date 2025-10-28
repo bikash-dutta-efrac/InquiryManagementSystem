@@ -6,24 +6,34 @@ import {
 import {
   ChevronsLeft,
   ChevronsRight,
+  File,
+  List,
+  NotebookTabs,
+  NotepadText,
+  NotepadTextDashed,
   TestTube2,
 } from "lucide-react";
 import {
+  MdAppRegistration,
   MdAssignment,
   MdBusiness,
   MdTrendingUp,
 } from "react-icons/md";
+import { FaListOl, FaRegistered } from "react-icons/fa";
+import { FaList } from "react-icons/fa6";
+import { IoAnalytics } from "react-icons/io5";
 
 export default function SideMenus({ activeView, onViewChange, isMinimized = false, onToggleMinimize }) {
   const searchingMenus = [
     { key: "inqDate", label: "Inquiry", icon: MdAssignment }, 
-    { key: "quotDate", label: "Quotation", icon: HiCurrencyDollar },
-    { key: "regisDate", label: "Registration", icon: HiUserPlus },
+    { key: "quotDate", label: "Quotation", icon: NotepadText },
+    { key: "regisDate", label: "Registration", icon: MdAppRegistration },
   ];
 
   const analysisMenus = [
-    { key: "bdProjection", label: "Bd Projection", icon: MdTrendingUp },
-    { key: "labAnalysis", label: "Lab Analysis", icon: HiBeaker },
+    { key: "bdProjection", label: "BD Projection", icon: MdTrendingUp },
+    { key: "bdPerformanceAnalysis", label: "BD Performance", icon: IoAnalytics },
+    { key: "labAnalysis", label: "LAB Analysis", icon: HiBeaker },
     { key: "sampleAnalysis", label: "Sample Analysis", icon: TestTube2 },
     { key: "businessAnalysis", label: "Business Analysis", icon: MdBusiness },
   ];

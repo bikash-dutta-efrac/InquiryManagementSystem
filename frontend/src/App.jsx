@@ -9,6 +9,7 @@ import SampleAnalysis from "./components/SampleAnalysis";
 import SubInquiryList from "./components/SubInquiryList";
 import BusinessAnalysis from "./components/BusinessAnalysis";
 import BDProjectionManager from "./components/BdProjectionManager";
+import BdPerformanceAnalysis from "./components/BdPerformanceAnalysis";
 
 import { BarChart3, List, AlertTriangle, RefreshCcw } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
@@ -30,6 +31,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const [bdProjectionInquiries, setBdProjectionInquiries] = useState([]);
+  const [bdPerformanceInquiries, setBdPerformanceInquiries] = useState([]);
 
   const today = new Date();
   const minDate = new Date();
@@ -66,10 +68,6 @@ export default function App() {
   // ---------------- Hooks ----------------
   const { inquiries, loading, fetchInquiries } = useInquiries(defaultFilters);
 
-  // const { projections, loading: projectionsLoading } = useProjections(
-  //   queryType === "bdProjection" ? filters : null
-  // );
-
   const { 
     sampleSummaries,
     labSummaries,
@@ -78,14 +76,13 @@ export default function App() {
     totalCount 
   } = useLabAnalysis(queryType === "labAnalysis" ? filters : null);
 
-  // const totalLoading = loading || projectionsLoading || labAnalysisLoading;
-
   const totalLoading = loading || labAnalysisLoading;
 
-  // ---------------- Callbacks ----------------
+  // ---------------- Handlers ----------------
   const handleToggleMinimize = () => setIsMinimized((prev) => !prev);
 
   const handleCardClick = (type) => setSubView(type);
+  
   const handleBack = () => setSubView(null);
 
   const handleResetAll = () => {
@@ -128,7 +125,7 @@ export default function App() {
       if (fetchParams.dateField === "labAnalysis" || fetchParams.dateField === "sampleAnalysis") return;
 
       try {
-        if (fetchParams.dateField !== "bdProjection") {
+        if (fetchParams.dateField !== "bdProjection" && fetchParams.dateField !== "bdPerformanceAnalysis") {
           await fetchInquiries(fetchParams);
         } else {
           await fetchInquiries({ ...fetchParams, dateField: "regisDate" });
@@ -141,41 +138,77 @@ export default function App() {
     [fetchInquiries]
   );
 
-const handleBdProjectionMonthChange = useCallback(
-  async (monthData) => {
-    try {
-      const { fromDate, toDate, bdNames, dateField } = monthData;
+  const handleBdProjectionMonthChange = useCallback(
+    async (monthData) => {
+      try {
+        const { fromDate, toDate, bdNames, dateField } = monthData;
 
-      const fetchParams = {
-        dateField: dateField,
-        fromDate,
-        toDate,
-        bdNames: bdNames || [],
-        verticals: [],
-        clientNames: [],
-        excludeVerticals: false,
-        excludeBds: false,
-        excludeClients: false,
-        sortOrder: "newest",
-      };
+        const fetchParams = {
+          dateField: dateField,
+          fromDate,
+          toDate,
+          bdNames: bdNames || [],
+          verticals: [],
+          clientNames: [],
+          excludeVerticals: false,
+          excludeBds: false,
+          excludeClients: false,
+          sortOrder: "newest",
+        };
 
-      console.log(fetchParams)
-      await fetchInquiries(fetchParams);
+        console.log("BD Projection Fetch Params:", fetchParams);
+        await fetchInquiries(fetchParams);
 
-    } catch (e) {
-      console.error("❌ Failed to fetch BD projection inquiries:", e);
-      setBdProjectionInquiries([]);
+      } catch (e) {
+        console.error("❌ Failed to fetch BD projection inquiries:", e);
+        setBdProjectionInquiries([]);
+      }
+    },
+    [fetchInquiries]
+  );
+
+  const handleBdPerformanceMonthChange = useCallback(
+    async (monthData) => {
+      try {
+        const { fromDate, toDate, bdNames, dateField } = monthData;
+
+        const fetchParams = {
+          dateField: dateField,
+          fromDate,
+          toDate,
+          bdNames: bdNames || [],
+          verticals: [],
+          clientNames: [],
+          excludeVerticals: false,
+          excludeBds: false,
+          excludeClients: false,
+          sortOrder: "newest",
+        };
+
+        console.log("BD Performance Fetch Params:", fetchParams);
+        await fetchInquiries(fetchParams);
+
+      } catch (e) {
+        console.error("❌ Failed to fetch BD performance inquiries:", e);
+        setBdPerformanceInquiries([]);
+      }
+    },
+    [fetchInquiries]
+  );
+
+  // Update bdProjectionInquiries when inquiries change for bdProjection
+  useEffect(() => {
+    if (queryType === "bdProjection" && inquiries?.length >= 0) {
+      setBdProjectionInquiries(inquiries);
     }
-  },
-  [fetchInquiries]
-);
+  }, [inquiries, queryType]);
 
-useEffect(() => {
-  if (queryType === "bdProjection" && inquiries?.length) {
-    setBdProjectionInquiries(inquiries);
-  }
-}, [inquiries, queryType]);
-
+  // Update bdPerformanceInquiries when inquiries change for bdPerformanceAnalysis
+  useEffect(() => {
+    if (queryType === "bdPerformanceAnalysis" && inquiries?.length >= 0) {
+      setBdPerformanceInquiries(inquiries);
+    }
+  }, [inquiries, queryType]);
 
   const onFiltersChange = (newFilterState) => {
     const { reviewsBy, labStatusFilter, pageNumber, pageSize, ...rest } = newFilterState;
@@ -184,7 +217,6 @@ useEffect(() => {
     newFilters.dateField = queryType;
     newFilters.sortOrder = newFilterState.sortOrder || filters.sortOrder;
 
-    // Date Range Logic
     if (newFilterState.filterType === "range") {
       let startDate = new Date(newFilterState.range?.start);
       let endDate = new Date(newFilterState.range?.end);
@@ -196,7 +228,7 @@ useEffect(() => {
         endDate <= today &&
         startDate <= endDate
       ) {
-        if (queryType === "bdProjection") {
+        if (queryType === "bdProjection" || queryType === "bdPerformanceAnalysis") {
           startDate = startOfMonth(startDate);
           endDate = endOfMonth(endDate);
         }
@@ -220,7 +252,6 @@ useEffect(() => {
       newFilters.year = null;
     }
 
-    // Filters based on queryType
     if (queryType === "labAnalysis") {
       newFilters.labNames = newFilterState.labNames;
       newFilters.excludeLabs = newFilterState.excludeLabs;
@@ -291,7 +322,13 @@ useEffect(() => {
 
   // ---------------- Effects ----------------
   useEffect(() => {
-    if (queryType !== "labAnalysis" && queryType !== "sampleAnalysis" && queryType !== "bdProjection") {
+    if (
+      queryType !== "labAnalysis" && 
+      queryType !== "sampleAnalysis" && 
+      queryType !== "bdProjection" && 
+      queryType !== "bdPerformanceAnalysis" &&
+      queryType !== "businessAnalysis"
+    ) {
       safeFetch(filters);
     }
   }, [filters, safeFetch, queryType]);
@@ -355,7 +392,10 @@ useEffect(() => {
         <div className="py-4 px-4">
           {/* Filters */}
           <div className="max-w-6xl mx-auto mb-6">
-            {queryType !== "sampleAnalysis" && queryType !== "bdProjection" && queryType !== "businessAnalysis" && (
+            {queryType !== "sampleAnalysis" && 
+             queryType !== "bdProjection" && 
+             queryType !== "bdPerformanceAnalysis" && 
+             queryType !== "businessAnalysis" && (
               <Filters
                 onChange={onFiltersChange}
                 onResetAll={handleResetAll}
@@ -367,7 +407,11 @@ useEffect(() => {
 
           {/* Main Content */}
           <div>
-            {subView && queryType !== "bdProjection" && queryType !== "labAnalysis" ? (
+            {/* Sub-views for standard inquiry types */}
+            {subView && 
+             queryType !== "bdProjection" && 
+             queryType !== "bdPerformanceAnalysis" && 
+             queryType !== "labAnalysis" ? (
               <div className="max-w-7xl mx-auto px-2 relative">
                 <SubInquiryList
                   {...filterSubData()}
@@ -402,6 +446,13 @@ useEffect(() => {
                   inquiriesData={bdProjectionInquiries}
                 /> 
               </div>
+            ) : queryType === "bdPerformanceAnalysis" ? (
+              <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
+                <BdPerformanceAnalysis 
+                  onMonthChange={handleBdPerformanceMonthChange}
+                  inquiriesData={bdPerformanceInquiries}
+                /> 
+              </div>
             ) : (
               <>
                 {/* Overview */}
@@ -414,7 +465,7 @@ useEffect(() => {
                   />
                 </div>
 
-                {/* View Switch */}
+                {/* View Toggle */}
                 <div className="flex justify-center my-8">
                   <div className="relative flex items-center bg-white rounded-full p-2 shadow-lg border border-gray-200 transition-all duration-300">
                     <div

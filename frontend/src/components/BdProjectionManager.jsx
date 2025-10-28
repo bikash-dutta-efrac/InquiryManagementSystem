@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Target,
   Plus,
@@ -35,7 +35,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -109,54 +108,51 @@ const generateMonthOptions = () => {
 
 const MONTH_OPTIONS = generateMonthOptions();
 
-const getStatus = (achieved, projected) => {
-  if (projected === 0) {
-    return {
-      text: "Not Projected",
-      badgeColor: "bg-blue-200 text-blue-600 border-blue-400",
-      progressColor: "bg-blue-500",
-      progress: achieved > 0 ? 100 : 0, // Show 100% if achieved > 0 but not projected
-      icon: <AlertCircle className="w-3 h-3" />,
-      isAchieved: achieved > 0,
-      isPartial: false,
-    };
-  }
-
-  const progress = Math.min((achieved / projected) * 100, 100);
-
-  if (achieved === 0) {
-    return {
-      text: "Not Achieved",
-      badgeColor: "bg-red-100 text-red-700 border-red-300",
-      progressColor: "bg-red-500",
-      progress: 0,
-      icon: <XCircle className="w-3 h-3" />,
-      isAchieved: false,
-      isPartial: false,
-    };
-  } else if (achieved >= projected) {
-    return {
-      text: "Achieved",
-      badgeColor: "bg-green-100 text-green-700 border-green-300",
-      progressColor: "bg-green-500",
-      progress,
-      icon: <CheckCircle2 className="w-3 h-3" />,
-      isAchieved: true,
-      isPartial: false,
-    };
+const getStatus = (achieved, target, isClientContext = true) => {
+  let progress;
+  let text;
+  let badgeColor;
+  let progressColor;
+  let icon;
+  
+  if (target === 0) {
+    if (achieved > 0) {
+      progress = 100;
+      text = isClientContext ? "Not Projected" : "No Target";
+      badgeColor = "bg-blue-100 text-blue-700 border-blue-300";
+      progressColor = "bg-blue-500";
+      icon = <AlertCircle className="w-3 h-3" />;
+    } else {
+      progress = 0;
+      text = isClientContext ? "No Projected" : "No Target";
+      badgeColor = "bg-gray-100 text-gray-700 border-gray-300";
+      progressColor = "bg-green-500";
+      icon = <AlertCircle className="w-3 h-3" />;
+    }
   } else {
-    return {
-      text: "Partial Achieved",
-      badgeColor: "bg-yellow-100 text-yellow-700 border-yellow-300",
-      progressColor: "bg-yellow-500",
-      progress,
-      icon: <Activity className="w-3 h-3" />,
-      isAchieved: false,
-      isPartial: true,
-    };
-  }
-};
+    progress = Math.min((achieved / target) * 100, 100);
 
+    if (achieved >= target) {
+      text = "Achieved";
+      badgeColor = "bg-green-100 text-green-700 border-green-300";
+      progressColor = "bg-green-500";
+      icon = <CheckCircle2 className="w-3 h-3" />;
+    } else if (achieved > 0) {
+      text = "Partial Achieved";
+      badgeColor = "bg-yellow-100 text-yellow-700 border-yellow-300";
+      progressColor = "bg-yellow-500";
+      icon = <Activity className="w-3 h-3" />;
+    } else {
+      text = "Not Achieved";
+      badgeColor = "bg-red-100 text-red-700 border-red-300";
+      progressColor = "bg-red-200";
+      progress = 0;
+      icon = <XCircle className="w-3 h-3" />;
+    }
+  }
+
+  return { text, badgeColor, progressColor, progress, icon };
+};
 const Dropdown = ({
   options,
   selected,
@@ -191,9 +187,9 @@ const Dropdown = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left hover:shadow-md flex justify-between items-center transition-all duration-200"
       >
-        <span className="flex items-center gap-2.5 font-medium">
+        <span className="flex items-center gap-2.5 text-sm">
           <Icon className="w-4 h-4 text-blue-600" />
-          <span className={selectedOption ? "text-gray-700" : "text-gray-400"}>
+          <span className={selectedOption ? "text-gray-700" : "text-gray-500"}>
             {displayValue}
           </span>
         </span>
@@ -475,7 +471,7 @@ const TargetAchievementCard = ({ totalTarget, totalAchieved, isLoading }) => {
   let percentage = totalTarget > 0 ? (totalAchieved / totalTarget) * 100 : 0;
 
   if (percentage === 0 && totalAchieved >= 0) percentage = 100;
-  const status = getStatus(totalAchieved, totalTarget);
+  const status = getStatus(totalAchieved, totalTarget, false);
 
   return (
     <motion.div
@@ -753,7 +749,13 @@ const ProjectionAchievementCard = ({
           <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden shadow-inner">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min(percentage, 100)}%` }}
+              animate={{
+                width: `${
+                  status.text === "Not Achieved"
+                    ? 100
+                    : Math.min(percentage, 100)
+                }%`,
+              }}
               transition={{ duration: 1, ease: "easeOut" }}
               className={`h-full ${status.progressColor} relative overflow-hidden`}
             >
@@ -901,25 +903,52 @@ const GraphView = ({ data }) => {
     );
   }
 
-  const chartData = data.map((item) => ({
-    name: item.clientName,
-    Achieved: item.achievedValue,
-    Remaining: Math.max(0, item.projectedValue - item.achievedValue),
-  }));
+  // --- RE-UPDATED CHART DATA CALCULATION to show only the OVER-ACHIEVED portion in blue ---
+  const chartData = data.map((item) => {
+    const remaining = item.projectedValue - item.achievedValue;
+    const isOverAchieved = remaining <= 0;
+    
+    // The amount achieved up to the projection (used for the green bar)
+    const achievedUpToProjection = Math.min(item.achievedValue, item.projectedValue);
+    
+    // The amount achieved above the projection (used for the blue bar)
+    const overAchievedAmount = Math.max(0, item.achievedValue - item.projectedValue);
 
-  const COLORS = ["#10b981", "#ef4444"];
+    return {
+      name: item.clientName,
+      
+      // 1. Achieved (Green): The portion achieved, but capped at the projected value.
+      // This forms the base of the bar for both under- and over-achieved clients.
+      Achieved: achievedUpToProjection,
+
+      // 2. Remaining (Red): Only shows the amount remaining if under-achieved.
+      Remaining: Math.max(0, remaining),
+      
+      // 3. NotProjected/Over-Achieved (Blue): Only shows the amount achieved ABOVE projection.
+      NotProjected: overAchievedAmount, 
+    };
+  });
+
+  const COLORS = ["#10b981", "#ef4444", "#3b82f6"]; // Green, Red, Blue
 
   const Chart = ({ isModal }) => (
     <ResponsiveContainer width="100%" height={isModal ? 600 : 400}>
       <BarChart data={chartData}>
         <defs>
+          {/* Existing Achieved Gradient (Green) */}
           <linearGradient id="colorAchieved" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
             <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
           </linearGradient>
+          {/* Existing Remaining Gradient (Red) */}
           <linearGradient id="colorRemaining" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
             <stop offset="100%" stopColor="#dc2626" stopOpacity={0.9} />
+          </linearGradient>
+          {/* --- NEW NotProjected Gradient (Blue) --- */}
+          <linearGradient id="colorNotProjected" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity={0.9} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -945,16 +974,30 @@ const GraphView = ({ data }) => {
           }}
         />
         {!isModal && <Legend wrapperStyle={{ paddingTop: "20px" }} />}
+
+        {/* Bar 1: Achieved (Green) - Forms the base, representing achieved amount up to the projection. */}
         <Bar
           dataKey="Achieved"
           stackId="a"
           fill="url(#colorAchieved)"
           radius={[0, 0, 0, 0]}
         />
+        
+        {/* Bar 2: Remaining (Red) - Sits on top of Achieved if under-achieved. */}
         <Bar
           dataKey="Remaining"
           stackId="a"
           fill="url(#colorRemaining)"
+          radius={[8, 8, 0, 0]}
+        />
+
+        {/* Bar 3: NotProjected (Blue) - Sits on top of Achieved if over-achieved.
+           It only draws the OVER-ACHIEVED amount. */}
+        <Bar
+          dataKey="NotProjected"
+          stackId="a"
+          name="Over-Achieved"
+          fill="url(#colorNotProjected)"
           radius={[8, 8, 0, 0]}
         />
       </BarChart>
@@ -1042,7 +1085,6 @@ const GraphView = ({ data }) => {
     </>
   );
 };
-
 const TableView = ({ data }) => {
   if (!data.length) {
     return (
@@ -1079,11 +1121,11 @@ const TableView = ({ data }) => {
               <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide">
                 Remaining Value
               </th>
-              <th className="px-14 py-4 text-center text-xs font-bold uppercase tracking-wide">
-                Status
-              </th>
               <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wide">
                 Achievement %
+              </th>
+              <th className="px-14 py-4 text-center text-xs font-bold uppercase tracking-wide">
+                Status
               </th>
             </tr>
           </thead>
@@ -1143,23 +1185,19 @@ const TableView = ({ data }) => {
                     </span>
                   </td>
 
-                  {/* Status */}
-                  <td className="px-4 py-4 text-center">
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm border-2 ${status.badgeColor}`}
-                    >
-                      {status.icon}
-                      {status.text}
-                    </span>
-                  </td>
-
                   {/* Achievement % */}
                   <td className="px-4 py-4 text-center">
                     <div className="flex items-center justify-center gap-3">
-                      <div className="relative w-25 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="relative w-25 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${status.progress}%` }}
+                          animate={{
+                            width: `${
+                              status.text === "Not Achieved"
+                                ? 100
+                                : status.progress
+                            }%`,
+                          }}
                           transition={{ duration: 1, delay: index * 0.05 }}
                           style={{ width: `${status.progress}%` }}
                           className={`h-full ${status.progressColor} transition-all duration-500 ease-in-out relative overflow-hidden`}
@@ -1179,6 +1217,16 @@ const TableView = ({ data }) => {
                         {status.progress.toFixed(1)}%
                       </span>
                     </div>
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-4 py-4 text-center">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold shadow-sm border-2 ${status.badgeColor}`}
+                    >
+                      {status.icon}
+                      {status.text}
+                    </span>
                   </td>
                 </motion.tr>
               );

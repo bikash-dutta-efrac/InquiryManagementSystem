@@ -16,6 +16,7 @@ import {
   GitCompare,
   ArrowUp,
   ArrowDown,
+  ChevronRight,
 } from "lucide-react";
 import { MdPerson } from "react-icons/md";
 import { IoLayersSharp, IoPeople } from "react-icons/io5";
@@ -1023,7 +1024,6 @@ const VerticalClientBreakdownTable = ({
     0
   );
 
-  // Determine if we should show month-to-month change (X Month Range mode)
   const showMonthOverMonthChange = !isComparison && monthHeaders.length > 1;
 
   return (
@@ -1059,11 +1059,11 @@ const VerticalClientBreakdownTable = ({
               className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300
                             ${
                               isExpanded
-                                ? `${colorClass.iconBg} text-white -rotate-90 shadow-md`
+                                ? `${colorClass.iconBg} text-white rotate-90 shadow-md`
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
             >
-              <ChevronDown className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" />
             </div>
           </div>
         </div>
@@ -1448,14 +1448,14 @@ const BdRow = ({ bdData, monthHeaders, isComparison }) => {
         </td>
         <td className="px-4 py-4 text-center w-16">
           <div
-            className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300
+            className={`inline-flex items-center justify-center w-8 h-8 p-2 rounded-lg transition-all duration-300
             ${
               isExpanded
-                ? "bg-blue-600 text-white rotate-180"
+                ? "bg-blue-600 text-white rotate-90"
                 : "bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600"
             }`}
           >
-            <ChevronDown className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4" />
           </div>
         </td>
       </tr>
