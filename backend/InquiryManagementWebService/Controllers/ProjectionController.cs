@@ -116,11 +116,11 @@ namespace InquiryManagementWebService.Controllers
 
 
         [HttpPost("target/create")]
-        public async Task<IActionResult> CreateTarget([FromBody] BdTarget target)
+        public async Task<IActionResult> CreateTarget([FromBody] BdTargetRequest request)
         {
             try
             {
-                var newId = await _projectionRepository.CreateTargetAsync(target);
+                var newId = await _projectionRepository.CreateTargetAsync(request);
                 return Ok(newId);
             }
             catch (Exception ex)
@@ -160,11 +160,11 @@ namespace InquiryManagementWebService.Controllers
         }
 
         [HttpPut("target/{id}")]
-        public async Task<IActionResult> UpdateTarget(int id, [FromBody] BdTarget target)
+        public async Task<IActionResult> UpdateTarget(int id, [FromBody] BdTargetRequest request)
         {
             try
             {
-                var rowsAffected = await _projectionRepository.UpdateTargetAsync(id, target);
+                var rowsAffected = await _projectionRepository.UpdateTargetAsync(id, request);
 
                 if (rowsAffected == 0)
                     return NotFound($"Target with Id {id} not found.");

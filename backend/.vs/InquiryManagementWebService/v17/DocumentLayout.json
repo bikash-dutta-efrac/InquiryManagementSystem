@@ -3,24 +3,8 @@
   "WorkspaceRootPath": "D:\\react-projects\\inquery-ms\\backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\repositories\\projectionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\repositories\\projectionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\bdtarget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\bdtarget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\bdprojection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\bdprojection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\bdprojectionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\bdprojectionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\controllers\\projectioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -31,8 +15,24 @@
       "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\repositories\\iprojectionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\bdtarget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\bdtarget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\bdprojectionrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\bdprojectionrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\bdprojection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\bdprojection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\models\\bdprojectionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\models\\bdprojectionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|solutionrelative:inquirymanagementwebservice\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{49F5591E-BFB9-4AA7-B7B0-A1AFC6D02B0C}|InquiryManagementWebService\\InquiryManagementWebService.csproj|d:\\react-projects\\inquery-ms\\backend\\inquirymanagementwebservice\\repositories\\inquiryrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -146,48 +146,89 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "IProjectionRepository.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAqwAYAAABFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-27T06:20:06.635Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "BdProjection.cs",
               "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdProjection.cs",
               "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\BdProjection.cs",
               "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdProjection.cs",
               "RelativeToolTip": "InquiryManagementWebService\\Models\\BdProjection.cs",
-              "ViewState": "AgIAAAIAAAAAAAAAAAAxwA4AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-25T05:47:38.37Z"
+              "WhenOpened": "2025-10-25T05:47:38.37Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "ProjectionRepository.cs",
               "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\ProjectionRepository.cs",
               "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\ProjectionRepository.cs",
               "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\ProjectionRepository.cs",
               "RelativeToolTip": "InquiryManagementWebService\\Repositories\\ProjectionRepository.cs",
-              "ViewState": "AgIAABgAAAAAAAAAAAAowDsAAAAmAAAAAAAAAA==",
+              "ViewState": "AgIAAHMAAAAAAAAAAAAYwIoAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-15T07:25:17.716Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ProjectionController.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\ProjectionController.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Controllers\\ProjectionController.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\ProjectionController.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Controllers\\ProjectionController.cs",
+              "ViewState": "AgIAAHYAAAAAAAAAAIAzwKYAAABeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-16T10:23:28.317Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 4,
+              "Title": "BdProjectionRequest.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-25T05:48:06.801Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "BdTarget.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdTarget.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\BdTarget.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdTarget.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Models\\BdTarget.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAxwAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T06:32:13.615Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "IProjectionRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
+              "RelativeDocumentMoniker": "InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
+              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
+              "RelativeToolTip": "InquiryManagementWebService\\Repositories\\IProjectionRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAABFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T06:20:06.635Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
               "Title": "BdProjectionFilter.cs",
               "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdProjectionFilter.cs",
               "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\BdProjectionFilter.cs",
@@ -195,56 +236,21 @@
               "RelativeToolTip": "InquiryManagementWebService\\Models\\BdProjectionFilter.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAqwAYAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-25T06:11:05.558Z"
+              "WhenOpened": "2025-10-25T06:11:05.558Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "ProjectionController.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\ProjectionController.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Controllers\\ProjectionController.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Controllers\\ProjectionController.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Controllers\\ProjectionController.cs",
-              "ViewState": "AgIAADgAAAAAAAAAAAAIwD4AAAAzAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-16T10:23:28.317Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 7,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Program.cs",
               "RelativeDocumentMoniker": "InquiryManagementWebService\\Program.cs",
               "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Program.cs",
               "RelativeToolTip": "InquiryManagementWebService\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABIAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-16T11:48:35.755Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "BdTarget.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdTarget.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\BdTarget.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdTarget.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Models\\BdTarget.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAsAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-27T06:32:13.615Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "BdProjectionRequest.cs",
-              "DocumentMoniker": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
-              "RelativeDocumentMoniker": "InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
-              "ToolTip": "D:\\react-projects\\inquery-ms\\backend\\InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
-              "RelativeToolTip": "InquiryManagementWebService\\Models\\BdProjectionRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAqwBIAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-25T05:48:06.801Z"
             },
             {
               "$type": "Document",
@@ -557,6 +563,10 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
               "WhenOpened": "2025-09-08T05:24:46.987Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
             }
           ]
         }

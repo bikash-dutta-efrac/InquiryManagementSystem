@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.177:5075/api";
+const API_BASE_URL = "http://192.168.3.195:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -34,6 +34,7 @@ export async function getAllBdProjection(filter = {}) {
 }
 
 export async function createBdProjection(body = {}) {
+  console.log(body)
   const response = await axios.post(
     `${API_BASE_URL}/projections/bd/create`,
     body,
@@ -43,6 +44,7 @@ export async function createBdProjection(body = {}) {
 }
 
 export async function updateBdProjection(id, body = {}) {
+  console.log(id, body)
   const response = await axios.put(
     `${API_BASE_URL}/projections/bd/${id}`,
     body,
@@ -52,6 +54,7 @@ export async function updateBdProjection(id, body = {}) {
 }
 
 export async function deleteBdProjection(id) {
+  console.log(id)
   const response = await axios.delete(
     `${API_BASE_URL}/projections/bd/${id}`,
     { headers: { "Content-Type": "application/json" } }
@@ -80,6 +83,7 @@ export async function getAllBdTargets(filter = {}) {
 }
 
 export async function createBdTarget(body = {}) {
+  console.log(body)
   const response = await axios.post(
     `${API_BASE_URL}/projections/target/create`,
     body,
@@ -89,6 +93,7 @@ export async function createBdTarget(body = {}) {
 }
 
 export async function updateBdTarget(id, body = {}) {
+  console.log(id, body)
   const response = await axios.put(
     `${API_BASE_URL}/projections/target/${id}`,
     body,
@@ -98,6 +103,7 @@ export async function updateBdTarget(id, body = {}) {
 }
 
 export async function deleteBdTarget(id) {
+  console.log(id)
   const response = await axios.delete(
     `${API_BASE_URL}/projections/target/${id}`,
     { headers: { "Content-Type": "application/json" } }

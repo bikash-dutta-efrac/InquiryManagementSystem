@@ -17,6 +17,7 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronRight,
+  Users,
 } from "lucide-react";
 import { MdPerson } from "react-icons/md";
 import { IoLayersSharp, IoPeople } from "react-icons/io5";
@@ -854,7 +855,7 @@ const FilterPanel = ({ filters, setFilters, bdNameOptions }) => {
             selected={selectedBDs}
             onToggle={handleBDToggle}
             label="BD Persons"
-            icon={Telescope}
+            icon={Users}
             isExcluded={excludeBDs}
           />
         </div>

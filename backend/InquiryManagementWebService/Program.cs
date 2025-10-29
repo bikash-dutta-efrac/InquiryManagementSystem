@@ -16,21 +16,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins(
-                    "http://localhost:5173",
-                    "http://192.168.3.180:5173",
-                    "http://192.168.3.173:5173",
-                    "http://192.168.3.189:5173",
-                    "http://192.168.3.193:5173",
-                    "http://192.168.3.186:5173",
-                    "http://192.168.3.211:5173",
-                    "http://192.168.3.208:5173",
-                    "http://192.168.3.207:5173",
-                    "http://192.168.3.177:5173",
-                    "http://192.168.3.167:5173",
-                    "http://192.168.3.212:5173",
-                    "http://192.168.3.200:5174"
-                )
+                .AllowAnyOrigin()
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });

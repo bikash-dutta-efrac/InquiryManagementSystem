@@ -19,10 +19,14 @@ import {
   Users,
   Check,
   ChevronRight,
-  ArrowUp,
-  ArrowDown,
   RefreshCcw,
   Filter,
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  DollarSign,
+  IndianRupee,
 } from "lucide-react";
 import {
   BarChart,
@@ -40,8 +44,14 @@ import {
   getBdNames,
   getAllBdProjection,
   getAllBdTargets,
+  createBdProjection,
+  updateBdProjection,
+  deleteBdProjection,
+  createBdTarget,
+  updateBdTarget,
+  deleteBdTarget,
 } from "../services/api";
-
+import { MdCurrencyRupee, MdPerson } from "react-icons/md";
 
 function formatAmount(num) {
   if (num === null || num === undefined) return "0";
@@ -64,15 +74,28 @@ function formatAmount(num) {
 
 const generateMonthOptions = () => {
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const options = [];
   const now = new Date();
   for (let i = 0; i < 12; i++) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     options.push({
-      value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
+      value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}`,
       label: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
     });
   }
@@ -81,14 +104,13 @@ const generateMonthOptions = () => {
 
 const MONTH_OPTIONS = generateMonthOptions();
 
-
 const getStatus = (achieved, target, isClientContext = false) => {
   let progress;
   let text;
   let badgeColor;
   let progressColor;
   let icon;
-  
+
   if (target === 0) {
     if (achieved > 0) {
       progress = 100;
@@ -98,9 +120,9 @@ const getStatus = (achieved, target, isClientContext = false) => {
       icon = <AlertCircle className="w-3 h-3" />;
     } else {
       progress = 0;
-      text = isClientContext ? "No Projected" : "No Target";
+      text = isClientContext ? "Not Projected" : "No Target";
       badgeColor = "bg-gray-100 text-gray-700 border-gray-300";
-      progressColor = "bg-green-500";
+      progressColor = "bg-white";
       icon = <AlertCircle className="w-3 h-3" />;
     }
   } else {
@@ -148,17 +170,27 @@ const ExcludeToggle = ({ enabled, onChange }) => {
   );
 };
 
-const Dropdown = ({ options, selected, onSelect, label, icon: Icon, placeholder, multiple = false, onDeselectAll, isExcluded }) => {
+const Dropdown = ({
+  options,
+  selected,
+  onSelect,
+  label,
+  icon: Icon,
+  placeholder,
+  multiple = false,
+  onDeselectAll,
+  isExcluded,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   const filteredOptions = options.filter((o) =>
     o?.label?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
     const handler = (e) => {
-      if (!e.target.closest('.dropdown-container')) setIsOpen(false);
+      if (!e.target.closest(".dropdown-container")) setIsOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -167,7 +199,7 @@ const Dropdown = ({ options, selected, onSelect, label, icon: Icon, placeholder,
   const handleSelect = (value) => {
     if (multiple) {
       const newSelected = selected.includes(value)
-        ? selected.filter(v => v !== value)
+        ? selected.filter((v) => v !== value)
         : [...selected, value];
       onSelect(newSelected);
     } else {
@@ -179,12 +211,14 @@ const Dropdown = ({ options, selected, onSelect, label, icon: Icon, placeholder,
 
   const displayValue = multiple
     ? selected.length > 0
-      ? `${isExcluded ? 'Excluding' : 'Including'} ${selected.length} ${label}`
-      : `${isExcluded ? 'Excluding All' : 'Including All'} ${label}` 
+      ? `${isExcluded ? "Excluding" : "Including"} ${selected.length} ${label}`
+      : `${isExcluded ? "Excluding All" : "Including All"} ${label}`
     : options.find((o) => o.value === selected)?.label || placeholder;
 
   const modeColor = isExcluded ? "text-red-600" : "text-blue-600";
-  const modeHoverColor = isExcluded ? "group-hover:text-red-700" : "group-hover:text-blue-700";
+  const modeHoverColor = isExcluded
+    ? "group-hover:text-red-700"
+    : "group-hover:text-blue-700";
 
   return (
     <div className="relative w-full dropdown-container">
@@ -195,12 +229,22 @@ const Dropdown = ({ options, selected, onSelect, label, icon: Icon, placeholder,
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left hover:shadow-md flex justify-between items-center transition-all duration-200 group ${
-          isExcluded && multiple ? 'focus:ring-red-500' : 'focus:ring-blue-500'
+          isExcluded && multiple ? "focus:ring-red-500" : "focus:ring-blue-500"
         }`}
       >
         <span className="flex items-center gap-2.5 text-sm">
-          <Icon className={`w-4 h-4 ${multiple ? `${modeColor} ${modeHoverColor}` : 'text-blue-600'}`} />
-          <span className={selected.length > 0 || selected ? "text-gray-700" : "text-gray-500"}>
+          <Icon
+            className={`w-4 h-4 ${
+              multiple ? `${modeColor} ${modeHoverColor}` : "text-blue-600"
+            }`}
+          />
+          <span
+            className={
+              (selected && selected.length > 0) || (!multiple && selected)
+                ? "text-gray-700"
+                : "text-gray-500"
+            }
+          >
             {displayValue}
           </span>
         </span>
@@ -239,14 +283,18 @@ const Dropdown = ({ options, selected, onSelect, label, icon: Icon, placeholder,
                     setSearchTerm("");
                   }}
                   className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${
-                    isExcluded ? "hover:bg-red-50 text-red-700" : "hover:bg-blue-50 text-blue-700"
+                    isExcluded
+                      ? "hover:bg-red-50 text-red-700"
+                      : "hover:bg-blue-50 text-blue-700"
                   }`}
                 >
                   Deselect All
                 </li>
               )}
               {filteredOptions.map((o) => {
-                const isSelected = multiple ? selected.includes(o.value) : selected === o.value;
+                const isSelected = multiple
+                  ? selected.includes(o.value)
+                  : selected === o.value;
                 return (
                   <li
                     key={o.value}
@@ -261,7 +309,15 @@ const Dropdown = ({ options, selected, onSelect, label, icon: Icon, placeholder,
                   >
                     <div className="flex items-center justify-between">
                       <span>{o.label}</span>
-                      {isSelected && <Check className={`w-4 h-4 ${isExcluded && multiple ? 'text-red-600' : 'text-blue-600'}`} />}
+                      {isSelected && (
+                        <Check
+                          className={`w-4 h-4 ${
+                            isExcluded && multiple
+                              ? "text-red-600"
+                              : "text-blue-600"
+                          }`}
+                        />
+                      )}
                     </div>
                   </li>
                 );
@@ -279,7 +335,493 @@ const Dropdown = ({ options, selected, onSelect, label, icon: Icon, placeholder,
   );
 };
 
-const SummaryCard = ({ title, value, icon: Icon, borderColor, bgColor, iconColor, textColor, isLoading }) => (
+const BDTargetManager = ({ bd, onManage }) => {
+  const hasTarget = bd.totalTarget > 0;
+
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    onManage({
+      type: "EDIT_TARGET",
+      data: {
+        id: bd.targetId,
+        value: bd.totalTarget,
+        bdName: bd.bdName,
+        codecd: bd.codecd,
+      },
+    });
+  };
+
+  const handleAdd = (e) => {
+    e.stopPropagation();
+    onManage({
+      type: "ADD_TARGET",
+      data: {
+        bdName: bd.bdName,
+        codecd: bd.codecd,
+      },
+    });
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    onManage({
+      type: "DELETE_TARGET",
+      data: {
+        id: bd.targetId,
+        bdName: bd.bdName,
+        codecd: bd.codecd, // Pass codecd for consistency
+      },
+    });
+  };
+
+  return (
+    <div className="absolute top-0 right-0 h-full flex items-center pr-4 gap-2 translate-x-full group-hover:translate-x-0 transition-all duration-300 ease-out">
+      {hasTarget ? (
+        <>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleEdit}
+            className="p-2.5 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg hover:shadow-xl transition-all"
+            title="Edit Target"
+          >
+            <Edit2 className="w-4 h-4" />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: -5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleDelete}
+            className="p-2.5 rounded-full bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-lg hover:shadow-xl transition-all"
+            title="Delete Target"
+          >
+            <Trash2 className="w-4 h-4" />
+          </motion.button>
+        </>
+      ) : (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleAdd}
+          className="p-2.5 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all"
+          title="Add Target"
+        >
+          <Plus className="w-4 h-4" />
+        </motion.button>
+      )}
+    </div>
+  );
+};
+
+const ClientProjectionManager = ({ client, onManage, bdInfo }) => {
+  const hasProjection = client.projected > 0;
+
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    onManage({
+      type: "EDIT_PROJECTION",
+      data: {
+        projections: client.projections,
+        bdName: bdInfo.bdName,
+        codecd: bdInfo.codecd,
+        clientName: client.clientName,
+        // Pass the value for editing
+        value: client.projected,
+      },
+    });
+  };
+
+  const handleAdd = (e) => {
+    e.stopPropagation();
+    onManage({
+      type: "ADD_PROJECTION",
+      data: {
+        bdName: bdInfo.bdName,
+        codecd: bdInfo.codecd,
+        clientName: client.clientName,
+      },
+    });
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    onManage({
+      type: "DELETE_PROJECTION",
+      data: {
+        projections: client.projections,
+        bdName: bdInfo.bdName,
+        codecd: bdInfo.codecd,
+        clientName: client.clientName,
+      },
+    });
+  };
+
+  return (
+    <div className="absolute top-0 right-0 h-full flex items-center pr-3 gap-2 translate-x-full group-hover:translate-x-0 transition-all duration-300 ease-out z-10">
+      {hasProjection ? (
+        <>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleEdit}
+            className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-md hover:shadow-lg transition-all"
+            title="Edit Projection"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: -5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleDelete}
+            className="p-2 rounded-full bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-md hover:shadow-lg transition-all"
+            title="Delete Projection"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </motion.button>
+        </>
+      ) : (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleAdd}
+          className="p-2 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
+          title="Add Projection"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </motion.button>
+      )}
+    </div>
+  );
+};
+
+const ManagementModal = ({
+  isOpen,
+  onClose,
+  action,
+  refreshData,
+  month,
+  bdOptions,
+}) => {
+  const [value, setValue] = useState(action.data?.value || 0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [remark, setRemark] = useState(
+    action.data?.projections?.[0]?.REMARKS || ""
+  );
+
+  const isTarget = action.type.includes("TARGET");
+  const isAdd = action.type.includes("ADD");
+  const isEdit = action.type.includes("EDIT");
+  const isDelete = action.type.includes("DELETE");
+  const isProjection = action.type.includes("PROJECTION");
+
+  useEffect(() => {
+    if (isOpen) {
+      // Set value for Add/Edit, but not for Delete
+      if (isAdd) {
+        setValue(""); // Set to empty string for placeholder
+        setRemark("");
+      } else if (isEdit) {
+        setValue(action.data?.value || 0);
+        setRemark(action.data?.projections?.[0]?.REMARKS || "");
+      } else {
+        setValue(0); // Reset for delete
+        setRemark("");
+      }
+      setError(null);
+    }
+  }, [isOpen, action.data, isAdd, isEdit]);
+
+  const modalTitle = isTarget
+    ? `${isAdd ? "Add" : isEdit ? "Edit" : "Delete"} BD Target`
+    : `${isAdd ? "Add" : isEdit ? "Edit" : "Delete"} Client Projection`;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    // --- Validation ---
+    if (!isDelete) {
+      const numericValue = parseFloat(value);
+
+      if (value === "" || value === null || value === undefined) {
+        setError("Value cannot be empty. Please enter a valid amount.");
+        return; // Stop submission
+      }
+
+      if (isNaN(numericValue)) {
+        setError("Invalid number. Please enter a valid amount.");
+        return; // Stop submission
+      }
+
+      if (numericValue <= 0) {
+        setError(
+          "Value must be greater than 0. Please enter a positive amount."
+        );
+        return;
+      }
+    }
+
+    setIsLoading(true);
+
+    let apiCall;
+
+    const [year, monthNum] = month.split("-").map(Number);
+
+    const bdObject = bdOptions.find((bd) => bd.codecd === action.data.codecd);
+    const bdName = bdObject ? bdObject.label : action.data.bdName;
+
+    try {
+      if (isTarget) {
+        const targetBody = {
+          codecd: action.data.codecd,
+          targetVal: Number(value),
+          remarks: action.data?.remarks || "",
+        };
+
+        if (isAdd) {
+          apiCall = createBdTarget(targetBody);
+        } else if (isEdit) {
+          apiCall = updateBdTarget(action.data.id, targetBody);
+        } else if (isDelete) {
+          apiCall = deleteBdTarget(action.data.id);
+        }
+      } else if (isProjection) {
+        if (
+          action.data.projections &&
+          action.data.projections.length > 1 &&
+          (isEdit || isDelete)
+        ) {
+          throw new Error(
+            "Multiple projections exist for this client. Please manage them in the dedicated Projection Manager page."
+          );
+        }
+
+        const projectionBody = {
+          codecd: action.data.codecd,
+          clientName: action.data.clientName,
+          projval: parseFloat(value),
+          remarks: remark,
+        };
+
+        const projectionId =
+          action.data.projections && action.data.projections.length > 0
+            ? action.data.projections[0].id
+            : null;
+
+        if (isAdd) {
+          apiCall = createBdProjection(projectionBody);
+        } else if (isEdit) {
+          if (!projectionId)
+            throw new Error("Projection ID not found for editing.");
+          apiCall = updateBdProjection(projectionId, projectionBody);
+        } else if (isDelete) {
+          if (!projectionId)
+            throw new Error("Projection ID not found for deletion.");
+          apiCall = deleteBdProjection(projectionId);
+        }
+      } else {
+        throw new Error("Invalid action type.");
+      }
+
+      if (apiCall) await apiCall;
+
+      await refreshData();
+      onClose();
+    } catch (err) {
+      console.error("API Error:", err);
+      setError(
+        err.message ||
+          "An unexpected error occurred during the transaction. Check console for details."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" // Changed blur
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 p-6 relative overflow-hidden">
+          <motion.div
+            className="absolute inset-0 opacity-10"
+            animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, white 1px, transparent 1px)",
+              backgroundSize: "50px 50px",
+            }}
+          />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="p-2 rounded-lg bg-white/20 backdrop-blur-sm"
+              >
+                <IndianRupee className="w-6 h-6 text-white" />
+              </motion.div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{modalTitle}</h2>
+                <p className="text-blue-100 text-sm">
+                  {action.data.bdName}{" "}
+                  {isProjection && `• ${action.data.clientName}`}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {isDelete ? (
+            <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-red-100">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-red-800 font-semibold mb-1">
+                    Confirm Deletion
+                  </p>
+                  <p className="text-sm text-red-600">
+                    Are you sure you want to delete this{" "}
+                    {isTarget ? "target" : "projection"}? This action cannot be
+                    undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <form
+              id="management-form"
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  {isTarget ? "Target Value" : "Projected Value"} (₹)
+                </label>
+                <div className="relative">
+                  <MdCurrencyRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    required
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg font-semibold"
+                    placeholder="e.g., 500000"
+                  />
+                </div>
+              </div>
+
+              {isProjection && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">
+                    Remarks (Optional)
+                  </label>
+                  <textarea
+                    value={remark}
+                    onChange={(e) => setRemark(e.target.value)}
+                    rows="3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                    placeholder="Enter any relevant remarks..."
+                  />
+                </div>
+              )}
+            </form>
+          )}
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-3 p-4 bg-red-50 rounded-xl border border-red-200 mb-4"
+            >
+              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600">{error}</p>
+            </motion.div>
+          )}
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onClose}
+              type="button"
+              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={isDelete ? handleSubmit : undefined}
+              type={isDelete ? "button" : "submit"}
+              form={isDelete ? undefined : "management-form"} // Connect to form if not delete
+              disabled={isLoading}
+              className={`flex-1 px-4 py-3 rounded-xl font-medium text-white transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden ${
+                isDelete
+                  ? "bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-lg"
+                  : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:shadow-lg"
+              } disabled:opacity-70 disabled:cursor-not-allowed`}
+            >
+              {!isLoading && (
+                <motion.div
+                  className="absolute inset-0 bg-white opacity-0 hover:opacity-20"
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                />
+              )}
+              {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+              <span className="relative z-10">
+                {isDelete ? "Confirm Delete" : isAdd ? "Add" : "Save Changes"}
+              </span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const SummaryCard = ({
+  title,
+  value,
+  icon: Icon,
+  borderColor,
+  bgColor,
+  iconColor,
+  textColor,
+  isLoading,
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -288,7 +830,9 @@ const SummaryCard = ({ title, value, icon: Icon, borderColor, bgColor, iconColor
     className={`bg-white p-6 rounded-xl shadow-lg border-t-4 ${borderColor} transform transition-all duration-300`}
   >
     <div className="flex items-center justify-between mb-3">
-      <span className="text-sm font-medium uppercase text-gray-500">{title}</span>
+      <span className="text-sm font-medium uppercase text-gray-500">
+        {title}
+      </span>
       <motion.div
         whileHover={{ scale: 1.1, rotate: 10 }}
         className={`p-2 rounded-lg ${bgColor}`}
@@ -296,112 +840,146 @@ const SummaryCard = ({ title, value, icon: Icon, borderColor, bgColor, iconColor
         {Icon && <Icon className={`w-5 h-5 ${iconColor}`} />}
       </motion.div>
     </div>
-    <p className={`text-3xl mt-6 font-extrabold ${textColor} flex items-center gap-1`}>
-      {isLoading ? <Loader2 className={`w-6 h-6 animate-spin ${iconColor}`} /> : value}
+    <p
+      className={`text-3xl mt-6 font-extrabold ${textColor} flex items-center gap-1`}
+    >
+      {isLoading ? (
+        <Loader2 className={`w-6 h-6 animate-spin ${iconColor}`} />
+      ) : (
+        value
+      )}
     </p>
   </motion.div>
 );
 
-const BDPerformanceTableCard = ({ bd, isLoading, clients }) => {
+const BDPerformanceTableCard = ({
+  bd,
+  isLoading,
+  clients,
+  onTargetManage,
+  onProjectionManage,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [activeRowIndex, setActiveRowIndex] = useState(null);
   const status = getStatus(bd.totalAchieved, bd.totalTarget);
 
-  // Logic: Change progress bar background to red when status is 'Not Achieved'
-  const progressBarBg = (status.text === 'Not Achieved' && bd.totalTarget > 0)
-      ? 'bg-red-200'
-      : (status.text === 'No Target' || status.text === 'Achieved (No Target)')
-      ? 'bg-blue-200' // Blue background for No Target case
-      : 'bg-gray-200'; // Default background
+  const progressBarBg =
+    status.text === "Not Achieved" && bd.totalTarget > 0
+      ? "bg-red-200"
+      : status.text === "No Target"
+      ? "bg-blue-200"
+      : "bg-gray-200";
+
+  const SHIFT_CLASS = "-translate-x-12";
+  const WIDTH_CLASS = "w-12";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300"
+      className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group"
     >
-      {/* Main BD Row */}
-      <div 
-        className="p-6 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+      {/* Header */}
+      <div
+        className="p-6 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-transparent transition-all duration-200 relative overflow-hidden"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center justify-between">
-          {/* BD Name & Icon (w-4/12 width) */}
-          <div className="flex items-center gap-4 flex-grow-0 flex-shrink-0 w-3/12">
+        <div className="flex items-center justify-between transition-transform duration-300 group-hover:-translate-x-4">
+          <div className="flex items-center gap-4 flex-shrink-0 w-3/12">
             <motion.div
               animate={{ rotate: isExpanded ? 90 : 0 }}
               transition={{ duration: 0.3 }}
-              className="p-2 rounded-lg bg-blue-50"
+              className="p-2 rounded-lg bg-gray-100 "
             >
-              <ChevronRight className="w-5 h-5 text-blue-600" />
+              <ChevronRight className="w-5 h-5 text-blue-500" />
             </motion.div>
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md">
-                {/* MODIFIED: BD icon size made smaller (w-4 h-4 -> w-3 h-3) */}
-                <Users className="w-3 h-3 text-white" />
+                <MdPerson className="w-4 h-4 text-white" />
               </div>
               <div>
-                {/* MODIFIED: BD Name size made smaller (text-lg -> text-base) */}
-                <h3 className="text-base font-bold text-gray-800">{bd.bdName}</h3>
-                <p className="text-xs text-gray-500">{bd.clientCount} Clients · {bd.projectionCount} Projections</p>
+                <h3 className="text-base font-bold text-gray-800">
+                  {bd.bdName}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {bd.clientCount} Clients · {bd.projectionCount} Projections
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Stats Grid - MODIFIED: Gap increased (gap-8 -> gap-10) and fixed widths applied */}
           <div className="flex items-center gap-10 w-9/12">
-            {/* Target Column (w-24) */}
+            {/* Target */}
             <div className="text-center w-24">
               <p className="text-xs text-gray-500 mb-1">Target</p>
               <p className="text-base font-bold text-purple-600">
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `₹${formatAmount(bd.totalTarget)}`}
-              </p>
-            </div>
-            
-            {/* Projected Column (w-24) */}
-            <div className="text-center w-24">
-              <p className="text-xs text-gray-500 mb-1">Projected</p>
-              <p className="text-base font-bold text-blue-600">
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `₹${formatAmount(bd.totalProjected)}`}
-              </p>
-            </div>
-            
-            {/* Achieved Column (w-24) */}
-            <div className="text-center w-24">
-              <p className="text-xs text-gray-500 mb-1">Achieved</p>
-              <p className="text-base font-bold text-green-600">
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `₹${formatAmount(bd.totalAchieved)}`}
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : (
+                  `₹${formatAmount(bd.totalTarget)}`
+                )}
               </p>
             </div>
 
-            {/* Progress Bar (w-48) */}
+            {/* Projected */}
+            <div className="text-center w-24">
+              <p className="text-xs text-gray-500 mb-1">Projected</p>
+              <p className="text-base font-bold text-blue-600">
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : (
+                  `₹${formatAmount(bd.totalProjected)}`
+                )}
+              </p>
+            </div>
+
+            {/* Achieved */}
+            <div className="text-center w-24">
+              <p className="text-xs text-gray-500 mb-1">Achieved</p>
+              <p className="text-base font-bold text-green-600">
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : (
+                  `₹${formatAmount(bd.totalAchieved)}`
+                )}
+              </p>
+            </div>
+
+            {/* Progress bar */}
             <div className="w-48 flex-shrink-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-500">vs Target</span>
-                <span className="text-xs font-bold text-gray-700">{status.progress.toFixed(0)}%</span>
+                <span className="text-xs font-bold text-gray-700">
+                  {status.progress.toFixed(0)}%
+                </span>
               </div>
-              {/* MODIFIED: Dynamic background for progress bar */}
-              <div className={`relative h-2 ${progressBarBg} rounded-full overflow-hidden`}> 
+              <div
+                className={`relative h-2 ${progressBarBg} rounded-full overflow-hidden`}
+              >
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(status.progress, 100)}%`}}
+                  animate={{ width: `${Math.min(status.progress, 100)}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className={`h-full ${status.progressColor}`}
                 />
               </div>
             </div>
 
-            {/* Status Badge (w-28) */}
-            <div className="w-28 justify-center flex-shrink-0">
-                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border ${status.badgeColor}  `}>
-              {status.icon}
-              {status.text}
-            </span>
+            {/* Status Chip */}
+            <div className="w-28 flex justify-center flex-shrink-0">
+              <span
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${status.badgeColor}`}
+              >
+                {status.icon}
+                {status.text}
+              </span>
             </div>
           </div>
         </div>
+        <BDTargetManager bd={bd} onManage={onTargetManage} />
       </div>
 
-      {/* Expanded Client Details */}
+      {/* Expanded Table */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -420,160 +998,256 @@ const BDPerformanceTableCard = ({ bd, isLoading, clients }) => {
                   Client-wise Performance Analysis
                 </h4>
               </div>
-              
+
               {clients.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 text-sm">
                   No client data available for this BD
                 </div>
               ) : (
-                <>
-                  <div className="overflow-hidden rounded-xl border border-gray-200 shadow-xl bg-white/80 backdrop-blur-md mb-6">
-                    <table className="min-w-full">
-                      <thead className="bg-gradient-to-r from-cyan-500 to-blue-600">
-                        <tr>
-                          {/* MODIFIED: Set specific widths for client table columns */}
-                          <th className="px-4 py-3 text-left text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-4/12">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-0.5 h-3 bg-white/60 rounded-full"></div>
-                              <span className="drop-shadow-sm">Client</span>
-                            </div>
-                          </th>
-                          <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-2/12">
-                            <span className="drop-shadow-sm">Projected</span>
-                          </th>
-                          <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-2/12">
-                            <span className="drop-shadow-sm">Achieved</span>
-                          </th>
-                          <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-2/12">
-                            <span className="drop-shadow-sm">Progress</span>
-                          </th>
-                          <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide w-2/12">
-                            <span className="drop-shadow-sm">Status</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {clients.map((client, index) => {
-                          // MODIFIED: Pass true for isClientContext
-                          const clientStatus = getStatus(client.achieved, client.projected, true);
-                          const isEvenRow = index % 2 === 0;
-                          
-                          // Logic: Change progress bar background to red when status is 'Not Achieved'
-                          const clientProgressBarBg = (clientStatus.text === 'Not Achieved' && client.projected > 0)
-                              ? 'bg-red-200'
-                              : (clientStatus.text === 'Not Projected' || clientStatus.text === 'Achieved (No Proj)')
-                              ? 'bg-blue-200' // Blue background for Not Projected case
-                              : 'bg-gray-200'; // Default background
+                <div className="overflow-hidden rounded-xl border border-gray-200 shadow-xl bg-white/80 backdrop-blur-md mb-6">
+                  <table className="min-w-full border-collapse w-full">
+                    <thead className="bg-gradient-to-r from-cyan-500 to-blue-600">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-[20%]">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-0.5 h-3 bg-white/60 rounded-full"></div>
+                            <span className="drop-shadow-sm">Client</span>
+                          </div>
+                        </th>
+                        <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-[15%]">
+                          Projected
+                        </th>
+                        <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-[15%]">
+                          Achieved
+                        </th>
+                        <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20 w-[30%]">
+                          Progress
+                        </th>
+                        <th className="px-4 py-3 text-center text-[10px] font-bold text-white uppercase tracking-wide w-[20%]">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 w-[5%]"></th>
+                      </tr>
+                    </thead>
 
-                          return (
-                            <motion.tr
-                              key={index}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.05 }}
-                              className={`group transition-all duration-150 ${
-                                isEvenRow ? "bg-white/90" : "bg-gray-50/50"
-                              } hover:bg-gradient-to-r hover:from-blue-50/70 hover:to-indigo-50/70`}
+                    <tbody className="divide-y divide-gray-100">
+                      {clients.map((client, index) => {
+                        const clientStatus = getStatus(
+                          client.achieved,
+                          client.projected,
+                          true
+                        );
+                        const isEvenRow = index % 2 === 0;
+                        const clientProgressBarBg =
+                          clientStatus.text === "Not Achieved" &&
+                          client.projected > 0
+                            ? "bg-red-200"
+                            : clientStatus.text === "Not Projected"
+                            ? "bg-blue-200"
+                            : "bg-gray-200";
+                        const active = activeRowIndex === index;
+
+                        return (
+                          <motion.tr
+                            key={client.clientName + index}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            onMouseEnter={() => setActiveRowIndex(index)}
+                            onMouseLeave={() => setActiveRowIndex(null)}
+                            className={`transition-all duration-150 relative ${
+                              isEvenRow ? "bg-white/90" : "bg-gray-50/50"
+                            } hover:bg-gradient-to-r hover:from-blue-50/70 hover:to-indigo-50/70`}
+                          >
+                            <td
+                              className={`px-4 py-3 text-left w-[20%] transition-transform duration-300 ${
+                                active ? SHIFT_CLASS : ""
+                              }`}
                             >
-                              <td className="px-4 py-3 text-left w-4/12">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-0.5 h-4 bg-gradient-to-b from-cyan-500 to-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                  <span className="text-sm font-medium text-gray-800 group-hover:translate-x-0.5 transition-transform">
-                                    {client.clientName}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-center w-2/12">
-                                <span className="text-sm text-blue-600 font-semibold">
-                                  ₹{formatAmount(client.projected)}
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-800">
+                                  {client.clientName}
                                 </span>
-                              </td>
-                              <td className="px-4 py-3 text-center w-2/12">
-                                <span className="text-sm text-green-600 font-semibold">
-                                  ₹{formatAmount(client.achieved)}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 w-2/12">
-                                <div className="flex items-center justify-center gap-2">
-                                  <div className={`relative w-24 h-1.5 ${clientProgressBarBg} rounded-full overflow-hidden`}>
-                                    <motion.div
-                                      initial={{ width: 0 }}
-                                      // Progress is now safe from Infinity due to getStatus logic
-                                      animate={{ width: `${clientStatus.progress}%` }} 
-                                      transition={{ duration: 1, delay: index * 0.05 }}
-                                      className={`h-full ${clientStatus.progressColor}`}
-                                    />
-                                  </div>
-                                  <span className="text-xs font-semibold text-gray-700 w-10 text-right">
-                                    {clientStatus.progress.toFixed(0)}%
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-center w-2/12">
-                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border ${clientStatus.badgeColor}`}>
-                                  {clientStatus.icon}
-                                  {clientStatus.text}
-                                </span>
-                              </td>
-                            </motion.tr>
-                          );
-                        })}
-                        
-                        {/* BD Total Row - Simplified and Aligned */}
-                        <tr className="bg-gradient-to-r from-blue-100/80 via-indigo-100/80 to-blue-100/80 border-t-2 border-blue-200">
-                          <td className="px-4 py-3 text-left font-bold text-blue-900 w-4/12">
-                            <div className="flex items-center gap-2">
-                              <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
-                              <span className="text-xs">BD Total</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-center w-2/12">
-                            <span className="text-sm text-blue-900 font-extrabold">
-                              ₹{formatAmount(bd.totalProjected)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center w-2/12">
-                            <span className="text-sm text-green-900 font-extrabold">
-                              ₹{formatAmount(bd.totalAchieved)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 w-2/12">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="relative w-24 h-2 bg-gray-300 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ 
-                                    width: `${
-                                        bd.totalProjected === 0 && bd.totalAchieved > 0 
-                                            ? 100 
-                                            : Math.min((bd.totalAchieved / bd.totalProjected) * 100, 100)
-                                    }%` 
-                                  }}
-                                  transition={{ duration: 1 }}
-                                  className={`h-full ${getStatus(bd.totalAchieved, bd.totalProjected, true).progressColor}`}
-                                />
                               </div>
-                              <span className="text-xs font-extrabold text-blue-900 w-10 text-right">
+                            </td>
+
+                            <td
+                              className={`px-4 py-3 text-center w-[15%] transition-transform duration-300 ${
+                                active ? SHIFT_CLASS : ""
+                              }`}
+                            >
+                              <span className="text-sm text-blue-600 font-semibold">
+                                ₹{formatAmount(client.projected)}
+                              </span>
+                            </td>
+
+                            <td
+                              className={`px-4 py-3 text-center w-[15%] transition-transform duration-300 ${
+                                active ? SHIFT_CLASS : ""
+                              }`}
+                            >
+                              <span className="text-sm text-green-600 font-semibold">
+                                ₹{formatAmount(client.achieved)}
+                              </span>
+                            </td>
+
+                            <td
+                              className={`px-4 py-3 w-[30%] transition-transform duration-300 ${
+                                active ? SHIFT_CLASS : ""
+                              }`}
+                            >
+                              <div className="flex items-center justify-center gap-2">
+                                <div
+                                  className={`relative w-24 h-1.5 ${clientProgressBarBg} rounded-full overflow-hidden`}
+                                >
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{
+                                      width: `${clientStatus.progress}%`,
+                                    }}
+                                    transition={{
+                                      duration: 1,
+                                      delay: index * 0.05,
+                                    }}
+                                    className={`h-full ${clientStatus.progressColor}`}
+                                  />
+                                </div>
+                                <span className="text-xs font-semibold text-gray-700 w-10 text-right">
+                                  {clientStatus.progress.toFixed(0)}%
+                                </span>
+                              </div>
+                            </td>
+
+                            <td
+                              className={`px-2 py-2 text-center w-[20%] transition-transform duration-300 ${
+                                active ? SHIFT_CLASS : ""
+                              }`}
+                            >
+                              <span
+                                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${clientStatus.badgeColor}`}
+                              >
+                                {clientStatus.icon}
+                                {clientStatus.text}
+                              </span>
+                            </td>
+
+                            <td className="px-2 py-2 w-[5%] text-center">
+                              {active && (
+                                <ClientProjectionManager
+                                  client={client}
+                                  onManage={onProjectionManage}
+                                  bdInfo={{
+                                    bdName: bd.bdName,
+                                    codecd: bd.codecd,
+                                  }}
+                                />
+                              )}
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
+
+                      {/* ✅ Fixed BD Total Row */}
+                      <tr className="bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-100 border-t-2 border-blue-200 w-full">
+                        <td className="px-4 py-3 text-left font-bold text-blue-900 w-[20%]">
+                          <div className="flex items-center gap-2">
+                            <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
+                            <span className="text-xs">Projected/Achieved</span>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3 text-center w-[15%]">
+                          <span className="text-[10px] text-blue-800 font-medium block">
+                            Total Projected
+                          </span>
+                          <span className="text-sm text-blue-900 font-extrabold">
+                            ₹{formatAmount(bd.totalProjected)}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3 text-center w-[15%]">
+                          <span className="text-[10px] text-green-800 font-medium block">
+                            Total Achieved(Among Proj.)
+                          </span>
+                          <span className="text-sm text-green-900 font-extrabold">
+                            ₹{formatAmount(bd.totalAchievedFromProjectedClients)}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3 w-[30%]">
+                          <div className="flex flex-col items-center gap-0.5">
+                            <div className="flex items-center justify-between w-32 mb-0.5">
+                              <span className="text-xs text-gray-500">
+                                vs Projection
+                              </span>
+                              <span className="text-xs font-bold text-gray-700">
                                 {
-                                    bd.totalProjected === 0 && bd.totalAchieved > 0
-                                        ? 100
-                                        : ((bd.totalAchieved / bd.totalProjected) * 100).toFixed(0)
-                                }%
+                                  getStatus(
+                                    bd.totalAchievedFromProjectedClients,
+                                    bd.totalProjected,
+                                    true
+                                  ).progress.toFixed(0)
+                                }
+                                %
                               </span>
                             </div>
-                          </td>
-                          <td className="px-4 py-3 text-center w-2/12"> 
-                        
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border ${getStatus(bd.totalAchieved, bd.totalProjected).badgeColor}`}>
-                                  {getStatus(bd.totalAchieved, bd.totalProjected).icon}
-                                  {getStatus(bd.totalAchieved, bd.totalProjected, true).text}
-                                </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </>
+                            <div
+                              className={`relative h-1.5 w-32 rounded-full overflow-hidden bg-white`}
+                            >
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: getStatus(
+                                    bd.totalAchievedFromProjectedClients,
+                                    bd.totalProjected,
+                                    true
+                                  ).progress.toFixed(0),
+                                }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className={`h-full ${
+                                  getStatus(
+                                    bd.totalAchievedFromProjectedClients,
+                                    bd.totalProjected,
+                                    true
+                                  ).progressColor
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3 text-center w-[20%]">
+                          <span
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${
+                              getStatus(
+                                bd.totalAchievedFromProjectedClients,
+                                bd.totalProjected,
+                                true
+                              ).badgeColor
+                            }`}
+                          >
+                            {
+                              getStatus(
+                                bd.totalAchievedFromProjectedClients,
+                                bd.totalProjected,
+                                true
+                              ).icon
+                            }
+                            {
+                              getStatus(
+                                bd.totalAchievedFromProjectedClients,
+                                bd.totalProjected,
+                                true
+                              ).text
+                            }
+                          </span>
+                        </td>
+
+                        <td className="px-2 py-2 w-[5%]"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </motion.div>
@@ -582,6 +1256,7 @@ const BDPerformanceTableCard = ({ bd, isLoading, clients }) => {
     </motion.div>
   );
 };
+
 
 const GraphView = ({ data, bdNames }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -599,11 +1274,10 @@ const GraphView = ({ data, bdNames }) => {
   }
 
   const chartData = bdNames.map((bd) => {
-    // Collect totals across all clients for this BD
     let bdProjected = 0;
     let bdAchieved = 0;
-    
-    data.forEach(client => {
+
+    data.forEach((client) => {
       if (client.bdData[bd.codecd]) {
         bdProjected += client.bdData[bd.codecd].projected || 0;
         bdAchieved += client.bdData[bd.codecd].achieved || 0;
@@ -617,8 +1291,9 @@ const GraphView = ({ data, bdNames }) => {
     };
   });
 
-  // Filter out BDs with zero projected and achieved values for cleaner graph
-  const filteredChartData = chartData.filter(d => d.Projected > 0 || d.Achieved > 0);
+  const filteredChartData = chartData.filter(
+    (d) => d.Projected > 0 || d.Achieved > 0
+  );
 
   if (filteredChartData.length === 0) {
     return (
@@ -634,7 +1309,10 @@ const GraphView = ({ data, bdNames }) => {
 
   const Chart = ({ isModal }) => (
     <ResponsiveContainer width="100%" height={isModal ? 600 : 400}>
-      <BarChart data={filteredChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+      <BarChart
+        data={filteredChartData}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
         <defs>
           <linearGradient id="colorProjected" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
@@ -646,8 +1324,19 @@ const GraphView = ({ data, bdNames }) => {
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} fontSize={12} stroke="#6b7280" />
-        <YAxis tickFormatter={(value) => `₹${formatAmount(value)}`} fontSize={12} stroke="#6b7280" />
+        <XAxis
+          dataKey="name"
+          angle={-45}
+          textAnchor="end"
+          height={100}
+          fontSize={12}
+          stroke="#6b7280"
+        />
+        <YAxis
+          tickFormatter={(value) => `₹${formatAmount(value)}`}
+          fontSize={12}
+          stroke="#6b7280"
+        />
         <Tooltip
           formatter={(value, name) => [`₹${formatAmount(value)}`, name]}
           contentStyle={{
@@ -655,11 +1344,19 @@ const GraphView = ({ data, bdNames }) => {
             border: "1px solid #e5e7eb",
             boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
           }}
-          labelStyle={{ fontWeight: 'bold', color: '#374151' }}
+          labelStyle={{ fontWeight: "bold", color: "#374151" }}
         />
         {!isModal && <Legend wrapperStyle={{ paddingTop: "20px" }} />}
-        <Bar dataKey="Projected" fill="url(#colorProjected)" radius={[8, 8, 0, 0]} />
-        <Bar dataKey="Achieved" fill="url(#colorAchieved)" radius={[8, 8, 0, 0]} />
+        <Bar
+          dataKey="Projected"
+          fill="url(#colorProjected)"
+          radius={[8, 8, 0, 0]}
+        />
+        <Bar
+          dataKey="Achieved"
+          fill="url(#colorAchieved)"
+          radius={[8, 8, 0, 0]}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -691,7 +1388,10 @@ const GraphView = ({ data, bdNames }) => {
             <Maximize size={20} />
           </motion.button>
         </div>
-        <div className="w-full bg-white rounded-2xl p-6 shadow-inner" style={{ height: "400px" }}>
+        <div
+          className="w-full bg-white rounded-2xl p-6 shadow-inner"
+          style={{ height: "400px" }}
+        >
           <Chart isModal={false} />
         </div>
       </motion.div>
@@ -723,7 +1423,9 @@ const GraphView = ({ data, bdNames }) => {
                   <BarChart3 className="w-8 h-8 text-blue-600" />
                   BD Performance Comparison - Full View
                 </h2>
-                <p className="text-gray-500 mt-2">Detailed comparison across all BDs</p>
+                <p className="text-gray-500 mt-2">
+                  Detailed comparison across all BDs
+                </p>
               </div>
               <Chart isModal={true} />
             </motion.div>
@@ -734,26 +1436,39 @@ const GraphView = ({ data, bdNames }) => {
   );
 };
 
-export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [] }) {
+export default function BdPerformanceAnalysis({
+  onMonthChange,
+  inquiriesData = [],
+}) {
   const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-
-    const defaultDate = new Date('2025-10-01');
-    const targetDate = defaultDate < now ? now : defaultDate;
-
-    return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}`;
+    // Default to a month with mock data for demo purposes if needed
+    // Let's default to October 2025 as in your original code
+    // const now = new Date();
+    const defaultDate = new Date("2025-10-01");
+    // const targetDate = defaultDate < now ? now : defaultDate;
+    // For mock, let's just use the default date
+    return `${defaultDate.getFullYear()}-${String(
+      defaultDate.getMonth() + 1
+    ).padStart(2, "0")}`;
   });
   const [selectedBDs, setSelectedBDs] = useState([]);
   const [excludeBDs, setExcludeBDs] = useState(false);
   const [bdOptions, setBdOptions] = useState([]);
   const [projections, setProjections] = useState([]);
   const [targets, setTargets] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Set initial loading to true
   const [view, setView] = useState("cards");
 
- const calculateMonthDateRange = (monthValue) => {
-    const [y, m] = monthValue.split("-").map(Number);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState({ type: null, data: {} });
 
+  const handleManage = (action) => {
+    setModalAction(action);
+    setIsModalOpen(true);
+  };
+
+  const calculateMonthDateRange = (monthValue) => {
+    const [y, m] = monthValue.split("-").map(Number);
     const fromDate = new Date(Date.UTC(y, m - 1, 1));
     const toDate = new Date(Date.UTC(y, m, 0));
 
@@ -776,11 +1491,11 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
       setTargets([]);
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const { fromDate, toDate } = calculateMonthDateRange(monthValue);
-      
+
       const payload = {
         CODECDs: bdCodes,
         fromDate: fromDate,
@@ -792,22 +1507,27 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
         getAllBdTargets(payload),
       ]);
 
-      setProjections(projectionsData.map((p) => ({
-        id: p.id,
-        CODECD: String(p.codecd),
-        CUSTACCCODE: p.custacccode,
-        ProjDate: p.projDate,
-        ProjVal: parseFloat(p.projVal) || 0,
-        BDName: p.bdName,
-        ClientName: p.clientName,
-        REMARKS: p.remarks,
-      })));
+      setProjections(
+        projectionsData.map((p) => ({
+          id: p.id,
+          CODECD: String(p.codecd),
+          CUSTACCCODE: p.custacccode,
+          ProjDate: p.projDate,
+          ProjVal: parseFloat(p.projVal) || 0,
+          BDName: p.bdName,
+          ClientName: p.clientName,
+          REMARKS: p.remarks,
+        }))
+      );
 
-      setTargets(targetsData.map((t) => ({
-        ...t,
-        codecd: String(t.codecd),
-        TargetVal: parseFloat(t.targetVal) || 0,
-      })));
+      setTargets(
+        targetsData.map((t) => ({
+          ...t,
+          codecd: String(t.codecd),
+          TargetVal: parseFloat(t.targetVal) || 0,
+          id: t.id,
+        }))
+      );
     } catch (error) {
       console.error("Failed to fetch projections/targets:", error);
       setProjections([]);
@@ -817,8 +1537,19 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
     }
   };
 
+  const refreshData = async () => {
+    const effectiveBdCodes = excludeBDs
+      ? bdOptions
+          .filter((bd) => !selectedBDs.includes(bd.codecd))
+          .map((bd) => bd.codecd)
+      : selectedBDs;
+
+    await fetchProjectionsAndTargets(selectedMonth, effectiveBdCodes);
+  };
+
   useEffect(() => {
     const fetchBDs = async () => {
+      setIsLoading(true);
       try {
         const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
         const bds = await getBdNames({ fromDate, toDate });
@@ -829,45 +1560,58 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
           bdName: bd.bdName,
         }));
         setBdOptions(normalized);
-        
+
         if (normalized.length > 0 && selectedBDs.length === 0) {
-          const allBdCodes = normalized.map(bd => bd.codecd);
+          const allBdCodes = normalized.map((bd) => bd.codecd);
           setSelectedBDs(allBdCodes);
         } else if (normalized.length > 0 && selectedBDs.length > 0) {
-          const validSelectedBDs = selectedBDs.filter(codecd => normalized.some(bd => bd.codecd === codecd));
+          const validSelectedBDs = selectedBDs.filter((codecd) =>
+            normalized.some((bd) => bd.codecd === codecd)
+          );
           setSelectedBDs(validSelectedBDs);
         } else if (normalized.length === 0) {
           setSelectedBDs([]);
         }
-
       } catch (error) {
         console.error("Failed to fetch BD names:", error);
         setBdOptions([]);
+      } finally {
+        // Loading will be set to false in the *next* effect
+        // after projections/targets are fetched
       }
     };
     fetchBDs();
-  }, [selectedMonth]);
+  }, [selectedMonth]); // Removed selectedBDs from dependency array
 
   useEffect(() => {
     const effectiveBdCodes = excludeBDs
-      ? bdOptions.filter(bd => !selectedBDs.includes(bd.codecd)).map(bd => bd.codecd)
+      ? bdOptions
+          .filter((bd) => !selectedBDs.includes(bd.codecd))
+          .map((bd) => bd.codecd)
       : selectedBDs;
-    
-    fetchProjectionsAndTargets(selectedMonth, effectiveBdCodes);
-  }, [selectedMonth, selectedBDs, excludeBDs, bdOptions.length]);
+
+    if (bdOptions.length > 0 && effectiveBdCodes.length === 0) {
+      setIsLoading(false); // No BDs to fetch, stop loading
+      setProjections([]);
+      setTargets([]);
+    } else if (bdOptions.length > 0) {
+      fetchProjectionsAndTargets(selectedMonth, effectiveBdCodes);
+    }
+    // If bdOptions is still loading, this effect will re-run when it's ready
+  }, [selectedMonth, selectedBDs, excludeBDs, bdOptions]); // Changed dependency
 
   useEffect(() => {
-    const effectiveBdObjects = bdOptions.filter(bd => {
-        if (excludeBDs) {
-            return !selectedBDs.includes(bd.codecd);
-        }
-        return selectedBDs.includes(bd.codecd);
+    const effectiveBdObjects = bdOptions.filter((bd) => {
+      if (excludeBDs) {
+        return !selectedBDs.includes(bd.codecd);
+      }
+      return selectedBDs.includes(bd.codecd);
     });
-    
+
     if (effectiveBdObjects.length > 0 && onMonthChange) {
       const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
-      const bdNames = effectiveBdObjects.map(bd => bd.bdName);
-      const bdCodes = effectiveBdObjects.map(bd => bd.codecd);
+      const bdNames = effectiveBdObjects.map((bd) => bd.bdName);
+      const bdCodes = effectiveBdObjects.map((bd) => bd.codecd);
 
       onMonthChange({
         fromDate: fromDate,
@@ -877,50 +1621,88 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
         dateField: "regisDate",
       });
     } else if (onMonthChange) {
-        const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
-        onMonthChange({
-            fromDate: fromDate,
-            toDate: toDate,
-            bdNames: [],
-            CODECDs: [],
-            dateField: "regisDate",
-        });
+      const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
+      onMonthChange({
+        fromDate: fromDate,
+        toDate: toDate,
+        bdNames: [],
+        CODECDs: [],
+        dateField: "regisDate",
+      });
     }
   }, [selectedMonth, selectedBDs, excludeBDs, bdOptions.length, onMonthChange]);
 
   const bdPerformanceData = useMemo(() => {
     const effectiveBdCodes = excludeBDs
-      ? bdOptions.filter(bd => !selectedBDs.includes(bd.codecd)).map(bd => bd.codecd)
+      ? bdOptions
+          .filter((bd) => !selectedBDs.includes(bd.codecd))
+          .map((bd) => bd.codecd)
       : selectedBDs;
 
-    const selectedBdData = bdOptions.filter(bd => effectiveBdCodes.includes(bd.codecd));
-    
+    const selectedBdData = bdOptions.filter((bd) =>
+      effectiveBdCodes.includes(bd.codecd)
+    );
+
     return selectedBdData.map((bd) => {
-      const bdProjections = projections.filter((p) => String(p.CODECD) === bd.codecd);
+      const bdProjections = projections.filter(
+        (p) => String(p.CODECD) === bd.codecd
+      );
       const bdTarget = targets.find((t) => String(t.codecd) === bd.codecd);
-      const bdInquiries = inquiriesData.filter((i) => i.bdName === bd.bdName); 
+      const bdInquiries = inquiriesData.filter((i) => i.bdName === bd.bdName);
 
-      const totalProjected = bdProjections.reduce((sum, p) => sum + p.ProjVal, 0);
-      const totalAchieved = bdInquiries.reduce((sum, i) => sum + (parseFloat(i.regisVal) || 0), 0); 
+      const totalProjected = bdProjections.reduce(
+        (sum, p) => sum + p.ProjVal,
+        0
+      );
+      const totalAchieved = bdInquiries.reduce(
+        (sum, i) => sum + (parseFloat(i.regisVal) || 0),
+        0
+      );
       const totalTarget = bdTarget ? bdTarget.TargetVal : 0;
+      const targetId = bdTarget ? bdTarget.id : null;
 
-      const uniqueClientsInProjections = new Set(bdProjections.map((p) => p.ClientName));
-      const uniqueClientsInInquiries = new Set(bdInquiries.map((i) => i.clientName));
-      const combinedClients = new Set([...uniqueClientsInProjections, ...uniqueClientsInInquiries]);
+      const uniqueClientsInProjections = new Set(
+        bdProjections.map((p) => p.ClientName)
+      );
+      const uniqueClientsInInquiries = new Set(
+        bdInquiries.map((i) => i.clientName)
+      );
+      const combinedClients = new Set([
+        ...uniqueClientsInProjections,
+        ...uniqueClientsInInquiries,
+      ]);
 
-      const clientDetails = Array.from(combinedClients).map(clientName => {
-        const clientProjections = bdProjections.filter(p => p.ClientName === clientName);
-        const clientInquiries = bdInquiries.filter(i => i.clientName === clientName);
-        
-        const projected = clientProjections.reduce((sum, p) => sum + p.ProjVal, 0);
-        const achieved = clientInquiries.reduce((sum, i) => sum + (parseFloat(i.regisVal) || 0), 0);
-        
-        return {
-          clientName,
-          projected,
-          achieved
-        };
-      }).filter(c => c.projected > 0 || c.achieved > 0);
+      const clientDetails = Array.from(combinedClients)
+        .map((clientName) => {
+          const clientProjections = bdProjections.filter(
+            (p) => p.ClientName === clientName
+          );
+          const clientInquiries = bdInquiries.filter(
+            (i) => i.clientName === clientName
+          );
+
+          const projected = clientProjections.reduce(
+            (sum, p) => sum + p.ProjVal,
+            0
+          );
+          const achieved = clientInquiries.reduce(
+            (sum, i) => sum + (parseFloat(i.regisVal) || 0),
+            0
+          );
+
+          return {
+            clientName,
+            projected,
+            achieved,
+            custacccode: clientProjections[0]?.CUSTACCCODE || null,
+            projections: clientProjections,
+          };
+        })
+        .filter((c) => c.projected > 0 || c.achieved > 0);
+
+      const totalAchievedFromProjectedClients = clientDetails
+        .filter((c) => c.projected > 0)
+        .reduce((sum, c) => sum + c.achieved, 0);
 
       return {
         bdName: bd.bdName,
@@ -928,72 +1710,87 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
         totalProjected,
         totalAchieved,
         totalTarget,
+        targetId,
         clientCount: combinedClients.size,
         projectionCount: bdProjections.length,
-        clients: clientDetails
+        clients: clientDetails,
+        totalAchievedFromProjectedClients,
       };
     });
   }, [projections, targets, inquiriesData, bdOptions, selectedBDs, excludeBDs]);
 
   const clientComparisonData = useMemo(() => {
     const effectiveBdCodes = excludeBDs
-      ? bdOptions.filter(bd => !selectedBDs.includes(bd.codecd)).map(bd => bd.codecd)
+      ? bdOptions
+          .filter((bd) => !selectedBDs.includes(bd.codecd))
+          .map((bd) => bd.codecd)
       : selectedBDs;
 
     const clientMap = {};
 
     projections.forEach((proj) => {
-      if (!effectiveBdCodes.includes(String(proj.CODECD))) return; 
-      
+      if (!effectiveBdCodes.includes(String(proj.CODECD))) return;
+
       const clientName = proj.ClientName || "Unknown";
       const bdCode = String(proj.CODECD);
-      
+
       if (!clientMap[clientName]) {
         clientMap[clientName] = { clientName, bdData: {} };
       }
-      
+
       if (!clientMap[clientName].bdData[bdCode]) {
         clientMap[clientName].bdData[bdCode] = { projected: 0, achieved: 0 };
       }
-      
+
       clientMap[clientName].bdData[bdCode].projected += proj.ProjVal;
     });
 
     inquiriesData.forEach((inq) => {
       if (inq.regisVal && inq.clientName && inq.bdName) {
         const clientName = inq.clientName;
-        const bdInfo = bdOptions.find(bd => bd.bdName === inq.bdName);
-        
-        if (bdInfo && effectiveBdCodes.includes(bdInfo.codecd)) { 
+        const bdInfo = bdOptions.find((bd) => bd.bdName === inq.bdName);
+
+        if (bdInfo && effectiveBdCodes.includes(bdInfo.codecd)) {
           const bdCode = bdInfo.codecd;
 
           if (!clientMap[clientName]) {
             clientMap[clientName] = { clientName, bdData: {} };
           }
-          
+
           if (!clientMap[clientName].bdData[bdCode]) {
-            clientMap[clientName].bdData[bdCode] = { projected: 0, achieved: 0 };
+            clientMap[clientName].bdData[bdCode] = {
+              projected: 0,
+              achieved: 0,
+            };
           }
-          
-          clientMap[clientName].bdData[bdCode].achieved += parseFloat(inq.regisVal) || 0;
+
+          clientMap[clientName].bdData[bdCode].achieved +=
+            parseFloat(inq.regisVal) || 0;
         }
       }
     });
 
-    const filteredClients = Object.values(clientMap).filter(client => {
-      return effectiveBdCodes.some(codecd => {
+    return Object.values(clientMap).filter((client) => {
+      return effectiveBdCodes.some((codecd) => {
         const data = client.bdData[codecd];
         return data && (data.projected > 0 || data.achieved > 0);
       });
     });
-
-    return filteredClients;
   }, [projections, inquiriesData, bdOptions, selectedBDs, excludeBDs]);
 
   const overallStats = useMemo(() => {
-    const totalProjected = bdPerformanceData.reduce((sum, bd) => sum + bd.totalProjected, 0);
-    const totalAchieved = bdPerformanceData.reduce((sum, bd) => sum + bd.totalAchieved, 0);
-    const totalTarget = bdPerformanceData.reduce((sum, bd) => sum + bd.totalTarget, 0);
+    const totalProjected = bdPerformanceData.reduce(
+      (sum, bd) => sum + bd.totalProjected,
+      0
+    );
+    const totalAchieved = bdPerformanceData.reduce(
+      (sum, bd) => sum + bd.totalAchieved,
+      0
+    );
+    const totalTarget = bdPerformanceData.reduce(
+      (sum, bd) => sum + bd.totalTarget,
+      0
+    );
     const activeBDs = bdPerformanceData.length;
 
     return { totalProjected, totalAchieved, totalTarget, activeBDs };
@@ -1001,6 +1798,9 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
 
   const handleMonthChange = (monthValue) => {
     setSelectedMonth(monthValue);
+    // Reset BDs when month changes as available BDs might change
+    setSelectedBDs([]);
+    setBdOptions([]);
   };
 
   const handleBDChange = (bdCodes) => {
@@ -1013,14 +1813,16 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
 
   const handleClearFilters = () => {
     setSelectedMonth(() => {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const defaultDate = new Date("2025-10-01");
+      return `${defaultDate.getFullYear()}-${String(
+        defaultDate.getMonth() + 1
+      ).padStart(2, "0")}`;
     });
-    setSelectedBDs(bdOptions.map(bd => bd.codecd));
+    setSelectedBDs(bdOptions.map((bd) => bd.codecd));
     setExcludeBDs(false);
   };
 
-  const selectedBdObjects = bdOptions.filter(bd => {
+  const selectedBdObjects = bdOptions.filter((bd) => {
     if (excludeBDs) {
       return !selectedBDs.includes(bd.codecd);
     }
@@ -1039,9 +1841,14 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
           <motion.div
             className="absolute inset-0 opacity-10"
             animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
             style={{
-              backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+              backgroundImage:
+                "radial-gradient(circle, white 1px, transparent 1px)",
               backgroundSize: "50px 50px",
             }}
           />
@@ -1066,7 +1873,6 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
           </div>
         </motion.div>
 
-        {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1102,16 +1908,14 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
                 <label className="text-xs font-medium text-gray-600 block">
                   BD Selection
                 </label>
-                <ExcludeToggle
-                  enabled={excludeBDs}
-                  onChange={setExcludeBDs}
-                />
+                <ExcludeToggle enabled={excludeBDs} onChange={setExcludeBDs} />
               </div>
               <Dropdown
                 options={bdOptions}
                 selected={selectedBDs}
                 onSelect={handleBDChange}
                 icon={Users}
+                label="BDs"
                 placeholder="Choose BDs"
                 multiple={true}
                 onDeselectAll={handleDeselectAll}
@@ -1132,7 +1936,6 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
           </div>
         </motion.div>
 
-        {/* Overall Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <SummaryCard
             title="Total Projected"
@@ -1166,7 +1969,7 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
           />
           <SummaryCard
             title="Active BDs"
-            value={overallStats.activeBDs}
+            value={selectedBdObjects.length}
             icon={Users}
             borderColor="border-teal-500"
             bgColor="bg-teal-100"
@@ -1183,7 +1986,9 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
             className="flex flex-col justify-center items-center py-20 bg-white rounded-xl shadow-lg border border-gray-200"
           >
             <Loader2 className="w-12 h-12 animate-spin text-blue-500 mb-4" />
-            <span className="text-xl font-medium text-gray-600">Loading Performance Data...</span>
+            <span className="text-xl font-medium text-gray-600">
+              Loading Performance Data...
+            </span>
           </motion.div>
         ) : selectedBdObjects.length === 0 ? (
           <motion.div
@@ -1198,14 +2003,15 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
             >
               <Users className="w-12 h-12 text-gray-400" />
             </motion.div>
-            <span className="text-xl font-medium text-gray-600">No BDs Selected</span>
+            <span className="text-xl font-medium text-gray-600">
+              No BDs Selected
+            </span>
             <span className="text-sm text-gray-400 mt-2 max-w-md text-center">
               Please select at least one BD to view performance analysis.
             </span>
           </motion.div>
         ) : (
           <>
-            {/* View Toggle */}
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <motion.div
@@ -1239,7 +2045,11 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
                     <motion.div
                       className="absolute inset-0 bg-white opacity-20"
                       animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                     />
                   )}
                   <List className="w-5 h-5 relative z-10" />
@@ -1259,7 +2069,11 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
                     <motion.div
                       className="absolute inset-0 bg-white opacity-20"
                       animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                     />
                   )}
                   <BarChart3 className="w-5 h-5 relative z-10" />
@@ -1268,7 +2082,6 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
               </motion.div>
             </div>
 
-            {/* Content */}
             <AnimatePresence mode="wait">
               {view === "cards" ? (
                 <motion.div
@@ -1285,6 +2098,8 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
                       bd={bd}
                       isLoading={isLoading}
                       clients={bd.clients}
+                      onTargetManage={handleManage}
+                      onProjectionManage={handleManage}
                     />
                   ))}
                 </motion.div>
@@ -1296,13 +2111,29 @@ export default function BdPerformanceAnalysis({ onMonthChange, inquiriesData = [
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <GraphView data={clientComparisonData} bdNames={selectedBdObjects} />
+                  <GraphView
+                    data={clientComparisonData}
+                    bdNames={selectedBdObjects}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
           </>
         )}
       </div>
+
+      <AnimatePresence>
+        {isModalOpen && (
+          <ManagementModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            action={modalAction}
+            refreshData={refreshData}
+            month={selectedMonth}
+            bdOptions={bdOptions}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

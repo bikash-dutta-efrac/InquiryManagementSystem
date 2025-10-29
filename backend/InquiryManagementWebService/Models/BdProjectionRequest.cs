@@ -8,7 +8,7 @@ namespace InquiryManagementWebService.Models
         public string CODECD { get; set; }
 
         [Required]
-        public string CUSTACCCODE { get; set; }
+        public string ClientName { get; set; }
 
         [Required]
         public long PROJVAL { get; set; }

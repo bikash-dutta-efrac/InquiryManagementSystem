@@ -532,17 +532,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BdTarget"
+                "$ref": "#/components/schemas/BdTargetRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/BdTarget"
+                "$ref": "#/components/schemas/BdTargetRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/BdTarget"
+                "$ref": "#/components/schemas/BdTargetRequest"
               }
             }
           }
@@ -595,17 +595,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BdTarget"
+                "$ref": "#/components/schemas/BdTargetRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/BdTarget"
+                "$ref": "#/components/schemas/BdTargetRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/BdTarget"
+                "$ref": "#/components/schemas/BdTargetRequest"
               }
             }
           }
@@ -713,8 +713,8 @@
       },
       "BdProjectionRequest": {
         "required": [
+          "clientName",
           "codecd",
-          "custacccode",
           "projval"
         ],
         "type": "object",
@@ -723,7 +723,7 @@
             "minLength": 1,
             "type": "string"
           },
-          "custacccode": {
+          "clientName": {
             "minLength": 1,
             "type": "string"
           },
@@ -738,28 +738,16 @@
         },
         "additionalProperties": false
       },
-      "BdTarget": {
+      "BdTargetRequest": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
           "codecd": {
             "type": "string",
             "nullable": true
           },
-          "projDate": {
-            "type": "string",
-            "format": "date-time"
-          },
           "targetVal": {
-            "type": "string",
-            "nullable": true
-          },
-          "bdName": {
-            "type": "string",
+            "type": "integer",
+            "format": "int64",
             "nullable": true
           },
           "remarks": {

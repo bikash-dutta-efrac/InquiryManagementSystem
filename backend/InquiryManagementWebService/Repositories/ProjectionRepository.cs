@@ -67,48 +67,80 @@ namespace InquiryManagementWebService.Repositories
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                string query = @"
-                INSERT INTO tblBD_FORECAST (CODECD, CUSTACCCODE, PROJVAL, REMARKS)
-                VALUES (@CODECD, @CUSTACCCODE, @PROJVAL, @REMARKS);
-                SELECT CAST(SCOPE_IDENTITY() as int);
-            ";
+                var query = @"
+                    DECLARE @custCode VARCHAR(50);
+
+                    SELECT TOP 1 @custCode = CUSTACCCODE
+                    FROM OCUSTMST
+                    WHERE CUSTNAME = @ClientName;
+
+                    IF @custCode IS NULL
+                    BEGIN
+                        THROW 50001, 'Customer not found for given ClientName', 1;
+                    END
+
+                    INSERT INTO tblBD_FORECAST (CODECD, CUSTACCCODE, PROJVAL, REMARKS)
+                    VALUES (@CODECD, @custCode, @PROJVAL, @REMARKS);
+
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);
+";
 
                 int newId = await connection.QuerySingleAsync<int>(query, new
                 {
                     CODECD = request.CODECD,
-                    CUSTACCCODE = request.CUSTACCCODE,
+                    ClientName = request.ClientName,
                     PROJVAL = request.PROJVAL,
                     REMARKS = request.REMARKS
                 });
+
                 return newId;
             }
         }
 
-        public async Task<int> UpdateProjectionAsync(int id, BdProjectionRequest request)
+        public async Task<int> UpdateProjectionAsync(int id, BdProjectionRequest? request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
+                var existingProjection = await GetProjectionByIdAsync(id);
+
+                if (existingProjection == null)
+                    throw new Exception($"Projection with ID {id} not found.");
+
                 string query = @"
-                UPDATE tblBD_FORECAST
-                SET CODECD = @CODECD,
-                    CUSTACCCODE = @CUSTACCCODE,
-                    PROJVAL = @PROJVAL,
-                    REMARKS = @REMARKS
-                WHERE Id = @Id;
-            ";
+                    DECLARE @custCode VARCHAR(50);
+
+                    SELECT TOP 1 @custCode = CUSTACCCODE
+                    FROM OCUSTMST
+                    WHERE CUSTNAME = @ClientName;
+
+                    IF @custCode IS NULL
+                    BEGIN
+                        THROW 50001, 'Customer not found for given ClientName', 1;
+                    END
+
+                    UPDATE tblBD_FORECAST
+                    SET 
+                        CODECD = @CODECD,
+                        CUSTACCCODE = @custCode,
+                        PROJVAL = @PROJVAL,
+                        REMARKS = @REMARKS
+                    WHERE Id = @Id;
+                ";
 
                 var affectedRows = await connection.ExecuteAsync(query, new
                 {
                     Id = id,
-                    request.CODECD,
-                    request.CUSTACCCODE,
-                    request.PROJVAL,
-                    request.REMARKS
+                    CODECD = request.CODECD ?? existingProjection.CODECD,
+                    ClientName = request.ClientName,
+                    PROJVAL = request.PROJVAL,
+                    REMARKS = request.REMARKS ?? existingProjection.Remarks
                 });
 
                 return affectedRows;
             }
         }
+
+
 
         public async Task<int> DeleteProjectionAsync(int id)
         {
@@ -193,22 +225,21 @@ namespace InquiryManagementWebService.Repositories
         }
 
 
-        public async Task<int> CreateTargetAsync(BdTarget target)
+        public async Task<int> CreateTargetAsync(BdTargetRequest request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 string query = @"
-                INSERT INTO tblBD_TARGET (CODECD, TARGETVAL, TARGETDATE, REMARKS)
-                VALUES (@CODECD, @TARGETVAL, @TARGETDATE, @REMARKS);
+                INSERT INTO tblBD_TARGET (CODECD, TARGETVAL, REMARKS)
+                VALUES (@CODECD, @TargetVal, @Remarks);
                 SELECT CAST(SCOPE_IDENTITY() as int);
             ";
 
                 int newId = await connection.QuerySingleAsync<int>(query, new
                 {
-                    CODECD = target.CODECD,
-                    TARGETVAL = target.TargetVal,
-                    TARGETDATE = target.ProjDate,
-                    REMARKS = target.Remarks
+                    CODECD = request.CODECD,
+                    TargetVal = request.TargetVal,
+                    Remarks = request.Remarks
                 });
 
                 return newId;
@@ -223,8 +254,8 @@ namespace InquiryManagementWebService.Repositories
                 SELECT 
                     t.Id,
                     t.CODECD,
-                    t.TARGETDATE AS ProjDate,
-                    CAST(t.TARGETVAL AS VARCHAR) AS ProjVal,
+                    t.TARGETDATE AS TargetDate,
+                    CAST(t.TARGETVAL AS VARCHAR) AS TargetVal,
                     bd.CODEDESC AS BDName,
                     t.REMARKS
                 FROM tblBD_TARGET t
@@ -250,7 +281,7 @@ namespace InquiryManagementWebService.Repositories
                 SELECT 
                     t.Id,
                     t.CODECD,
-                    t.TARGETDATE AS ProjDate,
+                    t.TARGETDATE AS TargetDate,
                     CAST(t.TARGETVAL AS VARCHAR) AS TargetVal,
                     bd.CODEDESC AS BDName,
                     t.REMARKS
@@ -279,26 +310,31 @@ namespace InquiryManagementWebService.Repositories
             }
         }
 
-        public async Task<int> UpdateTargetAsync(int id, BdTarget target)
+        public async Task<int> UpdateTargetAsync(int id, BdTargetRequest request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
+
+                var existingTarget = await GetTargetByIdAsync(id);
+
+                if (existingTarget == null)
+                    throw new Exception($"Target with ID {id} not found.");
+
+
                 string query = @"
                 UPDATE tblBD_TARGET
                 SET CODECD = @CODECD,
-                    TARGETVAL = @TARGETVAL,
-                    TARGETDATE = @TARGETDATE,
-                    REMARKS = @REMARKS
+                    TARGETVAL = @TargetVal,
+                    REMARKS = @Remarks
                 WHERE Id = @Id;
             ";
 
                 var affectedRows = await connection.ExecuteAsync(query, new
                 {
                     Id = id,
-                    CODECD = target.CODECD,
-                    TARGETVAL = target.TargetVal,
-                    TARGETDATE = target.ProjDate,
-                    REMARKS = target.Remarks
+                    CODECD = request.CODECD ?? existingTarget.CODECD,
+                    TargetVal = request.TargetVal,
+                    REMARKS = request.Remarks ?? existingTarget.Remarks
                 });
 
                 return affectedRows;

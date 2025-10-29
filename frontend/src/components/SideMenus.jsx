@@ -1,16 +1,10 @@
 import {
-  HiUserPlus,
   HiBeaker,
-  HiCurrencyDollar,
 } from "react-icons/hi2";
 import {
   ChevronsLeft,
   ChevronsRight,
-  File,
-  List,
-  NotebookTabs,
   NotepadText,
-  NotepadTextDashed,
   TestTube2,
 } from "lucide-react";
 import {
@@ -19,8 +13,6 @@ import {
   MdBusiness,
   MdTrendingUp,
 } from "react-icons/md";
-import { FaListOl, FaRegistered } from "react-icons/fa";
-import { FaList } from "react-icons/fa6";
 import { IoAnalytics } from "react-icons/io5";
 
 export default function SideMenus({ activeView, onViewChange, isMinimized = false, onToggleMinimize }) {

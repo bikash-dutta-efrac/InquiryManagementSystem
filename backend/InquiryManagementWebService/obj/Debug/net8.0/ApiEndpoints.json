@@ -306,8 +306,8 @@
         "IsRequired": true
       },
       {
-        "Name": "target",
-        "Type": "InquiryManagementWebService.Models.BdTarget",
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.BdTargetRequest",
         "IsRequired": true
       }
     ],
@@ -338,8 +338,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "target",
-        "Type": "InquiryManagementWebService.Models.BdTarget",
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.BdTargetRequest",
         "IsRequired": true
       }
     ],
