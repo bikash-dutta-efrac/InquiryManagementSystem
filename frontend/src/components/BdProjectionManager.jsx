@@ -25,6 +25,11 @@ import {
   AlertCircle,
   Activity,
   Zap,
+  MapPin,
+  User,
+  IndianRupeeIcon,
+  Briefcase,
+  BriefcaseBusiness,
 } from "lucide-react";
 import {
   BarChart,
@@ -42,9 +47,13 @@ import {
   createBdProjection,
   getAllBdProjection,
   getAllBdTargets,
+  getAssociateClients,
 } from "../services/api";
+import { MdLocationCity } from "react-icons/md";
 
 const DEMO_PROJECTIONS = [];
+const BdName = "Joydip Banerjee";
+const BdCode = "004";
 
 function formatAmount(num) {
   if (num === null || num === undefined) return "0";
@@ -108,13 +117,13 @@ const generateMonthOptions = () => {
 
 const MONTH_OPTIONS = generateMonthOptions();
 
-const getStatus = (achieved, target, isClientContext = true) => {
+const getStatus = (achieved, target, isClientContext = false) => {
   let progress;
   let text;
   let badgeColor;
   let progressColor;
   let icon;
-  
+
   if (target === 0) {
     if (achieved > 0) {
       progress = 100;
@@ -124,9 +133,9 @@ const getStatus = (achieved, target, isClientContext = true) => {
       icon = <AlertCircle className="w-3 h-3" />;
     } else {
       progress = 0;
-      text = isClientContext ? "No Projected" : "No Target";
+      text = isClientContext ? "Not Projected" : "No Target";
       badgeColor = "bg-gray-100 text-gray-700 border-gray-300";
-      progressColor = "bg-green-500";
+      progressColor = "bg-white";
       icon = <AlertCircle className="w-3 h-3" />;
     }
   } else {
@@ -145,7 +154,7 @@ const getStatus = (achieved, target, isClientContext = true) => {
     } else {
       text = "Not Achieved";
       badgeColor = "bg-red-100 text-red-700 border-red-300";
-      progressColor = "bg-red-200";
+      progressColor = "bg-red-500";
       progress = 0;
       icon = <XCircle className="w-3 h-3" />;
     }
@@ -153,6 +162,7 @@ const getStatus = (achieved, target, isClientContext = true) => {
 
   return { text, badgeColor, progressColor, progress, icon };
 };
+
 const Dropdown = ({
   options,
   selected,
@@ -189,7 +199,13 @@ const Dropdown = ({
       >
         <span className="flex items-center gap-2.5 text-sm">
           <Icon className="w-4 h-4 text-blue-600" />
-          <span className={selectedOption ? "text-gray-700" : "text-gray-500"}>
+          <span
+            className={
+              selectedOption
+                ? "text-gray-700 font-medium"
+                : "text-gray-500 font-medium"
+            }
+          >
             {displayValue}
           </span>
         </span>
@@ -254,16 +270,163 @@ const Dropdown = ({
   );
 };
 
+const ClientsDropdown = ({
+  options,
+  selected,
+  onSelect,
+  label,
+  icon: Icon,
+  placeholder,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef(null);
+
+  // Normalize options to ensure they have value property
+  const normalizedOptions = options.map((o) => ({
+    ...o,
+    value: o.value || o.clientCode || o.id,
+  }));
+
+  const filteredOptions = normalizedOptions.filter(
+    (o) =>
+      o?.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o?.clientCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o?.city?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+        setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selectedOption = normalizedOptions.find((o) => o.value === selected);
+  const displayValue = selectedOption ? selectedOption.clientName : placeholder;
+
+  return (
+    <div ref={dropdownRef} className="relative w-full">
+      <div className="mb-2">
+        <label className="text-xs font-medium text-gray-600 block mb-1.5">
+          {label}
+        </label>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-white border-2 border-blue-200 rounded-xl shadow-sm px-4 py-3.5 text-left hover:border-blue-400 hover:shadow-lg flex justify-between items-center transition-all duration-300 group"
+      >
+        <div className="flex items-center gap-2.5 text-sm">
+          {Icon && <Icon className="h-4 w-4 text-blue-600" />}
+          <span
+            className={
+              selectedOption ? "text-gray-700 font-medium" : "text-gray-500"
+            }
+          >
+            {displayValue}
+          </span>
+        </div>
+        <ChevronDown
+          className={`h-5 w-5 text-blue-600 transition-transform duration-300 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-white border-2 border-blue-200 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-100">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-500" />
+              <input
+                type="text"
+                placeholder="Search by name, code or city..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2.5 border-2 border-blue-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+              />
+            </div>
+          </div>
+
+          <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-gray-100">
+            {filteredOptions.map((o) => {
+              return (
+                <div
+                  key={o.value}
+                  onClick={() => {
+                    onSelect(o.value);
+                    setIsOpen(false);
+                    setSearchTerm("");
+                  }}
+                  className="mx-2 my-2 p-4 rounded-xl cursor-pointer transition-all duration-200 border bg-white border-transparent hover:border-blue-400 hover:shadow-sm hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:scale-[1.01] group"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                        <div className="flex items-center gap-2 text-gray-900">
+                          <BriefcaseBusiness className="h-4 w-4 flex-shrink-0 text-blue-500 group-hover:text-blue-700" />
+                          <span className="font-bold text-sm truncate group-hover:text-blue-900">
+                            {o.clientName}
+                          </span>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-700 transition-all duration-200">
+                          {o.clientCode}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-6 text-xs text-gray-600">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-blue-500 group-hover:text-blue-600" />
+                          <span className="flex-1 inline-block max-w-[300px] truncate group-hover:text-gray-800">
+                            {o.address}
+                            {o.unit !== null && o.unit !== "-" && `, ${o.unit}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MdLocationCity className="h-3.5 w-3.5 flex-shrink-0 text-blue-500 group-hover:text-blue-600" />
+                          <span className="font-medium group-hover:text-gray-800">
+                            {o.city} - {o.pin}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {!filteredOptions.length && (
+              <div className="px-4 py-12 text-center">
+                <div className="text-gray-400 mb-2">
+                  <Search className="h-12 w-12 mx-auto" />
+                </div>
+                <p className="text-sm text-gray-500 font-medium">
+                  No clients found
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Try a different search term
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 const AddProjectionModal = ({ isOpen, onClose, onAdd, clients }) => {
   const [formData, setFormData] = useState({
-    CUSTACCCODE: "",
-    PROJVAL: "",
-    REMARKS: "",
+    clientCode: "",
+    ProjVal: "",
+    Remarks: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!formData.CUSTACCCODE || !formData.PROJVAL) {
+    if (!formData.clientCode || !formData.ProjVal) {
       alert("Please select a client and enter a projection value.");
       return;
     }
@@ -272,29 +435,27 @@ const AddProjectionModal = ({ isOpen, onClose, onAdd, clients }) => {
 
     try {
       const apiPayload = {
-        codecd: "004",
-        custacccode: formData.CUSTACCCODE,
-        projval: parseInt(formData.PROJVAL),
-        remarks: formData.REMARKS || "",
+        bdCode: BdCode,
+        clientCode: formData.clientCode,
+        ProjVal: parseInt(formData.ProjVal),
+        Remarks: formData.Remarks || "",
       };
 
       await createBdProjection(apiPayload);
 
-      const client = clients.find(
-        (c) => c.custacccode === formData.CUSTACCCODE
-      );
+      const client = clients.find((c) => c.clientCode === formData.clientCode);
       const tempProjection = {
-        CUSTACCCODE: formData.CUSTACCCODE,
-        PROJVAL: formData.PROJVAL,
-        REMARKS: formData.REMARKS,
-        CODECD: apiPayload.codecd,
+        ClientCode: formData.clientCode,
+        ProjVal: formData.ProjVal,
+        Remarks: formData.Remarks,
+        bdCode: apiPayload.bdCode,
         ProjDate: `${new Date()}`,
         ClientName: client?.clientName || "",
       };
 
       onAdd(tempProjection);
 
-      setFormData({ CUSTACCCODE: "", PROJVAL: "", REMARKS: "" });
+      setFormData({ ClientCode: "", ProjVal: "", Remarks: "" });
       onClose();
     } catch (error) {
       console.error("Failed to add projection:", error);
@@ -309,8 +470,12 @@ const AddProjectionModal = ({ isOpen, onClose, onAdd, clients }) => {
   if (!isOpen) return null;
 
   const normalizedClients = clients.map((c) => ({
-    value: c.custacccode,
-    label: c.clientName,
+    clientCode: c.clientCode,
+    clientName: c.clientName,
+    address: c.address,
+    unit: c.unit,
+    pin: c.pin,
+    city: c.city,
   }));
 
   return (
@@ -354,11 +519,11 @@ const AddProjectionModal = ({ isOpen, onClose, onAdd, clients }) => {
         </div>
 
         <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <Dropdown
+          <ClientsDropdown
             options={normalizedClients}
-            selected={formData.CUSTACCCODE}
+            selected={formData.clientCode}
             onSelect={(value) =>
-              setFormData({ ...formData, CUSTACCCODE: value })
+              setFormData({ ...formData, clientCode: value })
             }
             label="Select Client"
             icon={Building2}
@@ -370,12 +535,12 @@ const AddProjectionModal = ({ isOpen, onClose, onAdd, clients }) => {
               Projection Value (₹)
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-600" />
+              <IndianRupeeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-600" />
               <input
                 type="number"
-                value={formData.PROJVAL}
+                value={formData.ProjVal}
                 onChange={(e) =>
-                  setFormData({ ...formData, PROJVAL: e.target.value })
+                  setFormData({ ...formData, ProjVal: e.target.value })
                 }
                 placeholder="Enter projection value"
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
@@ -390,9 +555,9 @@ const AddProjectionModal = ({ isOpen, onClose, onAdd, clients }) => {
             <div className="relative">
               <FileText className="absolute left-3 top-3 w-4 h-4 text-blue-600" />
               <textarea
-                value={formData.REMARKS}
+                value={formData.Remarks}
                 onChange={(e) =>
-                  setFormData({ ...formData, REMARKS: e.target.value })
+                  setFormData({ ...formData, Remarks: e.target.value })
                 }
                 placeholder="Add any additional notes..."
                 rows={3}
@@ -468,10 +633,8 @@ const SummaryCard = ({
 );
 
 const TargetAchievementCard = ({ totalTarget, totalAchieved, isLoading }) => {
-  let percentage = totalTarget > 0 ? (totalAchieved / totalTarget) * 100 : 0;
-
-  if (percentage === 0 && totalAchieved >= 0) percentage = 100;
   const status = getStatus(totalAchieved, totalTarget, false);
+  let percentage = status.progress;
 
   return (
     <motion.div
@@ -608,25 +771,25 @@ const TargetAchievementCard = ({ totalTarget, totalAchieved, isLoading }) => {
             <div className="flex items-center justify-center gap-1">
               <Zap
                 className={`w-4 h-4 ${
-                  status.isAchieved
+                  status.text === "Achieved"
                     ? "text-green-500"
-                    : status.isPartial
+                    : status.text === "Partial Achieved"
                     ? "text-yellow-500"
                     : "text-red-500"
                 }`}
               />
               <p
                 className={`text-lg font-bold ${
-                  status.isAchieved
+                  status.text === "Achieved"
                     ? "text-green-600"
-                    : status.isPartial
+                    : status.text === "Partial Achieved"
                     ? "text-yellow-600"
                     : "text-red-600"
                 }`}
               >
-                {status.isAchieved
+                {status.text === "Achieved"
                   ? "On Track"
-                  : status.isPartial
+                  : status.text === "Partial Achieved"
                   ? "In Progress"
                   : "Behind"}
               </p>
@@ -643,10 +806,8 @@ const ProjectionAchievementCard = ({
   totalAchieved,
   isLoading,
 }) => {
-  const effectiveProjected = Math.max(1, totalProjected);
-  const percentage = (totalAchieved / effectiveProjected) * 100;
-
   const status = getStatus(totalAchieved, totalProjected);
+  let percentage = status.progress;
 
   return (
     <motion.div
@@ -791,25 +952,25 @@ const ProjectionAchievementCard = ({
             <div className="flex items-center justify-center gap-1">
               <Activity
                 className={`w-4 h-4 ${
-                  status.isAchieved
+                  status.text === "Achieved"
                     ? "text-green-500"
-                    : status.isPartial
+                    : status.text === "Partial Achieved"
                     ? "text-yellow-500"
                     : "text-red-500"
                 }`}
               />
               <p
                 className={`text-lg font-bold ${
-                  status.isAchieved
+                  status.text === "Achieved"
                     ? "text-green-600"
-                    : status.isPartial
+                    : status.text === "Partial Achieved"
                     ? "text-yellow-600"
                     : "text-red-600"
                 }`}
               >
-                {status.isAchieved
+                {status.text === "Achieved"
                   ? "Completed"
-                  : status.isPartial
+                  : status.text === "Partial Achieved"
                   ? "In Execution"
                   : "Stalled"}
               </p>
@@ -877,10 +1038,10 @@ const ProjectionCard = ({ projection, onEdit, onDelete }) => (
             ₹{formatAmount(projection.ProjVal)}
           </span>
         </div>
-        {projection.REMARKS && (
+        {projection.Remarks && (
           <div className="p-3 bg-blue-50 rounded-lg">
             <p className="text-xs text-gray-600 font-medium mb-1">Remarks:</p>
-            <p className="text-sm text-gray-700">{projection.REMARKS}</p>
+            <p className="text-sm text-gray-700">{projection.Remarks}</p>
           </div>
         )}
       </div>
@@ -907,25 +1068,31 @@ const GraphView = ({ data }) => {
   const chartData = data.map((item) => {
     const remaining = item.projectedValue - item.achievedValue;
     const isOverAchieved = remaining <= 0;
-    
+
     // The amount achieved up to the projection (used for the green bar)
-    const achievedUpToProjection = Math.min(item.achievedValue, item.projectedValue);
-    
+    const achievedUpToProjection = Math.min(
+      item.achievedValue,
+      item.projectedValue
+    );
+
     // The amount achieved above the projection (used for the blue bar)
-    const overAchievedAmount = Math.max(0, item.achievedValue - item.projectedValue);
+    const overAchievedAmount = Math.max(
+      0,
+      item.achievedValue - item.projectedValue
+    );
 
     return {
       name: item.clientName,
-      
+
       // 1. Achieved (Green): The portion achieved, but capped at the projected value.
       // This forms the base of the bar for both under- and over-achieved clients.
       Achieved: achievedUpToProjection,
 
       // 2. Remaining (Red): Only shows the amount remaining if under-achieved.
       Remaining: Math.max(0, remaining),
-      
+
       // 3. NotProjected/Over-Achieved (Blue): Only shows the amount achieved ABOVE projection.
-      NotProjected: overAchievedAmount, 
+      NotProjected: overAchievedAmount,
     };
   });
 
@@ -982,7 +1149,7 @@ const GraphView = ({ data }) => {
           fill="url(#colorAchieved)"
           radius={[0, 0, 0, 0]}
         />
-        
+
         {/* Bar 2: Remaining (Red) - Sits on top of Achieved if under-achieved. */}
         <Bar
           dataKey="Remaining"
@@ -1152,13 +1319,18 @@ const TableView = ({ data }) => {
                 >
                   {/* Client Name */}
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-sm">
-                        <Building2 className="w-4 h-4 text-white" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-0.5 h-4 bg-gradient-to-b from-cyan-500 to-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 text-gray-900">
+                          <span className="font-medium text-sm truncate group-hover:text-blue-900">
+                            {item.clientName}
+                          </span>
+                        </div>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-700 transition-all duration-200">
+                          {item.clientCode}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-gray-800">
-                        {item.clientName}
-                      </span>
                     </div>
                   </td>
 
@@ -1377,7 +1549,7 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
       const { fromDate, toDate } = calculateMonthDateRange(monthValue);
 
       const payload = {
-        CODECDs: ["004"],
+        bdCodeList: ["004"],
         fromDate: new Date(fromDate).toISOString(),
         toDate: new Date(toDate).toISOString(),
       };
@@ -1386,13 +1558,13 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
 
       const normalizedData = data.map((p) => ({
         id: p.id,
-        CODECD: p.codecd,
-        CUSTACCCODE: p.custacccode,
+        bdCode: p.bdCode,
+        clientCode: p.clientCode,
         ProjDate: p.projDate,
         ProjVal: p.projVal,
         BDName: p.bdName,
         ClientName: p.clientName,
-        REMARKS: p.remarks,
+        Remarks: p.remarks,
       }));
 
       setProjections(normalizedData);
@@ -1417,7 +1589,7 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
     try {
       const { fromDate, toDate } = calculateMonthDateRange(monthValue);
       const payload = {
-        CODECDs: ["004"],
+        bdCodeList: [BdCode],
         fromDate: new Date(fromDate).toISOString(),
         toDate: new Date(toDate).toISOString(),
       };
@@ -1436,72 +1608,65 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
     }
   };
 
-  // FIX: Modify clientComparisonData to include ALL clients with registration data,
-  // not just projected ones, to be displayed in the table/graph.
   const clientComparisonData = useMemo(() => {
     const dataMap = {};
 
-    // Helper function to get or create a client entry
-    const getClientEntry = (clientName) => {
-      if (!dataMap[clientName]) {
-        dataMap[clientName] = {
-          clientName,
-          projectedValue: 0, // Default to 0
-          achievedValue: 0, // Default to 0
+    const getClientEntry = (clientCode, clientName) => {
+      if (!dataMap[clientCode]) {
+        dataMap[clientCode] = {
+          clientCode,
+          clientName: clientName || "Unknown",
+          projectedValue: 0,
+          achievedValue: 0,
         };
       }
-      return dataMap[clientName];
+      return dataMap[clientCode];
     };
 
-    // 1. Populate dataMap with projections
     projections.forEach((proj) => {
+      const clientCode = proj.clientCode;
       const clientName = proj.ClientName || "Unknown (Projected)";
-      // Fix 1 (from previous step): Use parseFloat for robust number conversion
-      getClientEntry(clientName).projectedValue +=
-        parseFloat(proj.ProjVal) || 0;
+      if (clientCode) {
+        getClientEntry(clientCode, clientName).projectedValue +=
+          parseFloat(proj.ProjVal) || 0;
+      }
     });
 
-    // 2. Aggregate ACHIEVED value for ALL clients in inquiriesData
-    // This ensures all clients with achieved value are included in the table/graph
     inquiriesData.forEach((inq) => {
-      if (inq.regisVal && inq.clientName) {
-        const clientName = inq.clientName;
-        getClientEntry(clientName).achievedValue +=
+      if (inq.regisVal && inq.clientCode) {
+        const clientCode = inq.clientCode;
+        const clientName = inq.clientName || "Unknown (Achieved)";
+        getClientEntry(clientCode, clientName).achievedValue +=
           parseFloat(inq.regisVal) || 0;
       }
     });
 
-    return Object.values(dataMap).sort(
-      (a, b) => b.projectedValue - a.projectedValue // Sort by projected value, or 0 if only achieved
+    return Object.values(dataMap).sort((a, b) =>
+      a.clientName.localeCompare(b.clientName)
     );
   }, [projections, inquiriesData]);
 
-  // FIX: Recalculate overallStats, ensuring totalAchievedFiltered strictly counts
-  // achieved value ONLY for clients that have a projection, regardless of what the table shows.
   const overallStats = useMemo(() => {
-    // 1. Identify the set of client names that have been projected
-    const projectedClientNames = new Set(
-      projections.map((p) => p.ClientName).filter((name) => name)
+    const projectedClientCodes = new Set(
+      projections.map((p) => p.clientCode).filter((code) => code)
     );
 
-    // Total Projected (Sum of all Projections)
     const totalProjected = projections.reduce(
       (sum, proj) => sum + (parseFloat(proj.ProjVal) || 0),
       0
     );
 
-    // Total Achieved (UNFILTERED - all registrations, for Target Achievement Card)
     const totalAchievedUnfiltered = inquiriesData.reduce(
       (sum, inq) => sum + (parseFloat(inq.regisVal) || 0),
       0
     );
 
-    // Total Achieved (FILTERED - only for projected clients, for Projection Achievement Card)
+    // Total Achieved (FILTERED - only for projected client codes, for Projection Achievement Card)
     const totalAchievedFiltered = inquiriesData.reduce((sum, inq) => {
       if (
         inq.regisVal &&
-        inq.clientName &&
-        projectedClientNames.has(inq.clientName)
+        inq.clientCode &&
+        projectedClientCodes.has(inq.clientCode)
       ) {
         return sum + (parseFloat(inq.regisVal) || 0);
       }
@@ -1516,7 +1681,7 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
       totalAchievedFiltered,
       clients,
     };
-  }, [projections, inquiriesData, clientComparisonData]); // Added projections as a dependency
+  }, [projections, inquiriesData, clientComparisonData]);
 
   const filteredProjections = useMemo(() => projections, [projections]);
 
@@ -1539,17 +1704,17 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
 
   const handleAddProjection = (newProjection) => {
     const client = clientOptions.find(
-      (c) => c.custacccode === newProjection.CUSTACCCODE
+      (c) => c.clientCode === newProjection.clientCode
     );
     const projection = {
       id: Math.max(...projections.map((p) => p.id), 0) + 1,
-      CODECD: newProjection.CODECD,
-      CUSTACCCODE: newProjection.CUSTACCCODE,
+      bdCode: newProjection.bdCode,
+      clientCode: newProjection.clientCode,
       ProjDate: newProjection.ProjDate,
-      ProjVal: newProjection.PROJVAL.toString(),
-      BDName: "Joydip Banerjee",
+      ProjVal: newProjection.ProjVal.toString(),
+      BDName: BdName,
       ClientName: client?.clientName || newProjection.ClientName || "",
-      REMARKS: newProjection.REMARKS || null,
+      Remarks: newProjection.Remarks || null,
     };
 
     const projDate = new Date(projection.ProjDate);
@@ -1576,7 +1741,7 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const options = await getClientNames();
+        const options = await getAssociateClients(BdCode);
         setClientOptions(Array.isArray(options) ? options : []);
       } catch (e) {
         console.error("Failed to fetch Client names", e);

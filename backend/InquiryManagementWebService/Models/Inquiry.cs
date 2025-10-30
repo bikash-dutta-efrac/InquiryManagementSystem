@@ -14,10 +14,10 @@
         public string? RegisNo { get; set; }
         public DateTime? RegisDate { get; set; }
         public string? RegisVal { get; set; }
-        public int CodeCD { get; set; }
+        public int BdCode { get; set; }
         public string Vertical { get; set; }
         public string BDName { get; set; }
-        public string ClientId { get; set; }
+        public string ClientCode { get; set; }
         public string ClientName { get; set; }
 
     }

@@ -1,13 +1,12 @@
 ﻿using InquiryManagementWebService.Models;
 using InquiryManagementWebService.Repositories;
-using Microsoft.AspNetCore.Mvc;
 
 namespace InquiryManagementWebService.Controllers
 {
     using Microsoft.AspNetCore.Mvc;
 
     [ApiController]
-    [Route("api/projections")]
+    [Route("api")]
     public class ProjectionController : Controller
     {
         private readonly IProjectionRepository _projectionRepository;
@@ -17,22 +16,7 @@ namespace InquiryManagementWebService.Controllers
             _projectionRepository = projectionRepository;
         }
 
-
-        [HttpPost]
-        public async Task<IActionResult> GetProjections([FromBody] ProjectionRequest request)
-        {
-            try
-            {
-                var response = await _projectionRepository.GetProjectionsAsync(request);
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpPost("bd/create")]
+        [HttpPost("projections/create")]
         public async Task<IActionResult> CreateProjection([FromBody] BdProjectionRequest request)
         {
             try
@@ -46,7 +30,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpPut("bd/{id}")]
+        [HttpPut("projections/update/{id}")]
         public async Task<IActionResult> UpdateProjection(int id, [FromBody] BdProjectionRequest request)
         {
             try
@@ -64,7 +48,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpDelete("bd/{id}")]
+        [HttpDelete("projections/delete/{id}")]
         public async Task<IActionResult> DeleteProjection(int id)
         {
             try
@@ -82,7 +66,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpGet("bd/{id}")]
+        [HttpGet("projections/get/{id}")]
         public async Task<IActionResult> GetProjectionById(int id)
         {
             try
@@ -100,7 +84,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpPost("bd/get-all")]
+        [HttpPost("projections/get")]
         public async Task<IActionResult> GetAllProjections([FromBody] BdProjectionFilter filter)
         {
             try
@@ -129,7 +113,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpGet("target/{id}")]
+        [HttpGet("target/get/{id}")]
         public async Task<IActionResult> GetTargetById(int id)
         {
             try
@@ -145,7 +129,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpPost("target/get-all")]
+        [HttpPost("target/get")]
         public async Task<IActionResult> GetAllTargets([FromBody] BdProjectionFilter filter)
         {
             try
@@ -159,7 +143,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpPut("target/{id}")]
+        [HttpPut("target/update/{id}")]
         public async Task<IActionResult> UpdateTarget(int id, [FromBody] BdTargetRequest request)
         {
             try
@@ -177,7 +161,7 @@ namespace InquiryManagementWebService.Controllers
             }
         }
 
-        [HttpDelete("target/{id}")]
+        [HttpDelete("target/delete/{id}")]
         public async Task<IActionResult> DeleteTarget(int id)
         {
             try
@@ -188,6 +172,21 @@ namespace InquiryManagementWebService.Controllers
                     return NotFound($"Target with Id {id} not found.");
 
                 return Ok($"Target {id} deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("projections/clients/get/{bdCode}")]
+        public async Task<IActionResult> GetAssoicateClients(string bdCode)
+        {
+            try
+            {
+                var response = await _projectionRepository.GetAssociateClientAsync(bdCode);
+
+                return Ok(response);
             }
             catch (Exception ex)
             {

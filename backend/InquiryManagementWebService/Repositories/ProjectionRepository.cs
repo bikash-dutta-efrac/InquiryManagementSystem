@@ -15,82 +15,24 @@ namespace InquiryManagementWebService.Repositories
         }
 
 
-        public async Task<IEnumerable<Projection>> GetProjectionsAsync(ProjectionRequest request)
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                var query = @"
-                SELECT 
-                    f.Id,
-                    f.PROJDATE AS ProjDate,
-                    CAST(f.PROJVAL AS VARCHAR) AS ProjVal,
-                    bd.CODEDESC AS BDName,
-                    c.CUSTNAME AS ClientName,
-                    CAST(f.TARGETVAL AS VARCHAR) AS TargetVal
-                FROM tblBD_FORECAST f
-                INNER JOIN OCODEMST bd 
-                    ON f.CODECD = bd.CODECD 
-                    AND bd.CODETYPE = 'SP'
-                LEFT JOIN OCUSTMST c 
-                    ON f.CUSTACCCODE = c.CUSTACCCODE
-                WHERE 
-                    (@FromDate IS NULL OR f.PROJDATE >= @FromDate)
-                    AND (@ToDate IS NULL OR f.PROJDATE <= @ToDate)
-                    AND (@Year IS NULL OR YEAR(f.PROJDATE) = @Year)
-                    AND (@Month IS NULL OR MONTH(f.PROJDATE) = @Month)
-                    AND (
-                        @BDNames IS NULL 
-                        OR (
-                            (@ExcludeBDs = 0 AND bd.CODEDESC IN (SELECT Value FROM dbo.SplitStrings(@BDNames, ',')))
-                            OR (@ExcludeBDs = 1 AND bd.CODEDESC NOT IN (SELECT Value FROM dbo.SplitStrings(@BDNames, ',')))
-                        )
-                    );
-            ";
-
-                var bdNames = request.BdNames != null && request.BdNames.Any()
-                    ? string.Join(",", request.BdNames)
-                    : null;
-
-                return await connection.QueryAsync<Projection>(query, new
-                {
-                    request.FromDate,
-                    request.ToDate,
-                    request.Month,
-                    request.Year,
-                    BDNames = bdNames,
-                    request.ExcludeBDs
-                });
-            }
-        }
-
         public async Task<int> CreateProjectionAsync(BdProjectionRequest request)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var query = @"
-                    DECLARE @custCode VARCHAR(50);
-
-                    SELECT TOP 1 @custCode = CUSTACCCODE
-                    FROM OCUSTMST
-                    WHERE CUSTNAME = @ClientName;
-
-                    IF @custCode IS NULL
-                    BEGIN
-                        THROW 50001, 'Customer not found for given ClientName', 1;
-                    END
 
                     INSERT INTO tblBD_FORECAST (CODECD, CUSTACCCODE, PROJVAL, REMARKS)
-                    VALUES (@CODECD, @custCode, @PROJVAL, @REMARKS);
+                    VALUES (@BdCode, @ClientCode, @ProjVal, @Remarks);
 
                     SELECT CAST(SCOPE_IDENTITY() AS INT);
-";
+                ";              
 
                 int newId = await connection.QuerySingleAsync<int>(query, new
                 {
-                    CODECD = request.CODECD,
-                    ClientName = request.ClientName,
-                    PROJVAL = request.PROJVAL,
-                    REMARKS = request.REMARKS
+                    BdCode = request.BdCode,
+                    ClientCode = request.ClientCode,
+                    ProjVal = request.ProjVal,
+                    Remarks = request.Remarks
                 });
 
                 return newId;
@@ -107,33 +49,23 @@ namespace InquiryManagementWebService.Repositories
                     throw new Exception($"Projection with ID {id} not found.");
 
                 string query = @"
-                    DECLARE @custCode VARCHAR(50);
-
-                    SELECT TOP 1 @custCode = CUSTACCCODE
-                    FROM OCUSTMST
-                    WHERE CUSTNAME = @ClientName;
-
-                    IF @custCode IS NULL
-                    BEGIN
-                        THROW 50001, 'Customer not found for given ClientName', 1;
-                    END
 
                     UPDATE tblBD_FORECAST
                     SET 
-                        CODECD = @CODECD,
-                        CUSTACCCODE = @custCode,
-                        PROJVAL = @PROJVAL,
-                        REMARKS = @REMARKS
+                        CODECD = @BdCode,
+                        CUSTACCCODE = @ClientCode,
+                        PROJVAL = @ProjVal,
+                        REMARKS = @Remarks
                     WHERE Id = @Id;
                 ";
 
                 var affectedRows = await connection.ExecuteAsync(query, new
                 {
                     Id = id,
-                    CODECD = request.CODECD ?? existingProjection.CODECD,
-                    ClientName = request.ClientName,
-                    PROJVAL = request.PROJVAL,
-                    REMARKS = request.REMARKS ?? existingProjection.Remarks
+                    BdCode = request.BdCode ?? existingProjection.BdCode,
+                    ClientCode = request.ClientCode,
+                    ProjVal = request.ProjVal,
+                    Remarks = request.Remarks ?? existingProjection.Remarks
                 });
 
                 return affectedRows;
@@ -163,8 +95,8 @@ namespace InquiryManagementWebService.Repositories
                     CAST(f.PROJVAL AS VARCHAR) AS ProjVal,
                     bd.CODEDESC AS BDName,
                     c.CUSTNAME AS ClientName,
-                    c.CUSTACCCODE,
-                    bd.CODECD,
+                    c.CUSTACCCODE AS ClientCode,
+                    bd.CODECD AS BdCode,
                     f.REMARKS AS Remarks
                 FROM tblBD_FORECAST f
                 INNER JOIN OCODEMST bd 
@@ -183,8 +115,8 @@ namespace InquiryManagementWebService.Repositories
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var codecdList = (filter.CODECDs != null && filter.CODECDs.Any())
-                    ? string.Join(",", filter.CODECDs)
+                var clientCodeList = (filter.BdCodeList != null && filter.BdCodeList.Any())
+                    ? string.Join(",", filter.BdCodeList)
                     : null;
 
                 var query = @"
@@ -194,8 +126,8 @@ namespace InquiryManagementWebService.Repositories
                     CAST(f.PROJVAL AS VARCHAR) AS ProjVal,
                     bd.CODEDESC AS BDName,
                     c.CUSTNAME AS ClientName,
-                    c.CUSTACCCODE,
-                    bd.CODECD,
+                    c.CUSTACCCODE AS ClientCode,
+                    bd.CODECD AS BdCode,
                     f.REMARKS AS Remarks
                 FROM tblBD_FORECAST f
                 INNER JOIN OCODEMST bd 
@@ -217,7 +149,7 @@ namespace InquiryManagementWebService.Repositories
                 {
                     FromDate = filter.FromDate,
                     ToDate = filter.ToDate,
-                    CODECDList = codecdList
+                    CODECDList = clientCodeList
                 });
 
                 return result;
@@ -237,7 +169,7 @@ namespace InquiryManagementWebService.Repositories
 
                 int newId = await connection.QuerySingleAsync<int>(query, new
                 {
-                    CODECD = request.CODECD,
+                    CODECD = request.BdCode,
                     TargetVal = request.TargetVal,
                     Remarks = request.Remarks
                 });
@@ -273,18 +205,18 @@ namespace InquiryManagementWebService.Repositories
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var codecdList = (filter.CODECDs != null && filter.CODECDs.Any())
-                    ? string.Join(",", filter.CODECDs)
+                var codecdList = (filter.BdCodeList != null && filter.BdCodeList.Any())
+                    ? string.Join(",", filter.BdCodeList)
                     : null;
 
                 string query = @"
                 SELECT 
                     t.Id,
-                    t.CODECD,
+                    t.CODECD AS BdCode,
                     t.TARGETDATE AS TargetDate,
                     CAST(t.TARGETVAL AS VARCHAR) AS TargetVal,
                     bd.CODEDESC AS BDName,
-                    t.REMARKS
+                    t.REMARKS AS Remarks
                 FROM tblBD_TARGET t
                 INNER JOIN OCODEMST bd 
                     ON t.CODECD = bd.CODECD 
@@ -332,7 +264,7 @@ namespace InquiryManagementWebService.Repositories
                 var affectedRows = await connection.ExecuteAsync(query, new
                 {
                     Id = id,
-                    CODECD = request.CODECD ?? existingTarget.CODECD,
+                    CODECD = request.BdCode ?? existingTarget.BdCode,
                     TargetVal = request.TargetVal,
                     REMARKS = request.Remarks ?? existingTarget.Remarks
                 });
@@ -348,6 +280,25 @@ namespace InquiryManagementWebService.Repositories
                 string query = "DELETE FROM tblBD_TARGET WHERE Id = @Id;";
                 var affectedRows = await connection.ExecuteAsync(query, new { Id = id });
                 return affectedRows;
+            }
+        }
+
+        public async Task<IEnumerable<ClientDetail>> GetAssociateClientAsync(string bdCode)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                string query = @"
+                    SELECT 
+                        CUSTNAME AS ClientName, 
+                        CUSTACCCODE AS ClientCode,
+                        CUSTUNIT AS Unit,
+                        CUSTADD1 AS Address,
+                        CUSTCITY AS City,
+                        CUSTPIN AS Pin
+                    FROM OCUSTMST
+                    WHERE CUSTSALEPERSONCD = @BdCode
+                ";
+                return await connection.QueryAsync<ClientDetail>(query, new { BdCode = bdCode });
             }
         }
     }

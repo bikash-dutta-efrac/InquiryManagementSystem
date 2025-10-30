@@ -11,9 +11,9 @@ namespace InquiryManagementWebService.Repositories
         Task<IEnumerable<BdProjection>> GetAllProjectionsAsync(BdProjectionFilter filter);
         Task<IEnumerable<BdTarget>> GetAllTargetsAsync(BdProjectionFilter filter);
         Task<BdProjection?> GetProjectionByIdAsync(int id);
-        Task<IEnumerable<Projection>> GetProjectionsAsync(ProjectionRequest request);
         Task<BdTarget?> GetTargetByIdAsync(int id);
         Task<int> UpdateProjectionAsync(int id, BdProjectionRequest request);
         Task<int> UpdateTargetAsync(int id, BdTargetRequest request);
+        Task<IEnumerable<ClientDetail>> GetAssociateClientAsync(string bdCode);
     }
 }

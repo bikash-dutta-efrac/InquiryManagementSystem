@@ -3,8 +3,8 @@
     public class BdProjection
     {
         public int? Id { get; set; }
-        public string CODECD { get; set; }
-        public string CUSTACCCODE { get; set; }
+        public string BdCode { get; set; }
+        public string ClientCode { get; set; }
         public DateTime ProjDate { get; set; }
         public string ProjVal { get; set; }
         public string BDName { get; set; }

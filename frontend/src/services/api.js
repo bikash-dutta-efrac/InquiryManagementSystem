@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.195:5075/api";
+const API_BASE_URL = "http://192.168.3.200:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -25,8 +25,9 @@ function buildRequestBody(filters = {}) {
 // ===================================================================
 
 export async function getAllBdProjection(filter = {}) {
+  console.log(filter)
   const response = await axios.post(
-    `${API_BASE_URL}/projections/bd/get-all`,
+    `${API_BASE_URL}/projections/get`,
     filter,
     { headers: { "Content-Type": "application/json" } }
   );
@@ -36,7 +37,7 @@ export async function getAllBdProjection(filter = {}) {
 export async function createBdProjection(body = {}) {
   console.log(body)
   const response = await axios.post(
-    `${API_BASE_URL}/projections/bd/create`,
+    `${API_BASE_URL}/projections/create`,
     body,
     { headers: { "Content-Type": "application/json" } }
   );
@@ -46,7 +47,7 @@ export async function createBdProjection(body = {}) {
 export async function updateBdProjection(id, body = {}) {
   console.log(id, body)
   const response = await axios.put(
-    `${API_BASE_URL}/projections/bd/${id}`,
+    `${API_BASE_URL}/projections/update/${id}`,
     body,
     { headers: { "Content-Type": "application/json" } }
   );
@@ -56,14 +57,15 @@ export async function updateBdProjection(id, body = {}) {
 export async function deleteBdProjection(id) {
   console.log(id)
   const response = await axios.delete(
-    `${API_BASE_URL}/projections/bd/${id}`,
+    `${API_BASE_URL}/projections/delete/${id}`,
     { headers: { "Content-Type": "application/json" } }
   );
   return response.data;
 }
 
 export async function getBdProjectionById(id) {
-  const response = await axios.get(`${API_BASE_URL}/projections/bd/${id}`, {
+  console.log(filter)
+  const response = await axios.get(`${API_BASE_URL}/projections/get/${id}`, {
     headers: { "Content-Type": "application/json" },
   });
   return response.data;
@@ -74,8 +76,9 @@ export async function getBdProjectionById(id) {
 // ===================================================================
 
 export async function getAllBdTargets(filter = {}) {
+  console.log(filter)
   const response = await axios.post(
-    `${API_BASE_URL}/projections/target/get-all`,
+    `${API_BASE_URL}/target/get`,
     filter,
     { headers: { "Content-Type": "application/json" } }
   );
@@ -85,7 +88,7 @@ export async function getAllBdTargets(filter = {}) {
 export async function createBdTarget(body = {}) {
   console.log(body)
   const response = await axios.post(
-    `${API_BASE_URL}/projections/target/create`,
+    `${API_BASE_URL}/target/create`,
     body,
     { headers: { "Content-Type": "application/json" } }
   );
@@ -95,7 +98,7 @@ export async function createBdTarget(body = {}) {
 export async function updateBdTarget(id, body = {}) {
   console.log(id, body)
   const response = await axios.put(
-    `${API_BASE_URL}/projections/target/${id}`,
+    `${API_BASE_URL}/target/update/${id}`,
     body,
     { headers: { "Content-Type": "application/json" } }
   );
@@ -105,16 +108,24 @@ export async function updateBdTarget(id, body = {}) {
 export async function deleteBdTarget(id) {
   console.log(id)
   const response = await axios.delete(
-    `${API_BASE_URL}/projections/target/${id}`,
+    `${API_BASE_URL}/target/delete/${id}`,
     { headers: { "Content-Type": "application/json" } }
   );
   return response.data;
 }
 
 export async function getBdTargetById(id) {
-  const response = await axios.get(`${API_BASE_URL}/projections/target/${id}`, {
+  const response = await axios.get(`${API_BASE_URL}/target/get/${id}`, {
     headers: { "Content-Type": "application/json" },
   });
+  return response.data;
+}
+
+export async function getAssociateClients(bdCode) {
+  const response = await axios.get(`${API_BASE_URL}/projections/clients/get/${bdCode}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  console.log("assoc-clients", bdCode, response.data)
   return response.data;
 }
 

@@ -144,9 +144,9 @@ namespace InquiryManagementWebService.Repositories
                                       ) 
                             END
                     END AS RegisVal,
-                    MIN(q.QUOT_SALESPERSONCD) AS CodeCD,
+                    MIN(q.QUOT_SALESPERSONCD) AS BdCode,
                     MIN(q.BDName) AS BDName,
-                    MIN(q.QUOTPARTYCD) AS ClientId,
+                    MIN(q.QUOTPARTYCD) AS ClientCode,
                     MIN(q.ClientName) AS ClientName,
                     MIN(q.Vertical) AS Vertical,
                     MAX(
@@ -237,7 +237,7 @@ ORDER BY Vertical;
             {
                 var query = @"
 SELECT bd.CODEDESC AS BDName, 
-MAX(bd.CODECD) AS CODECD
+MAX(bd.CODECD) AS BdCode
 FROM OQUOTMST i
 INNER JOIN OCODEMST bd ON bd.CODECD = i.QUOT_SALESPERSONCD
 INNER JOIN OCUSTMST c ON c.CUSTACCCODE = i.QUOTPARTYCD
@@ -276,7 +276,7 @@ ORDER BY bd.CODEDESC;
             {
                 var query = @"
 SELECT c.CUSTNAME AS ClientName,
-MAX(c.CUSTACCCODE) AS CUSTACCCODE
+MAX(c.CUSTACCCODE) AS ClientCode
 FROM OQUOTMST i
 INNER JOIN OCUSTMST c ON i.QUOTPARTYCD = c.CUSTACCCODE
 INNER JOIN OCODEMST bd ON bd.CODECD = i.QUOT_SALESPERSONCD

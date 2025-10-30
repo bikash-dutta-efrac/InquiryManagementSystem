@@ -346,38 +346,7 @@
         }
       }
     },
-    "/api/projections": {
-      "post": {
-        "tags": [
-          "Projection"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProjectionRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProjectionRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProjectionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/projections/bd/create": {
+    "/api/projections/create": {
       "post": {
         "tags": [
           "Projection"
@@ -408,7 +377,7 @@
         }
       }
     },
-    "/api/projections/bd/{id}": {
+    "/api/projections/update/{id}": {
       "put": {
         "tags": [
           "Projection"
@@ -448,7 +417,9 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/projections/delete/{id}": {
       "delete": {
         "tags": [
           "Projection"
@@ -469,7 +440,9 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/projections/get/{id}": {
       "get": {
         "tags": [
           "Projection"
@@ -492,7 +465,7 @@
         }
       }
     },
-    "/api/projections/bd/get-all": {
+    "/api/projections/get": {
       "post": {
         "tags": [
           "Projection"
@@ -523,7 +496,7 @@
         }
       }
     },
-    "/api/projections/target/create": {
+    "/api/target/create": {
       "post": {
         "tags": [
           "Projection"
@@ -554,7 +527,7 @@
         }
       }
     },
-    "/api/projections/target/{id}": {
+    "/api/target/get/{id}": {
       "get": {
         "tags": [
           "Projection"
@@ -575,7 +548,40 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/target/get": {
+      "post": {
+        "tags": [
+          "Projection"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdProjectionFilter"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdProjectionFilter"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BdProjectionFilter"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/target/update/{id}": {
       "put": {
         "tags": [
           "Projection"
@@ -615,7 +621,9 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/target/delete/{id}": {
       "delete": {
         "tags": [
           "Projection"
@@ -638,30 +646,21 @@
         }
       }
     },
-    "/api/projections/target/get-all": {
-      "post": {
+    "/api/projections/clients/get/{bdCode}": {
+      "get": {
         "tags": [
           "Projection"
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BdProjectionFilter"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BdProjectionFilter"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BdProjectionFilter"
-              }
+        "parameters": [
+          {
+            "name": "bdCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -691,7 +690,7 @@
       "BdProjectionFilter": {
         "type": "object",
         "properties": {
-          "codecDs": {
+          "bdCodeList": {
             "type": "array",
             "items": {
               "type": "string"
@@ -713,21 +712,21 @@
       },
       "BdProjectionRequest": {
         "required": [
-          "clientName",
-          "codecd",
-          "projval"
+          "bdCode",
+          "clientCode",
+          "projVal"
         ],
         "type": "object",
         "properties": {
-          "codecd": {
+          "bdCode": {
             "minLength": 1,
             "type": "string"
           },
-          "clientName": {
+          "clientCode": {
             "minLength": 1,
             "type": "string"
           },
-          "projval": {
+          "projVal": {
             "type": "integer",
             "format": "int64"
           },
@@ -741,7 +740,7 @@
       "BdTargetRequest": {
         "type": "object",
         "properties": {
-          "codecd": {
+          "bdCode": {
             "type": "string",
             "nullable": true
           },
@@ -839,49 +838,6 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ProjectionRequest": {
-        "type": "object",
-        "properties": {
-          "fromDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "toDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "month": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "verticals": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "bdNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "excludeBDs": {
-            "type": "boolean"
           }
         },
         "additionalProperties": false

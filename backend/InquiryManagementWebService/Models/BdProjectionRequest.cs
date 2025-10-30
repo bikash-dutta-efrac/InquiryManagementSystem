@@ -5,15 +5,15 @@ namespace InquiryManagementWebService.Models
     public class BdProjectionRequest
     {
         [Required]
-        public string CODECD { get; set; }
+        public string BdCode { get; set; }
 
         [Required]
-        public string ClientName { get; set; }
+        public string ClientCode { get; set; }
 
         [Required]
-        public long PROJVAL { get; set; }
+        public long ProjVal { get; set; }
 
-        public string? REMARKS { get; set; }
+        public string? Remarks { get; set; }
     }
 
 }

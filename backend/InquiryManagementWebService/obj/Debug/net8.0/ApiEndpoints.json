@@ -177,15 +177,79 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "GetProjections",
-    "RelativePath": "api/projections",
+    "Method": "GetAssoicateClients",
+    "RelativePath": "api/projections/clients/get/{bdCode}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "bdCode",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "CreateProjection",
+    "RelativePath": "api/projections/create",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
         "Name": "request",
-        "Type": "InquiryManagementWebService.Models.ProjectionRequest",
+        "Type": "InquiryManagementWebService.Models.BdProjectionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "DeleteProjection",
+    "RelativePath": "api/projections/delete/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "GetAllProjections",
+    "RelativePath": "api/projections/get",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "filter",
+        "Type": "InquiryManagementWebService.Models.BdProjectionFilter",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "GetProjectionById",
+    "RelativePath": "api/projections/get/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -194,7 +258,7 @@
   {
     "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
     "Method": "UpdateProjection",
-    "RelativePath": "api/projections/bd/{id}",
+    "RelativePath": "api/projections/update/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -214,8 +278,24 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "DeleteProjection",
-    "RelativePath": "api/projections/bd/{id}",
+    "Method": "CreateTarget",
+    "RelativePath": "api/target/create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.BdTargetRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
+    "Method": "DeleteTarget",
+    "RelativePath": "api/target/delete/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
@@ -230,40 +310,8 @@
   },
   {
     "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "GetProjectionById",
-    "RelativePath": "api/projections/bd/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "CreateProjection",
-    "RelativePath": "api/projections/bd/create",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "request",
-        "Type": "InquiryManagementWebService.Models.BdProjectionRequest",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "GetAllProjections",
-    "RelativePath": "api/projections/bd/get-all",
+    "Method": "GetAllTargets",
+    "RelativePath": "api/target/get",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -279,7 +327,7 @@
   {
     "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
     "Method": "GetTargetById",
-    "RelativePath": "api/projections/target/{id}",
+    "RelativePath": "api/target/get/{id}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -295,7 +343,7 @@
   {
     "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
     "Method": "UpdateTarget",
-    "RelativePath": "api/projections/target/{id}",
+    "RelativePath": "api/target/update/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -308,54 +356,6 @@
       {
         "Name": "request",
         "Type": "InquiryManagementWebService.Models.BdTargetRequest",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "DeleteTarget",
-    "RelativePath": "api/projections/target/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "CreateTarget",
-    "RelativePath": "api/projections/target/create",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "request",
-        "Type": "InquiryManagementWebService.Models.BdTargetRequest",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
-    "Method": "GetAllTargets",
-    "RelativePath": "api/projections/target/get-all",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "filter",
-        "Type": "InquiryManagementWebService.Models.BdProjectionFilter",
         "IsRequired": true
       }
     ],

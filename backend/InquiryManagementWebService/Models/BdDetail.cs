@@ -2,7 +2,7 @@
 {
     public class BdDetail
     {
-        public string CODECD { get; set; }
+        public string BdCode { get; set; }
         public string BdName { get; set; }
     }
 }

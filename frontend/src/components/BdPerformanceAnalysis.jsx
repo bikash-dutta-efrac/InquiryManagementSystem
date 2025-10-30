@@ -179,6 +179,7 @@ const Dropdown = ({
   placeholder,
   multiple = false,
   onDeselectAll,
+  onSelectAll, // <-- ADDED: New prop for Select All functionality
   isExcluded,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -276,6 +277,19 @@ const Dropdown = ({
               </div>
             </div>
             <ul className="max-h-60 overflow-y-auto">
+              {/* 🎁 New Select All Option */}
+              {multiple && onSelectAll && (
+                <li
+                  onClick={() => {
+                    onSelectAll();
+                    setSearchTerm("");
+                  }}
+                  className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${"hover:bg-red-50 text-black"
+                  }`}
+                >
+                  Select All
+                </li>
+              )}
               {multiple && onDeselectAll && (
                 <li
                   onClick={() => {
@@ -283,9 +297,7 @@ const Dropdown = ({
                     setSearchTerm("");
                   }}
                   className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${
-                    isExcluded
-                      ? "hover:bg-red-50 text-red-700"
-                      : "hover:bg-blue-50 text-blue-700"
+                      "hover:bg-blue-50 text-black"
                   }`}
                 >
                   Deselect All
@@ -335,7 +347,7 @@ const Dropdown = ({
   );
 };
 
-const BDTargetManager = ({ bd, onManage }) => {
+const BDTargetManager = ({ bd, onManage, isActive }) => {
   const hasTarget = bd.totalTarget > 0;
 
   const handleEdit = (e) => {
@@ -346,7 +358,7 @@ const BDTargetManager = ({ bd, onManage }) => {
         id: bd.targetId,
         value: bd.totalTarget,
         bdName: bd.bdName,
-        codecd: bd.codecd,
+        bdCode: bd.bdCode,
       },
     });
   };
@@ -357,7 +369,7 @@ const BDTargetManager = ({ bd, onManage }) => {
       type: "ADD_TARGET",
       data: {
         bdName: bd.bdName,
-        codecd: bd.codecd,
+        bdCode: bd.bdCode,
       },
     });
   };
@@ -369,13 +381,18 @@ const BDTargetManager = ({ bd, onManage }) => {
       data: {
         id: bd.targetId,
         bdName: bd.bdName,
-        codecd: bd.codecd, // Pass codecd for consistency
+        bdCode: bd.bdCode,
       },
     });
   };
 
   return (
-    <div className="absolute top-0 right-0 h-full flex items-center pr-4 gap-2 translate-x-full group-hover:translate-x-0 transition-all duration-300 ease-out">
+    <motion.div
+      initial={{ x: "100%" }}
+      animate={{ x: isActive ? "0%" : "100%" }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="absolute top-0 right-0 h-full flex items-center pr-4 gap-2 z-20"
+    >
       {hasTarget ? (
         <>
           <motion.button
@@ -408,11 +425,11 @@ const BDTargetManager = ({ bd, onManage }) => {
           <Plus className="w-4 h-4" />
         </motion.button>
       )}
-    </div>
+    </motion.div>
   );
 };
 
-const ClientProjectionManager = ({ client, onManage, bdInfo }) => {
+const ClientProjectionManager = ({ client, onManage, bdInfo, isActive }) => {
   const hasProjection = client.projected > 0;
 
   const handleEdit = (e) => {
@@ -422,9 +439,9 @@ const ClientProjectionManager = ({ client, onManage, bdInfo }) => {
       data: {
         projections: client.projections,
         bdName: bdInfo.bdName,
-        codecd: bdInfo.codecd,
+        bdCode: bdInfo.bdCode,
+        clientCode: client.clientCode,
         clientName: client.clientName,
-        // Pass the value for editing
         value: client.projected,
       },
     });
@@ -436,7 +453,8 @@ const ClientProjectionManager = ({ client, onManage, bdInfo }) => {
       type: "ADD_PROJECTION",
       data: {
         bdName: bdInfo.bdName,
-        codecd: bdInfo.codecd,
+        bdCode: bdInfo.bdCode,
+        clientCode: client.clientCode,
         clientName: client.clientName,
       },
     });
@@ -449,14 +467,20 @@ const ClientProjectionManager = ({ client, onManage, bdInfo }) => {
       data: {
         projections: client.projections,
         bdName: bdInfo.bdName,
-        codecd: bdInfo.codecd,
+        bdCode: bdInfo.bdCode,
+        clientCode: client.clientCode,
         clientName: client.clientName,
       },
     });
   };
 
   return (
-    <div className="absolute top-0 right-0 h-full flex items-center pr-3 gap-2 translate-x-full group-hover:translate-x-0 transition-all duration-300 ease-out z-10">
+    <motion.div
+      initial={{ x: "100%" }}
+      animate={{ x: isActive ? "0%" : "100%" }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="absolute top-0 right-0 h-full flex items-center pr-3 gap-2 z-30"
+    >
       {hasProjection ? (
         <>
           <motion.button
@@ -489,7 +513,7 @@ const ClientProjectionManager = ({ client, onManage, bdInfo }) => {
           <Plus className="w-3.5 h-3.5" />
         </motion.button>
       )}
-    </div>
+    </motion.div>
   );
 };
 
@@ -505,7 +529,7 @@ const ManagementModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [remark, setRemark] = useState(
-    action.data?.projections?.[0]?.REMARKS || ""
+    action.data?.projections?.[0]?.remarks || ""
   );
 
   const isTarget = action.type.includes("TARGET");
@@ -522,7 +546,7 @@ const ManagementModal = ({
         setRemark("");
       } else if (isEdit) {
         setValue(action.data?.value || 0);
-        setRemark(action.data?.projections?.[0]?.REMARKS || "");
+        setRemark(action.data?.projections?.[0]?.remarks || "");
       } else {
         setValue(0); // Reset for delete
         setRemark("");
@@ -567,13 +591,13 @@ const ManagementModal = ({
 
     const [year, monthNum] = month.split("-").map(Number);
 
-    const bdObject = bdOptions.find((bd) => bd.codecd === action.data.codecd);
+    const bdObject = bdOptions.find((bd) => bd.bdCode === action.data.bdCode);
     const bdName = bdObject ? bdObject.label : action.data.bdName;
 
     try {
       if (isTarget) {
         const targetBody = {
-          codecd: action.data.codecd,
+          bdCode: action.data.bdCode,
           targetVal: Number(value),
           remarks: action.data?.remarks || "",
         };
@@ -597,8 +621,8 @@ const ManagementModal = ({
         }
 
         const projectionBody = {
-          codecd: action.data.codecd,
-          clientName: action.data.clientName,
+          bdCode: action.data.bdCode,
+          clientCode: action.data.clientCode,
           projval: parseFloat(value),
           remarks: remark,
         };
@@ -645,7 +669,7 @@ const ManagementModal = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" // Changed blur
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
@@ -742,7 +766,7 @@ const ManagementModal = ({
               {isProjection && (
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-2">
-                    Remarks (Optional)
+                    remarks (Optional)
                   </label>
                   <textarea
                     value={remark}
@@ -781,7 +805,7 @@ const ManagementModal = ({
               whileTap={{ scale: 0.98 }}
               onClick={isDelete ? handleSubmit : undefined}
               type={isDelete ? "button" : "submit"}
-              form={isDelete ? undefined : "management-form"} // Connect to form if not delete
+              form={isDelete ? undefined : "management-form"}
               disabled={isLoading}
               className={`flex-1 px-4 py-3 rounded-xl font-medium text-white transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden ${
                 isDelete
@@ -858,9 +882,13 @@ const BDPerformanceTableCard = ({
   clients,
   onTargetManage,
   onProjectionManage,
+  activeBdActionbdCode,
+  setActiveBdActionbdCode,
+  activeClient,
+  setActiveClient,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeRowIndex, setActiveRowIndex] = useState(null);
+  const [isIconHidden, setIsIconHidden] = useState(false);
   const status = getStatus(bd.totalAchieved, bd.totalTarget);
 
   const progressBarBg =
@@ -870,47 +898,68 @@ const BDPerformanceTableCard = ({
       ? "bg-blue-200"
       : "bg-gray-200";
 
-  const SHIFT_CLASS = "-translate-x-12";
-  const WIDTH_CLASS = "w-12";
+  const SHIFT_CLASS = "-translate-x-10";
+
+  const isThisBdActionActive = activeBdActionbdCode === bd.bdCode;
+
+  const handleHeaderClick = () => {
+    setIsExpanded((s) => !s);
+    setIsIconHidden((prev) => !prev);
+    setActiveBdActionbdCode(isThisBdActionActive ? null : bd.bdCode);
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group"
+      className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 relative"
     >
       {/* Header */}
       <div
         className="p-6 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-transparent transition-all duration-200 relative overflow-hidden"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleHeaderClick}
       >
-        <div className="flex items-center justify-between transition-transform duration-300 group-hover:-translate-x-4">
-          <div className="flex items-center gap-4 flex-shrink-0 w-3/12">
+        <div className="flex items-center justify-between transition-transform duration-300">
+          <div className="flex items-center gap-4 flex-shrink-0 w-1/12">
             <motion.div
               animate={{ rotate: isExpanded ? 90 : 0 }}
               transition={{ duration: 0.3 }}
-              className="p-2 rounded-lg bg-gray-100 "
+              className="p-2 rounded-lg bg-gray-100"
             >
               <ChevronRight className="w-5 h-5 text-blue-500" />
             </motion.div>
+
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md">
+              <motion.div
+                animate={{
+                  x: isIconHidden ? -30 : 0,
+                  opacity: isIconHidden ? 0 : 1,
+                }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md"
+              >
                 <MdPerson className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-gray-800">
-                  {bd.bdName}
-                </h3>
-                <p className="text-xs text-gray-500">
-                  {bd.clientCount} Clients · {bd.projectionCount} Projections
-                </p>
-              </div>
+              </motion.div>
             </div>
           </div>
 
-          <div className="flex items-center gap-10 w-9/12">
+          <div
+            className={`flex items-center gap-10 w-11/12 ml-4 transition-transform duration-500 ${
+              isIconHidden ? "-translate-x-10" : ""
+            }`}
+          >
+            {/* BD Details */}
+            <div>
+              <h3 className="text-base font-bold text-gray-800 w-44">
+                {bd.bdName}
+              </h3>
+              <p className="text-xs text-gray-500">
+                {bd.clientCount} Clients · {bd.projectionCount} Projections
+              </p>
+            </div>
+
             {/* Target */}
-            <div className="text-center w-24">
+            <div className="text-center mw-20">
               <p className="text-xs text-gray-500 mb-1">Target</p>
               <p className="text-base font-bold text-purple-600">
                 {isLoading ? (
@@ -922,7 +971,7 @@ const BDPerformanceTableCard = ({
             </div>
 
             {/* Projected */}
-            <div className="text-center w-24">
+            <div className="text-center w-20">
               <p className="text-xs text-gray-500 mb-1">Projected</p>
               <p className="text-base font-bold text-blue-600">
                 {isLoading ? (
@@ -934,7 +983,7 @@ const BDPerformanceTableCard = ({
             </div>
 
             {/* Achieved */}
-            <div className="text-center w-24">
+            <div className="text-center w-20">
               <p className="text-xs text-gray-500 mb-1">Achieved</p>
               <p className="text-base font-bold text-green-600">
                 {isLoading ? (
@@ -946,7 +995,7 @@ const BDPerformanceTableCard = ({
             </div>
 
             {/* Progress bar */}
-            <div className="w-48 flex-shrink-0">
+            <div className="w-32 flex-shrink-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-500">vs Target</span>
                 <span className="text-xs font-bold text-gray-700">
@@ -966,17 +1015,31 @@ const BDPerformanceTableCard = ({
             </div>
 
             {/* Status Chip */}
-            <div className="w-28 flex justify-center flex-shrink-0">
+            <div className="w-28 flex justify-center flex-shrink-0 relative">
               <span
                 className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${status.badgeColor}`}
               >
                 {status.icon}
                 {status.text}
               </span>
+
+              <motion.div
+                animate={{
+                  x: isIconHidden ? 0 : 100,
+                  opacity: isIconHidden ? 1 : 0,
+                }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="absolute right-[-120px] top-1/2 -translate-y-1/2 flex items-center gap-2"
+              >
+                <BDTargetManager
+                  bd={bd}
+                  onManage={onTargetManage}
+                  isActive={isThisBdActionActive}
+                />
+              </motion.div>
             </div>
           </div>
         </div>
-        <BDTargetManager bd={bd} onManage={onTargetManage} />
       </div>
 
       {/* Expanded Table */}
@@ -1004,7 +1067,7 @@ const BDPerformanceTableCard = ({
                   No client data available for this BD
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-gray-200 shadow-xl bg-white/80 backdrop-blur-md mb-6">
+                <div className="overflow-hidden rounded-xl border border-gray-200 shadow-xl bg-white/80 backdrop-blur-md mb-6 relative">
                   <table className="min-w-full border-collapse w-full">
                     <thead className="bg-gradient-to-r from-cyan-500 to-blue-600">
                       <tr>
@@ -1045,7 +1108,11 @@ const BDPerformanceTableCard = ({
                             : clientStatus.text === "Not Projected"
                             ? "bg-blue-200"
                             : "bg-gray-200";
-                        const active = activeRowIndex === index;
+
+                        const active =
+                          activeClient &&
+                          activeClient.bdbdCode === bd.bdCode &&
+                          activeClient.index === index;
 
                         return (
                           <motion.tr
@@ -1053,26 +1120,38 @@ const BDPerformanceTableCard = ({
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            onMouseEnter={() => setActiveRowIndex(index)}
-                            onMouseLeave={() => setActiveRowIndex(null)}
-                            className={`transition-all duration-150 relative ${
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (active) {
+                                setActiveClient(null);
+                              } else {
+                                setActiveClient({ bdbdCode: bd.bdCode, index });
+                              }
+                            }}
+                            className={`group transition-all duration-150 relative cursor-pointer ${
                               isEvenRow ? "bg-white/90" : "bg-gray-50/50"
                             } hover:bg-gradient-to-r hover:from-blue-50/70 hover:to-indigo-50/70`}
                           >
-                            <td
-                              className={`px-4 py-3 text-left w-[20%] transition-transform duration-300 ${
-                                active ? SHIFT_CLASS : ""
-                              }`}
-                            >
+                            {/* Client Name with blue hover bar */}
+                            <td className="px-4 py-3 text-left w-[30%]">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-gray-800">
-                                  {client.clientName}
-                                </span>
+                                <div className="w-0.5 h-4 bg-gradient-to-b from-cyan-500 to-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="flex items-center gap-2 text-gray-900">
+                                    <span className="font-medium text-sm truncate group-hover:text-blue-900">
+                                      {client.clientName}
+                                    </span>
+                                  </div>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-700 transition-all duration-200">
+                                    {client.clientCode}
+                                  </span>
+                                </div>
                               </div>
                             </td>
 
+                            {/* The rest of columns shift left when active */}
                             <td
-                              className={`px-4 py-3 text-center w-[15%] transition-transform duration-300 ${
+                              className={`px-4 py-3 text-center w-[10%] transition-transform duration-300 ${
                                 active ? SHIFT_CLASS : ""
                               }`}
                             >
@@ -1082,7 +1161,7 @@ const BDPerformanceTableCard = ({
                             </td>
 
                             <td
-                              className={`px-4 py-3 text-center w-[15%] transition-transform duration-300 ${
+                              className={`px-4 py-3 text-center w-[10%] transition-transform duration-300 ${
                                 active ? SHIFT_CLASS : ""
                               }`}
                             >
@@ -1131,22 +1210,20 @@ const BDPerformanceTableCard = ({
                               </span>
                             </td>
 
-                            <td className="px-2 py-2 w-[5%] text-center">
-                              {active && (
-                                <ClientProjectionManager
-                                  client={client}
-                                  onManage={onProjectionManage}
-                                  bdInfo={{
-                                    bdName: bd.bdName,
-                                    codecd: bd.codecd,
-                                  }}
-                                />
-                              )}
+                            <td className="px-2 py-2 w-[5%] text-center relative">
+                              <ClientProjectionManager
+                                client={client}
+                                onManage={onProjectionManage}
+                                bdInfo={{
+                                  bdName: bd.bdName,
+                                  bdCode: bd.bdCode,
+                                }}
+                                isActive={active}
+                              />
                             </td>
                           </motion.tr>
                         );
                       })}
-
                       {/* ✅ Fixed BD Total Row */}
                       <tr className="bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-100 border-t-2 border-blue-200 w-full">
                         <td className="px-4 py-3 text-left font-bold text-blue-900 w-[20%]">
@@ -1170,7 +1247,8 @@ const BDPerformanceTableCard = ({
                             Total Achieved(Among Proj.)
                           </span>
                           <span className="text-sm text-green-900 font-extrabold">
-                            ₹{formatAmount(bd.totalAchievedFromProjectedClients)}
+                            ₹
+                            {formatAmount(bd.totalAchievedFromProjectedClients)}
                           </span>
                         </td>
 
@@ -1181,13 +1259,11 @@ const BDPerformanceTableCard = ({
                                 vs Projection
                               </span>
                               <span className="text-xs font-bold text-gray-700">
-                                {
-                                  getStatus(
-                                    bd.totalAchievedFromProjectedClients,
-                                    bd.totalProjected,
-                                    true
-                                  ).progress.toFixed(0)
-                                }
+                                {getStatus(
+                                  bd.totalAchievedFromProjectedClients,
+                                  bd.totalProjected,
+                                  true
+                                ).progress.toFixed(0)}
                                 %
                               </span>
                             </div>
@@ -1197,11 +1273,11 @@ const BDPerformanceTableCard = ({
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{
-                                  width: getStatus(
+                                  width: `${getStatus(
                                     bd.totalAchievedFromProjectedClients,
                                     bd.totalProjected,
                                     true
-                                  ).progress.toFixed(0),
+                                  ).progress.toFixed(0)}%`,
                                 }}
                                 transition={{ duration: 1, ease: "easeOut" }}
                                 className={`h-full ${
@@ -1257,7 +1333,6 @@ const BDPerformanceTableCard = ({
   );
 };
 
-
 const GraphView = ({ data, bdNames }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -1278,9 +1353,9 @@ const GraphView = ({ data, bdNames }) => {
     let bdAchieved = 0;
 
     data.forEach((client) => {
-      if (client.bdData[bd.codecd]) {
-        bdProjected += client.bdData[bd.codecd].projected || 0;
-        bdAchieved += client.bdData[bd.codecd].achieved || 0;
+      if (client.bdData[bd.bdCode]) {
+        bdProjected += client.bdData[bd.bdCode].projected || 0;
+        bdAchieved += client.bdData[bd.bdCode].achieved || 0;
       }
     });
 
@@ -1441,12 +1516,7 @@ export default function BdPerformanceAnalysis({
   inquiriesData = [],
 }) {
   const [selectedMonth, setSelectedMonth] = useState(() => {
-    // Default to a month with mock data for demo purposes if needed
-    // Let's default to October 2025 as in your original code
-    // const now = new Date();
     const defaultDate = new Date("2025-10-01");
-    // const targetDate = defaultDate < now ? now : defaultDate;
-    // For mock, let's just use the default date
     return `${defaultDate.getFullYear()}-${String(
       defaultDate.getMonth() + 1
     ).padStart(2, "0")}`;
@@ -1456,74 +1526,88 @@ export default function BdPerformanceAnalysis({
   const [bdOptions, setBdOptions] = useState([]);
   const [projections, setProjections] = useState([]);
   const [targets, setTargets] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Set initial loading to true
+  const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState("cards");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState({ type: null, data: {} });
+
+  const [activeBdActionbdCode, setActiveBdActionbdCode] = useState(null);
+  const [activeClient, setActiveClient] = useState(null);
+
+  // === Handlers ===
+  const handleMonthChange = (monthValue) => {
+    setSelectedMonth(monthValue);
+  };
+
+  const handleBDChange = (bdCodes) => {
+    setSelectedBDs(bdCodes);
+  };
+
+  const handleDeselectAll = () => setSelectedBDs([]);
+  const handleSelectAll = () => setSelectedBDs(bdOptions.map((bd) => bd.value));
+
+  const handleClearFilters = () => {
+    setSelectedMonth(() => {
+      const defaultDate = new Date("2025-10-01");
+      return `${defaultDate.getFullYear()}-${String(
+        defaultDate.getMonth() + 1
+      ).padStart(2, "0")}`;
+    });
+    setSelectedBDs(bdOptions.map((bd) => bd.bdCode));
+    setExcludeBDs(false);
+  };
 
   const handleManage = (action) => {
     setModalAction(action);
     setIsModalOpen(true);
   };
 
+  // === Helpers ===
   const calculateMonthDateRange = (monthValue) => {
     const [y, m] = monthValue.split("-").map(Number);
     const fromDate = new Date(Date.UTC(y, m - 1, 1));
     const toDate = new Date(Date.UTC(y, m, 0));
-
     const formatDate = (date) => {
       const year = date.getUTCFullYear();
       const month = String(date.getUTCMonth() + 1).padStart(2, "0");
       const day = String(date.getUTCDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-
-    return {
-      fromDate: formatDate(fromDate),
-      toDate: formatDate(toDate),
-    };
+    return { fromDate: formatDate(fromDate), toDate: formatDate(toDate) };
   };
 
+  // === Fetching Data ===
   const fetchProjectionsAndTargets = async (monthValue, bdCodes) => {
     if (!bdCodes || bdCodes.length === 0) {
       setProjections([]);
       setTargets([]);
       return;
     }
-
     setIsLoading(true);
     try {
       const { fromDate, toDate } = calculateMonthDateRange(monthValue);
-
-      const payload = {
-        CODECDs: bdCodes,
-        fromDate: fromDate,
-        toDate: toDate,
-      };
-
+      const payload = { bdCodes, fromDate, toDate };
       const [projectionsData, targetsData] = await Promise.all([
         getAllBdProjection(payload),
         getAllBdTargets(payload),
       ]);
-
       setProjections(
         projectionsData.map((p) => ({
           id: p.id,
-          CODECD: String(p.codecd),
-          CUSTACCCODE: p.custacccode,
+          bdCode: String(p.bdCode),
+          clientCode: p.clientCode,
+          clientName: p.clientName,
           ProjDate: p.projDate,
           ProjVal: parseFloat(p.projVal) || 0,
           BDName: p.bdName,
-          ClientName: p.clientName,
-          REMARKS: p.remarks,
+          remarks: p.remarks,
         }))
       );
-
       setTargets(
         targetsData.map((t) => ({
           ...t,
-          codecd: String(t.codecd),
+          bdCode: String(t.bdCode),
           TargetVal: parseFloat(t.targetVal) || 0,
           id: t.id,
         }))
@@ -1540,13 +1624,13 @@ export default function BdPerformanceAnalysis({
   const refreshData = async () => {
     const effectiveBdCodes = excludeBDs
       ? bdOptions
-          .filter((bd) => !selectedBDs.includes(bd.codecd))
-          .map((bd) => bd.codecd)
+          .filter((bd) => !selectedBDs.includes(bd.bdCode))
+          .map((bd) => bd.bdCode)
       : selectedBDs;
-
     await fetchProjectionsAndTargets(selectedMonth, effectiveBdCodes);
   };
 
+  // === Effects ===
   useEffect(() => {
     const fetchBDs = async () => {
       setIsLoading(true);
@@ -1554,132 +1638,123 @@ export default function BdPerformanceAnalysis({
         const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
         const bds = await getBdNames({ fromDate, toDate });
         const normalized = bds.map((bd) => ({
-          value: String(bd.codecd),
+          value: String(bd.bdCode),
           label: bd.bdName,
-          codecd: String(bd.codecd),
+          bdCode: String(bd.bdCode),
           bdName: bd.bdName,
         }));
         setBdOptions(normalized);
-
         if (normalized.length > 0 && selectedBDs.length === 0) {
-          const allBdCodes = normalized.map((bd) => bd.codecd);
-          setSelectedBDs(allBdCodes);
+          setSelectedBDs(normalized.map((bd) => bd.bdCode));
         } else if (normalized.length > 0 && selectedBDs.length > 0) {
-          const validSelectedBDs = selectedBDs.filter((codecd) =>
-            normalized.some((bd) => bd.codecd === codecd)
+          setSelectedBDs(
+            selectedBDs.filter((bdCode) =>
+              normalized.some((bd) => bd.bdCode === bdCode)
+            )
           );
-          setSelectedBDs(validSelectedBDs);
-        } else if (normalized.length === 0) {
+        } else {
           setSelectedBDs([]);
         }
       } catch (error) {
         console.error("Failed to fetch BD names:", error);
         setBdOptions([]);
       } finally {
-        // Loading will be set to false in the *next* effect
-        // after projections/targets are fetched
+        setIsLoading(false);
       }
     };
     fetchBDs();
-  }, [selectedMonth]); // Removed selectedBDs from dependency array
+  }, [selectedMonth]);
 
   useEffect(() => {
     const effectiveBdCodes = excludeBDs
       ? bdOptions
-          .filter((bd) => !selectedBDs.includes(bd.codecd))
-          .map((bd) => bd.codecd)
+          .filter((bd) => !selectedBDs.includes(bd.bdCode))
+          .map((bd) => bd.bdCode)
       : selectedBDs;
-
     if (bdOptions.length > 0 && effectiveBdCodes.length === 0) {
-      setIsLoading(false); // No BDs to fetch, stop loading
+      setIsLoading(false);
       setProjections([]);
       setTargets([]);
     } else if (bdOptions.length > 0) {
       fetchProjectionsAndTargets(selectedMonth, effectiveBdCodes);
     }
-    // If bdOptions is still loading, this effect will re-run when it's ready
-  }, [selectedMonth, selectedBDs, excludeBDs, bdOptions]); // Changed dependency
+  }, [selectedMonth, selectedBDs, excludeBDs, bdOptions]);
 
   useEffect(() => {
-    const effectiveBdObjects = bdOptions.filter((bd) => {
-      if (excludeBDs) {
-        return !selectedBDs.includes(bd.codecd);
-      }
-      return selectedBDs.includes(bd.codecd);
-    });
-
+    const effectiveBdObjects = bdOptions.filter((bd) =>
+      excludeBDs
+        ? !selectedBDs.includes(bd.bdCode)
+        : selectedBDs.includes(bd.bdCode)
+    );
     if (effectiveBdObjects.length > 0 && onMonthChange) {
       const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
       const bdNames = effectiveBdObjects.map((bd) => bd.bdName);
-      const bdCodes = effectiveBdObjects.map((bd) => bd.codecd);
-
+      const bdCodes = effectiveBdObjects.map((bd) => bd.bdCode);
       onMonthChange({
-        fromDate: fromDate,
-        toDate: toDate,
-        bdNames: bdNames,
-        CODECDs: bdCodes,
+        fromDate,
+        toDate,
+        bdNames,
+        bdCodes,
         dateField: "regisDate",
       });
     } else if (onMonthChange) {
       const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
       onMonthChange({
-        fromDate: fromDate,
-        toDate: toDate,
+        fromDate,
+        toDate,
         bdNames: [],
-        CODECDs: [],
+        bdCodes: [],
         dateField: "regisDate",
       });
     }
   }, [selectedMonth, selectedBDs, excludeBDs, bdOptions.length, onMonthChange]);
 
+  // === PERFORMANCE DATA (core fix here) ===
   const bdPerformanceData = useMemo(() => {
     const effectiveBdCodes = excludeBDs
       ? bdOptions
-          .filter((bd) => !selectedBDs.includes(bd.codecd))
-          .map((bd) => bd.codecd)
+          .filter((bd) => !selectedBDs.includes(bd.bdCode))
+          .map((bd) => bd.bdCode)
       : selectedBDs;
-
     const selectedBdData = bdOptions.filter((bd) =>
-      effectiveBdCodes.includes(bd.codecd)
+      effectiveBdCodes.includes(bd.bdCode)
     );
 
     return selectedBdData.map((bd) => {
       const bdProjections = projections.filter(
-        (p) => String(p.CODECD) === bd.codecd
+        (p) => String(p.bdCode) === bd.bdCode
       );
-      const bdTarget = targets.find((t) => String(t.codecd) === bd.codecd);
+      const bdTarget = targets.find((t) => String(t.bdCode) === bd.bdCode);
       const bdInquiries = inquiriesData.filter((i) => i.bdName === bd.bdName);
 
-      const totalProjected = bdProjections.reduce(
-        (sum, p) => sum + p.ProjVal,
-        0
-      );
+      const totalProjected = bdProjections.reduce((s, p) => s + p.ProjVal, 0);
       const totalAchieved = bdInquiries.reduce(
-        (sum, i) => sum + (parseFloat(i.regisVal) || 0),
+        (s, i) => s + (parseFloat(i.regisVal) || 0),
         0
       );
+
       const totalTarget = bdTarget ? bdTarget.TargetVal : 0;
       const targetId = bdTarget ? bdTarget.id : null;
 
-      const uniqueClientsInProjections = new Set(
-        bdProjections.map((p) => p.ClientName)
-      );
-      const uniqueClientsInInquiries = new Set(
-        bdInquiries.map((i) => i.clientName)
-      );
-      const combinedClients = new Set([
-        ...uniqueClientsInProjections,
-        ...uniqueClientsInInquiries,
+      // ✅ FIX: group clients by unique clientCode (not by name)
+      const uniqueClientCodes = new Set([
+        ...bdProjections.map((p) => p.clientCode || p.ClientName),
+        ...bdInquiries.map((i) => i.clientCode || i.clientName),
       ]);
 
-      const clientDetails = Array.from(combinedClients)
-        .map((clientName) => {
+      const clientDetails = Array.from(uniqueClientCodes)
+        .map((code) => {
           const clientProjections = bdProjections.filter(
-            (p) => p.ClientName === clientName
+            (p) => p.clientCode === code
           );
           const clientInquiries = bdInquiries.filter(
-            (i) => i.clientName === clientName
+            (i) => i.clientCode === code
           );
+
+          const clientName =
+            clientProjections[0]?.clientName ||
+            clientInquiries[0]?.clientName ||
+            "Unknown Client";
 
           const projected = clientProjections.reduce(
             (sum, p) => sum + p.ProjVal,
@@ -1692,26 +1767,27 @@ export default function BdPerformanceAnalysis({
 
           return {
             clientName,
+            clientCode: code,
             projected,
             achieved,
-            custacccode: clientProjections[0]?.CUSTACCCODE || null,
             projections: clientProjections,
           };
         })
-        .filter((c) => c.projected > 0 || c.achieved > 0);
+        .filter((c) => c.projected > 0 || c.achieved > 0)
+        .sort((a, b) => a.clientName.localeCompare(b.clientName));
 
       const totalAchievedFromProjectedClients = clientDetails
         .filter((c) => c.projected > 0)
-        .reduce((sum, c) => sum + c.achieved, 0);
+        .reduce((s, c) => s + c.achieved, 0);
 
       return {
         bdName: bd.bdName,
-        codecd: bd.codecd,
+        bdCode: bd.bdCode,
         totalProjected,
         totalAchieved,
         totalTarget,
         targetId,
-        clientCount: combinedClients.size,
+        clientCount: clientDetails.length,
         projectionCount: bdProjections.length,
         clients: clientDetails,
         totalAchievedFromProjectedClients,
@@ -1719,115 +1795,33 @@ export default function BdPerformanceAnalysis({
     });
   }, [projections, targets, inquiriesData, bdOptions, selectedBDs, excludeBDs]);
 
-  const clientComparisonData = useMemo(() => {
-    const effectiveBdCodes = excludeBDs
-      ? bdOptions
-          .filter((bd) => !selectedBDs.includes(bd.codecd))
-          .map((bd) => bd.codecd)
-      : selectedBDs;
-
-    const clientMap = {};
-
-    projections.forEach((proj) => {
-      if (!effectiveBdCodes.includes(String(proj.CODECD))) return;
-
-      const clientName = proj.ClientName || "Unknown";
-      const bdCode = String(proj.CODECD);
-
-      if (!clientMap[clientName]) {
-        clientMap[clientName] = { clientName, bdData: {} };
-      }
-
-      if (!clientMap[clientName].bdData[bdCode]) {
-        clientMap[clientName].bdData[bdCode] = { projected: 0, achieved: 0 };
-      }
-
-      clientMap[clientName].bdData[bdCode].projected += proj.ProjVal;
-    });
-
-    inquiriesData.forEach((inq) => {
-      if (inq.regisVal && inq.clientName && inq.bdName) {
-        const clientName = inq.clientName;
-        const bdInfo = bdOptions.find((bd) => bd.bdName === inq.bdName);
-
-        if (bdInfo && effectiveBdCodes.includes(bdInfo.codecd)) {
-          const bdCode = bdInfo.codecd;
-
-          if (!clientMap[clientName]) {
-            clientMap[clientName] = { clientName, bdData: {} };
-          }
-
-          if (!clientMap[clientName].bdData[bdCode]) {
-            clientMap[clientName].bdData[bdCode] = {
-              projected: 0,
-              achieved: 0,
-            };
-          }
-
-          clientMap[clientName].bdData[bdCode].achieved +=
-            parseFloat(inq.regisVal) || 0;
-        }
-      }
-    });
-
-    return Object.values(clientMap).filter((client) => {
-      return effectiveBdCodes.some((codecd) => {
-        const data = client.bdData[codecd];
-        return data && (data.projected > 0 || data.achieved > 0);
-      });
-    });
-  }, [projections, inquiriesData, bdOptions, selectedBDs, excludeBDs]);
-
+  // === Overall Stats ===
   const overallStats = useMemo(() => {
     const totalProjected = bdPerformanceData.reduce(
-      (sum, bd) => sum + bd.totalProjected,
+      (s, b) => s + b.totalProjected,
       0
     );
     const totalAchieved = bdPerformanceData.reduce(
-      (sum, bd) => sum + bd.totalAchieved,
+      (s, b) => s + b.totalAchieved,
       0
     );
     const totalTarget = bdPerformanceData.reduce(
-      (sum, bd) => sum + bd.totalTarget,
+      (s, b) => s + b.totalTarget,
       0
     );
-    const activeBDs = bdPerformanceData.length;
-
-    return { totalProjected, totalAchieved, totalTarget, activeBDs };
+    return {
+      totalProjected,
+      totalAchieved,
+      totalTarget,
+      activeBDs: bdPerformanceData.length,
+    };
   }, [bdPerformanceData]);
 
-  const handleMonthChange = (monthValue) => {
-    setSelectedMonth(monthValue);
-    // Reset BDs when month changes as available BDs might change
-    setSelectedBDs([]);
-    setBdOptions([]);
-  };
-
-  const handleBDChange = (bdCodes) => {
-    setSelectedBDs(bdCodes);
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedBDs([]);
-  };
-
-  const handleClearFilters = () => {
-    setSelectedMonth(() => {
-      const defaultDate = new Date("2025-10-01");
-      return `${defaultDate.getFullYear()}-${String(
-        defaultDate.getMonth() + 1
-      ).padStart(2, "0")}`;
-    });
-    setSelectedBDs(bdOptions.map((bd) => bd.codecd));
-    setExcludeBDs(false);
-  };
-
-  const selectedBdObjects = bdOptions.filter((bd) => {
-    if (excludeBDs) {
-      return !selectedBDs.includes(bd.codecd);
-    }
-    return selectedBDs.includes(bd.codecd);
-  });
+  const selectedBdObjects = bdOptions.filter((bd) =>
+    excludeBDs
+      ? !selectedBDs.includes(bd.bdCode)
+      : selectedBDs.includes(bd.bdCode)
+  );
 
   return (
     <div className="font-sans min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 sm:p-6 lg:p-8">
@@ -1919,6 +1913,7 @@ export default function BdPerformanceAnalysis({
                 placeholder="Choose BDs"
                 multiple={true}
                 onDeselectAll={handleDeselectAll}
+                onSelectAll={handleSelectAll}
                 isExcluded={excludeBDs}
               />
             </div>
@@ -1983,32 +1978,10 @@ export default function BdPerformanceAnalysis({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col justify-center items-center py-20 bg-white rounded-xl shadow-lg border border-gray-200"
+            className="text-center py-20 bg-white rounded-2xl shadow-xl"
           >
-            <Loader2 className="w-12 h-12 animate-spin text-blue-500 mb-4" />
-            <span className="text-xl font-medium text-gray-600">
-              Loading Performance Data...
-            </span>
-          </motion.div>
-        ) : selectedBdObjects.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col justify-center items-center py-20 bg-white rounded-xl shadow-lg border border-gray-200"
-          >
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="p-4 rounded-full bg-gray-100 mb-4"
-            >
-              <Users className="w-12 h-12 text-gray-400" />
-            </motion.div>
-            <span className="text-xl font-medium text-gray-600">
-              No BDs Selected
-            </span>
-            <span className="text-sm text-gray-400 mt-2 max-w-md text-center">
-              Please select at least one BD to view performance analysis.
-            </span>
+            {" "}
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />{" "}
           </motion.div>
         ) : (
           <>
@@ -2094,12 +2067,33 @@ export default function BdPerformanceAnalysis({
                 >
                   {bdPerformanceData.map((bd) => (
                     <BDPerformanceTableCard
-                      key={bd.codecd}
+                      key={bd.bdCode}
                       bd={bd}
                       isLoading={isLoading}
                       clients={bd.clients}
                       onTargetManage={handleManage}
                       onProjectionManage={handleManage}
+                      activeBdActionbdCode={activeBdActionbdCode}
+                      setActiveBdActionbdCode={(bdCode) => {
+                        // When BD action toggles, also clear activeClient if it's from another BD
+                        if (bdCode === null) {
+                          setActiveBdActionbdCode(null);
+                        } else {
+                          setActiveBdActionbdCode(bdCode);
+                          // do not change activeClient unless needed: keep existing active client but if it belongs to another BD, clear it
+                          if (
+                            activeClient &&
+                            activeClient.bdbdCode !== bdCode
+                          ) {
+                            setActiveClient(null);
+                          }
+                        }
+                      }}
+                      activeClient={activeClient}
+                      setActiveClient={(val) => {
+                        // ensure single active client across all BDs
+                        setActiveClient(val);
+                      }}
                     />
                   ))}
                 </motion.div>
