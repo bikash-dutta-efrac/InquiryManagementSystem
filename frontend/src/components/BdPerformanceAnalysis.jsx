@@ -284,8 +284,7 @@ const Dropdown = ({
                     onSelectAll();
                     setSearchTerm("");
                   }}
-                  className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${"hover:bg-red-50 text-black"
-                  }`}
+                  className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${"hover:bg-red-50 text-black"}`}
                 >
                   Select All
                 </li>
@@ -296,9 +295,7 @@ const Dropdown = ({
                     onDeselectAll();
                     setSearchTerm("");
                   }}
-                  className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${
-                      "hover:bg-blue-50 text-black"
-                  }`}
+                  className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${"hover:bg-blue-50 text-black"}`}
                 >
                   Deselect All
                 </li>
@@ -851,8 +848,10 @@ const SummaryCard = ({
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
     whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
-    className={`bg-white p-6 rounded-xl shadow-lg border-t-4 ${borderColor} transform transition-all duration-300`}
+    // The key change is adding 'flex flex-col justify-between h-full'
+    className={`bg-white p-6 rounded-xl shadow-lg border-t-4 ${borderColor} transform transition-all duration-300 flex flex-col justify-between h-full`}
   >
+    {/* Top Section (Title and Icon) */}
     <div className="flex items-center justify-between mb-3">
       <span className="text-sm font-medium uppercase text-gray-500">
         {title}
@@ -864,15 +863,80 @@ const SummaryCard = ({
         {Icon && <Icon className={`w-5 h-5 ${iconColor}`} />}
       </motion.div>
     </div>
+    
+    {/* Bottom Section (Value - Automatically pushed to bottom by 'justify-between') */}
     <p
-      className={`text-3xl mt-6 font-extrabold ${textColor} flex items-center gap-1`}
+      className={`text-3xl font-extrabold ${textColor} flex items-center gap-1`}
     >
       {isLoading ? (
-        <Loader2 className={`w-6 h-6 animate-spin ${iconColor}`} />
+        <Loader2 className={`w-5 h-5 animate-spin ${iconColor}`} />
       ) : (
         value
       )}
     </p>
+  </motion.div>
+);
+
+const BDPerformanceSummaryCard = ({
+  achieved,
+  notAchieved,
+  progress,
+  isLoading,
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3, delay: 0.2 }}
+    whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+    className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-yellow-500 transform transition-all duration-300"
+  >
+    <div className="flex items-center justify-between mb-3">
+      <span className="text-sm font-medium uppercase text-gray-500">
+        Performance
+      </span>
+      <Trophy className="w-5 h-5 text-yellow-500" />
+    </div>
+
+    <div className="flex justify-between items-end mb-1">
+      <div>
+        <p className="text-[10px] text-gray-500">Achieved</p>
+        <p className="text-2xl font-extrabold text-green-600">
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-green-600" />
+          ) : (
+            achieved
+          )}
+        </p>
+      </div>
+
+      <div className="text-right">
+        <p className="text-[10px] text-gray-500">Not Achieved</p>
+        <p className="text-2xl font-extrabold text-red-600">
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+          ) : (
+            notAchieved
+          )}
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-gray-500">Progress</span>
+        <span className="text-xs font-bold text-gray-700">
+          {progress.toFixed(0)}%
+        </span>
+      </div>
+      <div className="relative h-2 bg-red-500 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="h-full bg-green-500"
+        />
+      </div>
+    </div>
   </motion.div>
 );
 
@@ -1244,7 +1308,9 @@ const BDPerformanceTableCard = ({
 
                         <td className="px-4 py-3 text-center w-[15%]">
                           <span className="text-[10px] text-green-800 font-medium block">
-                            Total Achieved(Among Proj.)
+                            Total Achieved
+                            <br />
+                            (Among Proj.)
                           </span>
                           <span className="text-sm text-green-900 font-extrabold">
                             ₹
@@ -1795,7 +1861,6 @@ export default function BdPerformanceAnalysis({
     });
   }, [projections, targets, inquiriesData, bdOptions, selectedBDs, excludeBDs]);
 
-  // === Overall Stats ===
   const overallStats = useMemo(() => {
     const totalProjected = bdPerformanceData.reduce(
       (s, b) => s + b.totalProjected,
@@ -1814,6 +1879,38 @@ export default function BdPerformanceAnalysis({
       totalAchieved,
       totalTarget,
       activeBDs: bdPerformanceData.length,
+    };
+  }, [bdPerformanceData]);
+
+  const bdAchievementSummary = useMemo(() => {
+    let achievedCount = 0;
+    let notAchievedCount = 0;
+
+    // Only consider BDs that actually have a target set (totalTarget > 0)
+    const bdsWithTarget = bdPerformanceData.filter((bd) => bd.totalTarget > 0);
+
+    bdsWithTarget.forEach((bd) => {
+      // Determine the status using the existing logic
+      const { text } = getStatus(bd.totalAchieved, bd.totalTarget);
+
+      if (text === "Achieved") {
+        achievedCount += 1;
+      }
+      // "Partial Achieved" and "Not Achieved" are counted as "Not"
+      else if (text === "Partial Achieved" || text === "Not Achieved") {
+        notAchievedCount += 1;
+      }
+    });
+
+    const totalBdsWithTarget = achievedCount + notAchievedCount;
+    const progressPercentage =
+      totalBdsWithTarget > 0 ? (achievedCount / totalBdsWithTarget) * 100 : 0;
+
+    return {
+      achievedCount,
+      notAchievedCount,
+      totalBdsWithTarget,
+      progressPercentage: Math.min(progressPercentage, 100), // Cap at 100%
     };
   }, [bdPerformanceData]);
 
@@ -1933,9 +2030,9 @@ export default function BdPerformanceAnalysis({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <SummaryCard
-            title="Total Projected"
-            value={`₹${formatAmount(overallStats.totalProjected)}`}
-            icon={TrendingUp}
+            title="Total Target"
+            value={`₹${formatAmount(overallStats.totalTarget)}`}
+            icon={Target}
             borderColor="border-blue-500"
             bgColor="bg-blue-100"
             iconColor="text-blue-600"
@@ -1953,16 +2050,6 @@ export default function BdPerformanceAnalysis({
             isLoading={isLoading}
           />
           <SummaryCard
-            title="Total Target"
-            value={`₹${formatAmount(overallStats.totalTarget)}`}
-            icon={Target}
-            borderColor="border-purple-500"
-            bgColor="bg-purple-100"
-            iconColor="text-purple-600"
-            textColor="text-purple-700"
-            isLoading={isLoading}
-          />
-          <SummaryCard
             title="Active BDs"
             value={selectedBdObjects.length}
             icon={Users}
@@ -1970,6 +2057,12 @@ export default function BdPerformanceAnalysis({
             bgColor="bg-teal-100"
             iconColor="text-teal-600"
             textColor="text-teal-700"
+            isLoading={isLoading}
+          />
+          <BDPerformanceSummaryCard
+            achieved={bdAchievementSummary.achievedCount}
+            notAchieved={bdAchievementSummary.notAchievedCount}
+            progress={bdAchievementSummary.progressPercentage}
             isLoading={isLoading}
           />
         </div>

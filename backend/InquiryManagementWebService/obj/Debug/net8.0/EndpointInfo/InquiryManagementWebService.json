@@ -5,6 +5,37 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogInRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogInRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/business/bd-business-overview": {
       "post": {
         "tags": [
@@ -812,6 +843,24 @@
           },
           "excludeVerticals": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LogInRequest": {
+        "required": [
+          "employeeId",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false

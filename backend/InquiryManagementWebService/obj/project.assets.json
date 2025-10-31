@@ -52,6 +52,41 @@
           }
         }
       },
+      "JWT/11.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "compile": {
+          "lib/net8.0/JWT.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/JWT.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.21": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "7.1.2"
+        },
+        "compile": {
+          "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
+      },
       "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
         "type": "package",
         "compile": {
@@ -783,6 +818,54 @@
         "lib/netstandard2.0/Dapper.dll",
         "lib/netstandard2.0/Dapper.xml",
         "readme.md"
+      ]
+    },
+    "JWT/11.0.0": {
+      "sha512": "jOT1PA95jgf78CqWsKt8hz9Uzv4J39vukzf5nYtfky9N6wl1W4vIXT1CdkQI7zG20HnApEMtmpC/pMtCKr4rvw==",
+      "type": "package",
+      "path": "jwt/11.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "jwt.11.0.0.nupkg.sha512",
+        "jwt.nuspec",
+        "lib/net35/JWT.dll",
+        "lib/net35/JWT.pdb",
+        "lib/net35/JWT.xml",
+        "lib/net40/JWT.dll",
+        "lib/net40/JWT.pdb",
+        "lib/net40/JWT.xml",
+        "lib/net462/JWT.dll",
+        "lib/net462/JWT.pdb",
+        "lib/net462/JWT.xml",
+        "lib/net6.0/JWT.dll",
+        "lib/net6.0/JWT.pdb",
+        "lib/net6.0/JWT.xml",
+        "lib/net8.0/JWT.dll",
+        "lib/net8.0/JWT.pdb",
+        "lib/net8.0/JWT.xml",
+        "lib/netstandard1.3/JWT.dll",
+        "lib/netstandard1.3/JWT.pdb",
+        "lib/netstandard1.3/JWT.xml",
+        "lib/netstandard2.0/JWT.dll",
+        "lib/netstandard2.0/JWT.pdb",
+        "lib/netstandard2.0/JWT.xml"
+      ]
+    },
+    "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.21": {
+      "sha512": "ZuUpJ4DvmVArmTlyGGg+b9IdKgd8Kw0SmEzhjy4dQw8R6rxfNqCXfGvGm3ld7xlrgthJFou/le9tadsSyjFLuw==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.authentication.jwtbearer/8.0.21",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll",
+        "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.xml",
+        "microsoft.aspnetcore.authentication.jwtbearer.8.0.21.nupkg.sha512",
+        "microsoft.aspnetcore.authentication.jwtbearer.nuspec"
       ]
     },
     "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
@@ -2105,6 +2188,8 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "Dapper >= 2.1.66",
+      "JWT >= 11.0.0",
+      "Microsoft.AspNetCore.Authentication.JwtBearer >= 8.0.21",
       "Microsoft.Data.SqlClient >= 6.1.1",
       "Newtonsoft.Json >= 13.0.4",
       "Swashbuckle.AspNetCore >= 6.6.2"
@@ -2163,6 +2248,14 @@
           "Dapper": {
             "target": "Package",
             "version": "[2.1.66, )"
+          },
+          "JWT": {
+            "target": "Package",
+            "version": "[11.0.0, )"
+          },
+          "Microsoft.AspNetCore.Authentication.JwtBearer": {
+            "target": "Package",
+            "version": "[8.0.21, )"
           },
           "Microsoft.Data.SqlClient": {
             "target": "Package",

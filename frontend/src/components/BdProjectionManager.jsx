@@ -52,8 +52,9 @@ import {
 import { MdLocationCity } from "react-icons/md";
 
 const DEMO_PROJECTIONS = [];
-const BdName = "Joydip Banerjee";
-const BdCode = "004";
+const BdName = localStorage.getItem("Username");
+const BdCode = localStorage.getItem("BdCode");
+const Designation = localStorage.getItem("Designation");
 
 function formatAmount(num) {
   if (num === null || num === undefined) return "0";
@@ -1495,7 +1496,7 @@ const TableView = ({ data }) => {
   );
 };
 
-export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
+export default function BDProjectionManager({onMonthChange, inquiriesData }) {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -1510,7 +1511,7 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
   const [targets, setTargets] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonView, setComparisonView] = useState("table");
-  const [currentBd, setCurrentBd] = useState("Joydip Banerjee");
+  const [currentBd, setCurrentBd] = useState(BdName);
 
   const calculateMonthDateRange = (monthValue) => {
     const [y, m] = monthValue.split("-").map(Number);
@@ -1549,7 +1550,7 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
       const { fromDate, toDate } = calculateMonthDateRange(monthValue);
 
       const payload = {
-        bdCodeList: ["004"],
+        bdCodeList: [BdCode],
         fromDate: new Date(fromDate).toISOString(),
         toDate: new Date(toDate).toISOString(),
       };
@@ -1783,6 +1784,7 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
             }}
           />
           <div className="relative p-6 sm:p-8 flex items-center justify-between">
+            {/* Left Side: Title and Icon */}
             <div className="flex items-center gap-4">
               <motion.div
                 animate={{ rotate: [0, 360] }}
@@ -1799,6 +1801,18 @@ export default function BDProjectionManager({ onMonthChange, inquiriesData }) {
                   Track and manage monthly business projections with real-time
                   analytics
                 </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 text-right flex-shrink-0">
+              <div className="text-white">
+                <p className="text-lg font-semibold leading-snug">{BdName}</p>
+                <p className="text-blue-200 text-xs font-medium leading-snug">
+                  {Designation}
+                </p>
+              </div>
+              <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm shadow-lg">
+                <User className="w-6 h-6 text-white" />
               </div>
             </div>
           </div>

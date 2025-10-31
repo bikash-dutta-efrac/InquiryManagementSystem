@@ -243,3 +243,5 @@ D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\InquiryManagementWebService.pdb
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\InquiryManagementWebService.genruntimeconfig.cache
 D:\react-projects\inquery-ms\backend\InquiryManagementWebService\obj\Debug\net8.0\ref\InquiryManagementWebService.dll
+D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\JWT.dll
+D:\react-projects\inquery-ms\backend\InquiryManagementWebService\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

@@ -9,6 +9,8 @@
       "InquiryManagementWebService/1.0.0": {
         "dependencies": {
           "Dapper": "2.1.66",
+          "JWT": "11.0.0",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.21",
           "Microsoft.Data.SqlClient": "6.1.1",
           "Newtonsoft.Json": "13.0.4",
           "Swashbuckle.AspNetCore": "6.6.2"
@@ -49,6 +51,28 @@
           "lib/net8.0/Dapper.dll": {
             "assemblyVersion": "2.0.0.0",
             "fileVersion": "2.1.66.48463"
+          }
+        }
+      },
+      "JWT/11.0.0": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.4"
+        },
+        "runtime": {
+          "lib/net8.0/JWT.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.0.0"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.21": {
+        "dependencies": {
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "7.7.1"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll": {
+            "assemblyVersion": "8.0.21.0",
+            "fileVersion": "8.0.2125.47515"
           }
         }
       },
@@ -486,6 +510,20 @@
       "sha512": "sha512-/q77jUgDOS+bzkmk3Vy9SiWMaetTw+NOoPAV0xPBsGVAyljd5S6P+4RUW7R3ZUGGr9lDRyPKgAMj2UAOwvqZYw==",
       "path": "dapper/2.1.66",
       "hashPath": "dapper.2.1.66.nupkg.sha512"
+    },
+    "JWT/11.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jOT1PA95jgf78CqWsKt8hz9Uzv4J39vukzf5nYtfky9N6wl1W4vIXT1CdkQI7zG20HnApEMtmpC/pMtCKr4rvw==",
+      "path": "jwt/11.0.0",
+      "hashPath": "jwt.11.0.0.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.21": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ZuUpJ4DvmVArmTlyGGg+b9IdKgd8Kw0SmEzhjy4dQw8R6rxfNqCXfGvGm3ld7xlrgthJFou/le9tadsSyjFLuw==",
+      "path": "microsoft.aspnetcore.authentication.jwtbearer/8.0.21",
+      "hashPath": "microsoft.aspnetcore.authentication.jwtbearer.8.0.21.nupkg.sha512"
     },
     "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
       "type": "package",

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.200:5075/api";
+const API_BASE_URL = "http://192.168.3.181:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -201,6 +201,7 @@ export async function getMtoMBusinessComparison(filters = {}) {
 // ===================================================================
 
 export async function getInquiries(filters = {}) {
+  console.log(filters)
   const body = buildRequestBody(filters);
   const response = await axios.post(`${API_BASE_URL}/inquiries`, body, {
     headers: { "Content-Type": "application/json" },
@@ -237,5 +238,14 @@ export async function getClientNames(filters = {}) {
   const response = await axios.post(`${API_BASE_URL}/inquiries/clientnames`, body, {
     headers: { "Content-Type": "application/json" },
   });
+  return response.data;
+}
+
+export async function login(filters = {}) {
+  console.log(filters)
+  const response = await axios.post(`${API_BASE_URL}/auth/login`, filters, {
+    headers: { "Content-Type": "application/json" },
+  });
+  console.log(response.data)
   return response.data;
 }

@@ -1,5 +1,21 @@
 [
   {
+    "ContainingType": "InquiryManagementWebService.Controllers.AuthController",
+    "Method": "Login",
+    "RelativePath": "api/auth/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.LogInRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "InquiryManagementWebService.Controllers.BusinessController",
     "Method": "GetMtoMBusinessComparison",
     "RelativePath": "api/business/bd-business-comparison",

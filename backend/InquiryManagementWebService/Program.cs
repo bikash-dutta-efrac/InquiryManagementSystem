@@ -1,4 +1,8 @@
 using InquiryManagementWebService.Repositories;
+using InquiryManagementWebService.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +13,8 @@ builder.Services.AddScoped<IInquiryRepository, InquiryRepository>();
 builder.Services.AddScoped<IProjectionRepository, ProjectionRepository>();
 builder.Services.AddScoped<ILabRepository, LabRepository>();
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<JwtService>();
 
 builder.Services.AddCors(options =>
 {
@@ -22,6 +28,23 @@ builder.Services.AddCors(options =>
         });
 });
 
+var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!);
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -35,6 +58,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowReactApp");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

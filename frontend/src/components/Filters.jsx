@@ -28,6 +28,8 @@ const CustomSelect = ({
   label,
   icon,
   isExcluded = false,
+  // ADDED: New disabled prop
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -46,6 +48,7 @@ const CustomSelect = ({
   }, []);
 
   const handleToggle = (option) => {
+    if (disabled) return; // Prevent toggle if disabled
     onToggle(option);
   };
 
@@ -55,8 +58,15 @@ const CustomSelect = ({
     <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
-        className="w-full flex justify-between items-center bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 group"
-        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex justify-between items-center bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left transition-all duration-200 focus:outline-none group
+        ${
+          disabled
+            ? "bg-gray-100 cursor-not-allowed text-gray-400 border-gray-300"
+            : "hover:border-blue-400 hover:shadow-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        }
+        `}
+        onClick={() => !disabled && setIsOpen(!isOpen)} // Only open if not disabled
+        disabled={disabled}
       >
         <div className="flex items-center gap-2.5">
           {icon}
@@ -69,7 +79,7 @@ const CustomSelect = ({
         />
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl animate-fade-in-down max-h-64 overflow-hidden">
           <div className="p-3 border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
             <div className="relative">
@@ -134,8 +144,9 @@ const CustomSelect = ({
   );
 };
 
-const ExcludeToggle = ({ enabled, onChange }) => {
+const ExcludeToggle = ({ enabled, onChange, disabled = false }) => {
   const handleClick = () => {
+    if (disabled) return; // Prevent click if disabled
     const nextVal = !enabled;
     onChange(nextVal);
   };
@@ -145,12 +156,13 @@ const ExcludeToggle = ({ enabled, onChange }) => {
       type="button"
       onClick={handleClick}
       aria-pressed={enabled}
-      className={`relative inline-flex items-center h-6 w-12 rounded-full transition-all duration-300 transform-gpu ${
-        enabled
-          ? "bg-gradient-to-r from-red-500 to-red-600"
-          : "bg-gradient-to-r from-blue-500 to-cyan-600"
-      } focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md hover:shadow-lg ${
-        enabled ? "focus:ring-red-500" : "focus:ring-blue-500"
+      disabled={disabled}
+      className={`relative inline-flex items-center h-6 w-12 rounded-full transition-all duration-300 transform-gpu shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+        disabled
+          ? "bg-gray-400 cursor-not-allowed opacity-70"
+          : enabled
+          ? "bg-gradient-to-r from-red-500 to-red-600 focus:ring-red-500"
+          : "bg-gradient-to-r from-blue-500 to-cyan-600 focus:ring-blue-500"
       }`}
     >
       <span className="sr-only">Toggle include/exclude</span>
@@ -206,6 +218,9 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
   const [excludeBds, setExcludeBds] = useState(false);
   const [excludeClients, setExcludeClients] = useState(false);
   const [excludeLabs, setExcludeLabs] = useState(false);
+
+  // ADDED: State for disabling the BD dropdown
+  const [isBdDisabled, setIsBdDisabled] = useState(false);
 
   const [verticalSearchTerm, setVerticalSearchTerm] = useState("");
   const [bdSearchTerm, setBdSearchTerm] = useState("");
@@ -308,34 +323,48 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
   };
 
   const handleReset = () => {
+    // Standard resets for all other fields
     setFilterType("range");
     setRange(defaultRange);
     setMonth(defaultMonth);
     setYear(defaultYear);
     setVerticals([]);
-    setBdNames([]);
     setClientNames([]);
     setSortOrder("newest");
     setDateField("inqDate");
     setExcludeVerticals(false);
-    setExcludeBds(false);
     setExcludeClients(false);
     setLabNames([]);
     setExcludeLabs(false);
+    
+    const storedBdCode = localStorage.getItem("BdCode");
+    const isBdLockedLocal = storedBdCode && storedBdCode.trim() !== "";
+
+    // START: Logic to preserve BD Name and Exclude State if locked
+    if (!isBdLockedLocal) {
+        setBdNames([]);
+        setExcludeBds(false);
+        setIsBdDisabled(false); 
+    }
+    // END: Logic to preserve BD Name and Exclude State if locked
+
     onResetAll?.();
+
+    // Emit the new filter state, using the possibly preserved bdNames/excludeBds state
     emit({
       filterType: "range",
       range: defaultRange,
       month: defaultMonth,
       year: defaultYear,
-      bdNames: [],
+      // If locked, bdNames and excludeBds retain their values from state.
+      bdNames: isBdLockedLocal ? bdNames : [], 
+      excludeBds: isBdLockedLocal ? false : false, // Exclude must be false when locked, and false when reset.
       clientNames: [],
       verticals: [],
       labStatusFilter: null,
       sortOrder: "newest",
       dateField: "inqDate",
       excludeVerticals: false,
-      excludeBds: false,
       excludeClients: false,
       labNames: [],
       excludeLabs: false,
@@ -393,21 +422,50 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
     400
   );
 
-  useDebouncedEffect(
-    () => {
-      if (isLabAnalysisView) {
-        setBdOptions([]);
-        return;
-      }
+useDebouncedEffect(
+  () => {
+    const storedBdCode = localStorage.getItem("BdCode");
+
+    // ✅ If Lab Analysis View, skip fetching
+    if (isLabAnalysisView) {
+      setBdOptions([]);
+      setIsBdDisabled(false); 
+      return;
+    }
+
+    // Check for BdCode and lock the dropdown if present
+    if (storedBdCode && storedBdCode.trim() !== "") {
+      setIsBdDisabled(true); // Disable BD dropdown
+      setExcludeBds(false); // Force include mode when locked
+      
       const controller = new AbortController();
-      const fetchBDs = async () => {
+
+      const fetchSingleBd = async () => {
         setLoadingOptions(true);
         try {
-          const body = buildSearchRequest();
-          const response = await getBdNames(body, { signal: controller.signal });
+          // Fetch ALL BD names/codes to find the match, ignoring current filters
+          // to ensure the locked BD name is always available.
+          const response = await getBdNames({}, { signal: controller.signal });
 
-          var options = response.map(r => r.bdName);
-          setBdOptions(Array.isArray(options) ? options : []);
+          // Find the BD record matching this BdCode
+          const matched = response.find(
+            (r) => String(r.bdCode) === String(storedBdCode)
+          );
+
+          if (matched) {
+            const bdName = matched.bdName;
+            setBdOptions([bdName]); // only show this one
+            
+            // Auto-select the BD name and emit the change
+            setBdNames([bdName]);
+            emit({ bdNames: [bdName], excludeBds: false });
+            
+          } else {
+            // Fallback if no match found but code exists: keep disabled but show empty
+            setBdOptions([]);
+            setBdNames([]);
+            emit({ bdNames: [], excludeBds: false });
+          }
         } catch (e) {
           if (e.name !== "AbortError")
             console.error("Failed to fetch BD names", e);
@@ -416,12 +474,38 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
           setLoadingOptions(false);
         }
       };
-      fetchBDs();
+
+      fetchSingleBd();
       return () => controller.abort();
-    },
-    optionsDeps,
-    400
-  );
+    }
+
+    // ✅ Normal flow if BdCode is NOT present or empty
+    setIsBdDisabled(false); // Enable BD dropdown
+    const controller = new AbortController();
+    const fetchBDs = async () => {
+      setLoadingOptions(true);
+      try {
+        const body = buildSearchRequest();
+        const response = await getBdNames(body, { signal: controller.signal });
+
+        const options = response.map((r) => r.bdName);
+        setBdOptions(Array.isArray(options) ? options : []);
+      } catch (e) {
+        if (e.name !== "AbortError")
+          console.error("Failed to fetch BD names", e);
+        setBdOptions([]);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
+    fetchBDs();
+    return () => controller.abort();
+  },
+  optionsDeps,
+  400
+);
+
 
   useDebouncedEffect(
     () => {
@@ -810,18 +894,22 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
                         <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent"></div>
                       )}
                     </span>
+                    {/* Disable ExcludeToggle if BD is disabled/locked */}
                     <ExcludeToggle
                       enabled={excludeBds}
                       onChange={(val) => {
                         setExcludeBds(val);
                         emit({ excludeBds: val });
                       }}
+                      disabled={isBdDisabled} // Added disabled prop
                     />
                   </div>
                   <CustomSelect
                     label={`${
                       bdNames.length === 0
                         ? "Select BDs"
+                        : isBdDisabled
+                        ? bdNames[0] // Show the single selected BD name when disabled
                         : `${bdNames.length} selected`
                     }`}
                     icon={<Briefcase className="w-4 h-4 text-blue-600" />}
@@ -837,6 +925,7 @@ export default function Filters({ onChange, onResetAll, disabled, queryType }) {
                     searchTerm={bdSearchTerm}
                     onSearchChange={setBdSearchTerm}
                     isExcluded={excludeBds}
+                    disabled={isBdDisabled} // Added disabled prop
                   />
                 </div>
 
