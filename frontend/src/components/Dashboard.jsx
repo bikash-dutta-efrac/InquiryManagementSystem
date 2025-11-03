@@ -20,11 +20,10 @@ const GraphicalAnalysis = React.lazy(() => import("./GraphicalAnalysis"));
 
 export default function Dashboard({
   bdCode: initialBdCode,
-  username, // <--- Using username for the filter value when locked
+  username,
   designation,
   onLogout,
 }) {
-  console.log(initialBdCode);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Determine the BD identifier for filtering. If initialBdCode is passed (locking the view), use the username for the filter value.
@@ -32,7 +31,7 @@ export default function Dashboard({
     initialBdCode && initialBdCode.trim() !== "" ? username.trim() : null;
 
   // bdCode state now holds the filter value (username) if the view is locked.
-  const [bdCode, setBdCode] = useState(lockedBdIdentifier); 
+  const [bdCode, setBdCode] = useState(lockedBdIdentifier);
   const isBdLocked = initialBdCode && initialBdCode.trim() !== ""; // Determine locked status based on initialBdCode
 
   const [view, setView] = useState("list");
@@ -54,14 +53,14 @@ export default function Dashboard({
   // Derive initial filters based on props
   const getInitialFilters = (bdIdentifier, isLockedStatus) => {
     const bdNames = isLockedStatus ? [bdIdentifier] : []; // <--- Uses bdIdentifier (username)
-    
+
     return {
       filterType: "range",
       range: { start: defaultFromDate, end: defaultToDate },
       month: null,
       year: null,
       verticals: [],
-      bdNames: bdNames, 
+      bdNames: bdNames,
       clientNames: [],
       labNames: [],
       excludeVerticals: false,
@@ -73,7 +72,10 @@ export default function Dashboard({
     };
   };
 
-  const initialDefaultFilters = getInitialFilters(lockedBdIdentifier, isBdLocked);
+  const initialDefaultFilters = getInitialFilters(
+    lockedBdIdentifier,
+    isBdLocked
+  );
 
   const defaultFilters = {
     filterType: initialDefaultFilters.filterType,
@@ -88,7 +90,9 @@ export default function Dashboard({
   const [filters, setFilters] = useState(defaultFilters);
 
   // Use the *initial* filters for the hook to ensure first load is correct
-  const { inquiries, loading, fetchInquiries } = useInquiries(initialDefaultFilters);
+  const { inquiries, loading, fetchInquiries } = useInquiries(
+    initialDefaultFilters
+  );
   const {
     sampleSummaries,
     labSummaries,
@@ -207,14 +211,19 @@ export default function Dashboard({
   const handleBdProjectionMonthChange = useCallback(
     async (monthData) => {
       try {
-        const { fromDate, toDate, bdNames: incomingBdNames, dateField } = monthData;
-        
+        const {
+          fromDate,
+          toDate,
+          bdNames: incomingBdNames,
+          dateField,
+        } = monthData;
+
         let finalBdNames = incomingBdNames || [];
         let finalExcludeBds = false;
-        
+
         // Safeguard for locked BD
         if (isBdLocked && bdCode) {
-            finalBdNames = [bdCode];
+          finalBdNames = [bdCode];
         }
 
         const fetchParams = {
@@ -243,14 +252,19 @@ export default function Dashboard({
   const handleBdPerformanceMonthChange = useCallback(
     async (monthData) => {
       try {
-        const { fromDate, toDate, bdNames: incomingBdNames, dateField } = monthData;
-        
+        const {
+          fromDate,
+          toDate,
+          bdNames: incomingBdNames,
+          dateField,
+        } = monthData;
+
         let finalBdNames = incomingBdNames || [];
         let finalExcludeBds = false;
-        
+
         // Safeguard for locked BD
         if (isBdLocked && bdCode) {
-            finalBdNames = [bdCode];
+          finalBdNames = [bdCode];
         }
 
         const fetchParams = {
@@ -572,19 +586,27 @@ export default function Dashboard({
               </div>
             ) : queryType === "businessAnalysis" ? (
               <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
-                <BusinessAnalysis />
+                <BusinessAnalysis
+                  bdCode={initialBdCode}
+                  username={username}
+                  designation={designation}
+                />
               </div>
             ) : queryType === "bdProjection" ? (
               <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
                 <BDProjectionManager
+                  bdCode={initialBdCode}
+                  username={username}
+                  designation={designation}
                   onMonthChange={handleBdProjectionMonthChange}
                   inquiriesData={bdProjectionInquiries}
-                
                 />
               </div>
             ) : queryType === "bdPerformanceAnalysis" ? (
               <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
                 <BdPerformanceAnalysis
+                  username={username}
+                  designation={designation}
                   onMonthChange={handleBdPerformanceMonthChange}
                   inquiriesData={bdPerformanceInquiries}
                   // Pass bdCode (username) to analysis for API calls
@@ -597,6 +619,8 @@ export default function Dashboard({
                 {/* Overview */}
                 <div className="max-w-7xl mx-auto mb-8 px-2 relative">
                   <InquiryOverview
+                    username={username}
+                    designation={designation}
                     data={sortedInquiries}
                     queryType={queryType}
                     onCardClick={handleCardClick}

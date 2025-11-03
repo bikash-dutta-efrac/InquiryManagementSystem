@@ -18,8 +18,10 @@ import {
   ArrowDown,
   ChevronRight,
   Users,
+  User,
 } from "lucide-react";
-import { MdPerson } from "react-icons/md";
+import { motion, AnimatePresence } from "framer-motion";
+import { MdMoney, MdPerson } from "react-icons/md";
 import { IoLayersSharp, IoPeople } from "react-icons/io5";
 import { HiBuildingOffice, HiCurrencyRupee } from "react-icons/hi2";
 import useBusinessAnalysis from "../hooks/useBusinessAnalysis";
@@ -152,7 +154,9 @@ function computeDateRange(type, value, value2 = null) {
       ).toISOString(),
       // fromDate2/toDate2 is always the LATEST month
       // Start of month (1st day at 00:00:00.000Z)
-      fromDate2: new Date(Date.UTC(latestYear, latestMonthIndex, 1)).toISOString(),
+      fromDate2: new Date(
+        Date.UTC(latestYear, latestMonthIndex, 1)
+      ).toISOString(),
       // End of month (last day at 23:59:59.999Z)
       toDate2: new Date(
         Date.UTC(latestYear, latestMonthIndex + 1, 0, 23, 59, 59, 999)
@@ -376,13 +380,10 @@ const ComparisonDisplay = ({ percentageChange, size = "default" }) => {
       ? "100"
       : Math.abs(percentageChange).toFixed(1);
 
-
   // Set classes based on size
   const iconSizeClass = size === "small" ? "w-3 h-3" : "w-3.5 h-3.5";
   const textSizeClass =
-    size === "small"
-      ? "text-[10px] font-medium"
-      : "text-[11px] font-semibold";
+    size === "small" ? "text-[10px] font-medium" : "text-[11px] font-semibold";
 
   if (percentageChange === 0) {
     return (
@@ -447,6 +448,7 @@ const TimeRangeTabSelector = ({ selectedType, onSelect }) => {
 const ExcludeToggle = ({
   enabled,
   onChange,
+  disabled = false,
   leftText = "IN",
   rightText = "EX",
 }) => {
@@ -465,7 +467,9 @@ const ExcludeToggle = ({
       type="button"
       onClick={handleClick}
       aria-pressed={enabled}
-      className={`relative inline-flex items-center h-6 w-12 rounded-full transition-all duration-300 transform-gpu ${gradientClass} focus:outline-none shadow-md hover:shadow-lg ${focusRing}`}
+      className={`relative inline-flex ${
+        disabled ? "opacity-60 cursor-not-allowed" : "hover:shadow-md"
+      } items-center h-6 w-12 rounded-full transition-all duration-300 transform-gpu ${gradientClass} focus:outline-none shadow-md hover:shadow-lg ${focusRing}`}
     >
       <span className="sr-only">
         Toggle {leftText}/{rightText}
@@ -582,6 +586,7 @@ const MultiSelectDropdown = ({
   label,
   icon: Icon,
   isExcluded,
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -623,11 +628,12 @@ const MultiSelectDropdown = ({
     <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
-        className={`w-full bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left cursor-pointer hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 text-sm font-medium flex items-center justify-between group
-                    ${
-                      isExcluded ? "focus:ring-red-500" : "focus:ring-blue-500"
-                    }`}
-        onClick={() => setIsOpen(!isOpen)}
+        disabled={disabled}
+        className={`w-full bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 text-sm font-medium flex items-center justify-between group
+          ${isExcluded ? "focus:ring-red-500" : "focus:ring-blue-500"}
+          ${disabled ? "opacity-60 cursor-not-allowed" : "hover:shadow-md"}
+        `}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
       >
         <span className="flex items-center gap-2.5">
           <Icon className={`w-4 h-4 ${modeColor} ${modeHoverColor}`} />
@@ -712,7 +718,12 @@ const MultiSelectDropdown = ({
   );
 };
 
-const FilterPanel = ({ filters, setFilters, bdNameOptions }) => {
+const FilterPanel = ({
+  filters,
+  setFilters,
+  bdNameOptions,
+  isBdLocked = false,
+}) => {
   const {
     timeRangeType,
     timeRangeValue,
@@ -848,6 +859,7 @@ const FilterPanel = ({ filters, setFilters, bdNameOptions }) => {
             <ExcludeToggle
               enabled={excludeBDs}
               onChange={handleExcludeToggle}
+              disabled={isBdLocked}
             />
           </div>
           <MultiSelectDropdown
@@ -857,6 +869,7 @@ const FilterPanel = ({ filters, setFilters, bdNameOptions }) => {
             label="BD Persons"
             icon={Users}
             isExcluded={excludeBDs}
+            disabled={isBdLocked}
           />
         </div>
 
@@ -888,37 +901,37 @@ const SummaryCard = ({
       border: "border-t-4 border-blue-500",
       bg: "bg-blue-100",
       icon: "text-blue-600",
-      text: "text-blue-700"
+      text: "text-blue-700",
     },
     green: {
       border: "border-t-4 border-green-500",
       bg: "bg-green-100",
       icon: "text-green-600",
-      text: "text-green-700"
+      text: "text-green-700",
     },
     orange: {
       border: "border-t-4 border-orange-500",
       bg: "bg-orange-100",
       icon: "text-orange-600",
-      text: "text-orange-700"
+      text: "text-orange-700",
     },
     red: {
       border: "border-t-4 border-red-500",
       bg: "bg-red-100",
       icon: "text-red-600",
-      text: "text-red-700"
+      text: "text-red-700",
     },
     cyan: {
       border: "border-t-4 border-cyan-500",
       bg: "bg-cyan-100",
       icon: "text-cyan-600",
-      text: "text-cyan-700"
+      text: "text-cyan-700",
     },
     teal: {
       border: "border-t-4 border-teal-500",
       bg: "bg-teal-100",
       icon: "text-teal-600",
-      text: "text-teal-700"
+      text: "text-teal-700",
     },
   };
 
@@ -1153,7 +1166,8 @@ const VerticalClientBreakdownTable = ({
 
                         if (showMonthOverMonthChange && monthIndex > 0) {
                           // Scenario 1: X Month Range (MoM comparison)
-                          const prevMonthData = rowMonthlyValues[monthIndex - 1];
+                          const prevMonthData =
+                            rowMonthlyValues[monthIndex - 1];
                           const prevCount = prevMonthData?.count || 0;
                           const prevValue = prevMonthData?.value || 0;
 
@@ -1196,7 +1210,8 @@ const VerticalClientBreakdownTable = ({
                                   <span className="text-gray-900 text-sm font-bold">
                                     {formatAmount(value)}
                                   </span>
-                                  {(showMonthOverMonthChange && monthIndex > 0) ||
+                                  {(showMonthOverMonthChange &&
+                                    monthIndex > 0) ||
                                   isLatestMonthInComparison ? (
                                     <ComparisonDisplay
                                       percentageChange={valueChangeToDisplay}
@@ -1206,10 +1221,13 @@ const VerticalClientBreakdownTable = ({
                                 </div>
                                 {/* Count (Regs) with change display */}
                                 <div className="flex items-center justify-center gap-1">
-                                  <span className={`text-[11px] ${colorClass.textColor} font-medium`}>
+                                  <span
+                                    className={`text-[11px] ${colorClass.textColor} font-medium`}
+                                  >
                                     {count} reg{count !== 1 ? "s" : ""}
                                   </span>
-                                  {(showMonthOverMonthChange && monthIndex > 0) ||
+                                  {(showMonthOverMonthChange &&
+                                    monthIndex > 0) ||
                                   isLatestMonthInComparison ? (
                                     <ComparisonDisplay
                                       percentageChange={regChangeToDisplay}
@@ -1257,7 +1275,8 @@ const VerticalClientBreakdownTable = ({
                     let regChangeToDisplay = null;
                     let valueChangeToDisplay = null;
 
-                    const isLatestMonthInComparison = isComparison && index === 1;
+                    const isLatestMonthInComparison =
+                      isComparison && index === 1;
 
                     if (showMonthOverMonthChange && index > 0) {
                       // Scenario 1: X Month Range (MoM comparison)
@@ -1334,7 +1353,9 @@ const VerticalClientBreakdownTable = ({
                             {formatAmount(grandTotalValue)}
                           </span>
                         </div>
-                        <span className={`text-[11px] text-blue-800 font-extrabold`}>
+                        <span
+                          className={`text-[11px] text-blue-800 font-extrabold`}
+                        >
                           {grandTotalCount} reg
                           {grandTotalCount !== 1 ? "s" : ""}
                         </span>
@@ -1735,7 +1756,7 @@ const LoadingView = () => (
   </div>
 );
 
-export default function BusinessAnalysis() {
+export default function BusinessAnalysis({ bdCode, username, designation }) {
   const [filters, setFilters] = useState({
     timeRangeType: "relative",
     timeRangeValue: RELATIVE_TIME_OPTIONS[0].value,
@@ -1743,6 +1764,17 @@ export default function BusinessAnalysis() {
     selectedBDs: [],
     excludeBDs: false,
   });
+
+  const isBdLocked = bdCode && bdCode.trim() !== "";
+
+  React.useEffect(() => {
+    if (isBdLocked) {
+      setFilters((prev) => ({
+        ...prev,
+        selectedBDs: [username],
+      }));
+    }
+  }, [isBdLocked, username]);
 
   const isComparisonMode = filters.timeRangeType === "comparison";
 
@@ -1804,8 +1836,9 @@ export default function BusinessAnalysis() {
   ]);
 
   const availableBdNames = useMemo(() => {
+    if (isBdLocked) return [username];
     return Array.from(new Set(allBdData.map((bd) => bd.bdName))).sort();
-  }, [allBdData]);
+  }, [allBdData, username, isBdLocked]);
 
   const filteredBdData = useMemo(() => {
     const { selectedBDs, excludeBDs } = filters;
@@ -1918,28 +1951,54 @@ export default function BusinessAnalysis() {
   return (
     <div className="font-sans min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="relative overflow-hidden rounded-2xl shadow-xl mb-8 bg-white border border-gray-200">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 opacity-95"></div>
-          <div className="relative p-6 sm:p-8 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm shadow-lg">
-              <Briefcase className="w-7 h-7 text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl shadow-2xl mb-8 bg-white border border-gray-200"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 opacity-95"></div>
+          <motion.div
+            className="absolute inset-0 opacity-10"
+            animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
+            style={{
+              backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+              backgroundSize: "50px 50px",
+            }}
+          />
+          <div className="relative p-6 sm:p-8 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="p-3 rounded-xl bg-white/10 backdrop-blur-sm shadow-lg"
+              >
+                <Briefcase className="w-7 h-7 text-white" />
+              </motion.div>
+              <div>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Business Analysis</h1>
+                <p className="text-blue-100 text-sm mt-1">Comprehensive BD performance metrics and insights</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">
-                Business Development Analysis Dashboard
-              </h1>
-              <p className="text-blue-100 text-sm mt-1">
-                Comprehensive BD performance metrics and insights
-              </p>
+
+            <div className="flex items-center gap-3 text-right flex-shrink-0">
+              <div className="text-white">
+                <p className="text-lg font-semibold leading-snug">{username}</p>
+                <p className="text-blue-200 text-xs font-medium leading-snug">{designation}</p>
+              </div>
+              <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm shadow-lg">
+                <User className="w-6 h-6 text-white" />
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <div className="mb-8">
           <FilterPanel
             filters={filters}
             setFilters={setFilters}
             bdNameOptions={availableBdNames}
+            isBdLocked={isBdLocked}
           />
         </div>
 

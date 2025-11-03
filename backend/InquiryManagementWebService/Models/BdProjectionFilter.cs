@@ -4,10 +4,9 @@
     {
         public List<string>? BdCodeList { get; set; }
 
-        public DateTime? FromDate { get; set; }
+        public int? ProjMonth { get; set; }
 
-        public DateTime? ToDate { get; set; }
-
+        public int? ProjYear { get; set; }
     }
 
 }

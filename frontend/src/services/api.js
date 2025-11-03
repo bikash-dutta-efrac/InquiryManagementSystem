@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.3.181:5075/api";
+const API_BASE_URL = "http://192.168.3.116:5075/api";
 
 function buildRequestBody(filters = {}) {
   return {
@@ -25,7 +25,7 @@ function buildRequestBody(filters = {}) {
 // ===================================================================
 
 export async function getAllBdProjection(filter = {}) {
-  console.log(filter)
+  console.log("PROJECTION",filter)
   const response = await axios.post(
     `${API_BASE_URL}/projections/get`,
     filter,
@@ -76,7 +76,7 @@ export async function getBdProjectionById(id) {
 // ===================================================================
 
 export async function getAllBdTargets(filter = {}) {
-  console.log(filter)
+  console.log("TARGETS",filter)
   const response = await axios.post(
     `${API_BASE_URL}/target/get`,
     filter,

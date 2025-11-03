@@ -25,8 +25,8 @@ import {
   Edit2,
   Trash2,
   X,
-  DollarSign,
   IndianRupee,
+  User,
 } from "lucide-react";
 import {
   BarChart,
@@ -39,6 +39,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
+import { MdCurrencyRupee, MdPerson } from "react-icons/md";
 
 import {
   getBdNames,
@@ -51,7 +52,6 @@ import {
   updateBdTarget,
   deleteBdTarget,
 } from "../services/api";
-import { MdCurrencyRupee, MdPerson } from "react-icons/md";
 
 function formatAmount(num) {
   if (num === null || num === undefined) return "0";
@@ -97,12 +97,36 @@ const generateMonthOptions = () => {
         "0"
       )}`,
       label: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
     });
   }
   return options;
 };
 
 const MONTH_OPTIONS = generateMonthOptions();
+
+const getCurrentWeek = () => {
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  if (dayOfMonth <= 7) return 1;
+  if (dayOfMonth <= 14) return 2;
+  if (dayOfMonth <= 21) return 3;
+  if (dayOfMonth <= 28) return 4;
+  return 5;
+};
+
+const isCurrentMonth = (month, year) => {
+  const now = new Date();
+  return now.getMonth() + 1 === month && now.getFullYear() === year;
+};
+
+const isPastMonth = (month, year) => {
+  const now = new Date();
+  const currentDate = new Date(now.getFullYear(), now.getMonth());
+  const checkDate = new Date(year, month - 1);
+  return checkDate < currentDate;
+};
 
 const getStatus = (achieved, target, isClientContext = false) => {
   let progress;
@@ -179,7 +203,7 @@ const Dropdown = ({
   placeholder,
   multiple = false,
   onDeselectAll,
-  onSelectAll, // <-- ADDED: New prop for Select All functionality
+  onSelectAll,
   isExcluded,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -223,9 +247,6 @@ const Dropdown = ({
 
   return (
     <div className="relative w-full dropdown-container">
-      <label className="text-xs font-medium text-gray-600 block mb-1.5">
-        {label}
-      </label>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -277,14 +298,13 @@ const Dropdown = ({
               </div>
             </div>
             <ul className="max-h-60 overflow-y-auto">
-              {/* 🎁 New Select All Option */}
               {multiple && onSelectAll && (
                 <li
                   onClick={() => {
                     onSelectAll();
                     setSearchTerm("");
                   }}
-                  className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${"hover:bg-red-50 text-black"}`}
+                  className="px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 hover:bg-red-50 text-black"
                 >
                   Select All
                 </li>
@@ -295,7 +315,7 @@ const Dropdown = ({
                     onDeselectAll();
                     setSearchTerm("");
                   }}
-                  className={`px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 ${"hover:bg-blue-50 text-black"}`}
+                  className="px-4 py-2.5 text-sm cursor-pointer font-semibold border-b border-gray-100 transition-colors duration-150 hover:bg-blue-50 text-black"
                 >
                   Deselect All
                 </li>
@@ -343,6 +363,606 @@ const Dropdown = ({
     </div>
   );
 };
+
+const ManagementModal = ({
+  isOpen,
+  onClose,
+  action,
+  refreshData,
+  month,
+  bdOptions,
+}) => {
+  const [formData, setFormData] = useState({
+    week1Val: "",
+    week1Remarks: "",
+    week2Val: "",
+    week2Remarks: "",
+    week3Val: "",
+    week3Remarks: "",
+    week4Val: "",
+    week4Remarks: "",
+    week5Val: "",
+    week5Remarks: "",
+  });
+  const [targetValue, setTargetValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const isTarget = action.type.includes("TARGET");
+  const isAdd = action.type.includes("ADD");
+  const isEdit = action.type.includes("EDIT");
+  const isDelete = action.type.includes("DELETE");
+  const isProjection = action.type.includes("PROJECTION");
+
+  const monthOption = MONTH_OPTIONS.find((opt) => opt.value === month);
+  const currentWeek = getCurrentWeek();
+  const isCurrentMonthSelected = isCurrentMonth(
+    monthOption?.month,
+    monthOption?.year
+  );
+
+  const getWeekState = (weekNum) => {
+    if (!isCurrentMonthSelected) {
+      return { valueDisabled: false, remarksDisabled: false, state: "future" };
+    }
+
+    if (weekNum < currentWeek) {
+      return { valueDisabled: true, remarksDisabled: true, state: "past" };
+    } else if (weekNum === currentWeek) {
+      return { valueDisabled: true, remarksDisabled: false, state: "current" };
+    } else {
+      return { valueDisabled: false, remarksDisabled: false, state: "future" };
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      if (isTarget) {
+        setTargetValue(isEdit ? action.data?.value || "" : "");
+      } else if (isProjection) {
+        if (
+          isEdit &&
+          action.data?.projections &&
+          action.data.projections.length > 0
+        ) {
+          const proj = action.data.projections[0];
+          setFormData({
+            week1Val: proj.projValWeek1 || "",
+            week1Remarks: proj.remarksWeek1 || "",
+            week2Val: proj.projValWeek2 || "",
+            week2Remarks: proj.remarksWeek2 || "",
+            week3Val: proj.projValWeek3 || "",
+            week3Remarks: proj.remarksWeek3 || "",
+            week4Val: proj.projValWeek4 || "",
+            week4Remarks: proj.remarksWeek4 || "",
+            week5Val: proj.projValWeek5 || "",
+            week5Remarks: proj.remarksWeek5 || "",
+          });
+        } else {
+          setFormData({
+            week1Val: "",
+            week1Remarks: "",
+            week2Val: "",
+            week2Remarks: "",
+            week3Val: "",
+            week3Remarks: "",
+            week4Val: "",
+            week4Remarks: "",
+            week5Val: "",
+            week5Remarks: "",
+          });
+        }
+      }
+      setError(null);
+    }
+  }, [isOpen, action, isTarget, isProjection, isEdit]);
+
+  const modalTitle = isTarget
+    ? `${isAdd ? "Add" : isEdit ? "Edit" : "Delete"} BD Target`
+    : `${isAdd ? "Add" : isEdit ? "Edit" : "Delete"} Client Projection`;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!isDelete) {
+      if (isTarget) {
+        const numericValue = parseFloat(targetValue);
+        if (!targetValue || isNaN(numericValue) || numericValue <= 0) {
+          setError("Please enter a valid target value greater than 0.");
+          return;
+        }
+      } else if (isProjection) {
+        const week1 = parseFloat(formData.week1Val) || 0;
+        const week2 = parseFloat(formData.week2Val) || 0;
+        const week3 = parseFloat(formData.week3Val) || 0;
+        const week4 = parseFloat(formData.week4Val) || 0;
+        const week5 = parseFloat(formData.week5Val) || 0;
+
+        if (
+          week1 === 0 &&
+          week2 === 0 &&
+          week3 === 0 &&
+          week4 === 0 &&
+          week5 === 0
+        ) {
+          setError("Please enter at least one week projection value.");
+          return;
+        }
+      }
+    }
+
+    setIsLoading(true);
+
+    try {
+      let apiCall;
+
+      if (isTarget) {
+        const targetBody = {
+          bdCode: action.data.bdCode,
+          targetVal: Number(targetValue),
+          remarks: "",
+        };
+
+        if (isAdd) {
+          apiCall = createBdTarget(targetBody);
+        } else if (isEdit) {
+          apiCall = updateBdTarget(action.data.id, targetBody);
+        } else if (isDelete) {
+          apiCall = deleteBdTarget(action.data.id);
+        }
+      } else if (isProjection) {
+        const projectionBody = {
+          bdCode: action.data.bdCode,
+          clientCode: action.data.clientCode,
+          projValWeek1: parseFloat(formData.week1Val) || null,
+          projDateWeek1: formData.week1Val ? new Date().toISOString() : null,
+          remarksWeek1: formData.week1Remarks || null,
+          revisedValWeek1: null,
+          reviseDateWeek1: null,
+          projValWeek2: parseFloat(formData.week2Val) || null,
+          projDateWeek2: formData.week2Val ? new Date().toISOString() : null,
+          remarksWeek2: formData.week2Remarks || null,
+          revisedValWeek2: null,
+          reviseDateWeek2: null,
+          projValWeek3: parseFloat(formData.week3Val) || null,
+          projDateWeek3: formData.week3Val ? new Date().toISOString() : null,
+          remarksWeek3: formData.week3Remarks || null,
+          revisedValWeek3: null,
+          reviseDateWeek3: null,
+          projValWeek4: parseFloat(formData.week4Val) || null,
+          projDateWeek4: formData.week4Val ? new Date().toISOString() : null,
+          remarksWeek4: formData.week4Remarks || null,
+          revisedValWeek4: null,
+          reviseDateWeek4: null,
+          projValWeek5: parseFloat(formData.week5Val) || null,
+          projDateWeek5: formData.week5Val ? new Date().toISOString() : null,
+          remarksWeek5: formData.week5Remarks || null,
+          revisedValWeek5: null,
+          reviseDateWeek5: null,
+        };
+
+        if (isAdd) {
+          apiCall = createBdProjection(projectionBody);
+        } else if (isEdit) {
+          const projectionId = action.data.projections?.[0]?.id;
+          if (!projectionId)
+            throw new Error("Projection ID not found for editing.");
+          apiCall = updateBdProjection(projectionId, projectionBody);
+        } else if (isDelete) {
+          const projectionId = action.data.projections?.[0]?.id;
+          if (!projectionId)
+            throw new Error("Projection ID not found for deletion.");
+          apiCall = deleteBdProjection(projectionId);
+        }
+      }
+
+      if (apiCall) await apiCall;
+      await refreshData();
+      onClose();
+    } catch (err) {
+      console.error("API Error:", err);
+      setError(
+        err.message || "An unexpected error occurred. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 p-6 relative overflow-hidden">
+          <motion.div
+            className="absolute inset-0 opacity-10"
+            animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, white 1px, transparent 1px)",
+              backgroundSize: "50px 50px",
+            }}
+          />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="p-2 rounded-lg bg-white/20 backdrop-blur-sm"
+              >
+                <IndianRupee className="w-6 h-6 text-white" />
+              </motion.div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{modalTitle}</h2>
+                <p className="text-blue-100 text-sm">
+                  {action.data.bdName}{" "}
+                  {isProjection && `• ${action.data.clientName}`}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {isDelete ? (
+            <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-red-100">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-red-800 font-semibold mb-1">
+                    Confirm Deletion
+                  </p>
+                  <p className="text-sm text-red-600">
+                    Are you sure you want to delete this{" "}
+                    {isTarget ? "target" : "projection"}? This action cannot be
+                    undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : isTarget ? (
+            <form
+              id="management-form"
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Target Value (₹)
+                </label>
+                <div className="relative">
+                  <MdCurrencyRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={targetValue}
+                    onChange={(e) => setTargetValue(e.target.value)}
+                    required
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg font-semibold"
+                    placeholder="e.g., 500000"
+                  />
+                </div>
+              </div>
+            </form>
+          ) : (
+            <form
+              id="management-form"
+              onSubmit={handleSubmit}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2, 3, 4, 5].map((week) => {
+                  const weekState = getWeekState(week);
+                  const isPast = weekState.state === "past";
+                  const isCurrent = weekState.state === "current";
+
+                  return (
+                    <div
+                      key={week}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        isPast
+                          ? "bg-gray-50 border-gray-200 opacity-60"
+                          : isCurrent
+                          ? "bg-blue-50 border-blue-300"
+                          : "bg-white border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Calendar
+                          className={`w-4 h-4 ${
+                            isPast
+                              ? "text-gray-400"
+                              : isCurrent
+                              ? "text-blue-600"
+                              : "text-gray-600"
+                          }`}
+                        />
+                        <h3
+                          className={`text-sm font-bold ${
+                            isPast
+                              ? "text-gray-400"
+                              : isCurrent
+                              ? "text-blue-700"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          Week {week}
+                          {isCurrent && (
+                            <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">
+                              Current - Value Locked
+                            </span>
+                          )}
+                          {isPast && (
+                            <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                              Past - Locked
+                            </span>
+                          )}
+                        </h3>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                            Projection Value (₹)
+                            {isCurrent && (
+                              <span className="ml-1 text-blue-600">
+                                (Locked)
+                              </span>
+                            )}
+                          </label>
+                          <div className="relative">
+                            <IndianRupee
+                              className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                                weekState.valueDisabled
+                                  ? "text-gray-400"
+                                  : "text-blue-600"
+                              }`}
+                            />
+                            <input
+                              type="number"
+                              disabled={weekState.valueDisabled}
+                              value={formData[`week${week}Val`]}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  [`week${week}Val`]: e.target.value,
+                                })
+                              }
+                              placeholder={
+                                weekState.valueDisabled
+                                  ? isCurrent
+                                    ? "Current week locked"
+                                    : "Past week locked"
+                                  : "Enter value"
+                              }
+                              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                            Remarks{" "}
+                            {isCurrent && (
+                              <span className="text-blue-600">(Editable)</span>
+                            )}
+                          </label>
+                          <textarea
+                            disabled={weekState.remarksDisabled}
+                            value={formData[`week${week}Remarks`]}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                [`week${week}Remarks`]: e.target.value,
+                              })
+                            }
+                            placeholder={
+                              weekState.remarksDisabled
+                                ? "Past week locked"
+                                : "Add notes..."
+                            }
+                            rows={2}
+                            className={`w-full px-3 py-2 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 ${
+                              isCurrent
+                                ? "focus:ring-blue-500 border-blue-300"
+                                : "focus:ring-blue-500"
+                            } focus:border-transparent bg-white text-sm resize-none transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </form>
+          )}
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-3 p-4 bg-red-50 rounded-xl border border-red-200 mb-4"
+            >
+              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600">{error}</p>
+            </motion.div>
+          )}
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onClose}
+              type="button"
+              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={isDelete ? handleSubmit : undefined}
+              type={isDelete ? "button" : "submit"}
+              form={isDelete ? undefined : "management-form"}
+              disabled={isLoading}
+              className={`flex-1 px-4 py-3 rounded-xl font-medium text-white transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden ${
+                isDelete
+                  ? "bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-lg"
+                  : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:shadow-lg"
+              } disabled:opacity-70 disabled:cursor-not-allowed`}
+            >
+              {!isLoading && (
+                <motion.div
+                  className="absolute inset-0 bg-white opacity-0 hover:opacity-20"
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                />
+              )}
+              {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+              <span className="relative z-10">
+                {isDelete ? "Confirm Delete" : isAdd ? "Add" : "Save Changes"}
+              </span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const SummaryCard = ({
+  title,
+  value,
+  icon: Icon,
+  borderColor,
+  bgColor,
+  iconColor,
+  textColor,
+  isLoading,
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+    whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+    className={`bg-white p-6 rounded-xl shadow-lg border-t-4 ${borderColor} transform transition-all duration-300 flex flex-col justify-between h-full`}
+  >
+    <div className="flex items-center justify-between mb-3">
+      <span className="text-sm font-medium uppercase text-gray-500">
+        {title}
+      </span>
+      <motion.div
+        whileHover={{ scale: 1.1, rotate: 10 }}
+        className={`p-2 rounded-lg ${bgColor}`}
+      >
+        {Icon && <Icon className={`w-5 h-5 ${iconColor}`} />}
+      </motion.div>
+    </div>
+
+    <p
+      className={`text-3xl font-extrabold ${textColor} flex items-center gap-1`}
+    >
+      {isLoading ? (
+        <Loader2 className={`w-5 h-5 animate-spin ${iconColor}`} />
+      ) : (
+        value
+      )}
+    </p>
+  </motion.div>
+);
+
+const BDPerformanceSummaryCard = ({
+  achieved,
+  notAchieved,
+  progress,
+  isLoading,
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3, delay: 0.2 }}
+    whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+    className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-yellow-500 transform transition-all duration-300"
+  >
+    <div className="flex items-center justify-between mb-3">
+      <span className="text-sm font-medium uppercase text-gray-500">
+        Performance
+      </span>
+      <Trophy className="w-5 h-5 text-yellow-500" />
+    </div>
+
+    <div className="flex justify-between items-end mb-1">
+      <div>
+        <p className="text-[10px] text-gray-500">Achieved</p>
+        <p className="text-2xl font-extrabold text-green-600">
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-green-600" />
+          ) : (
+            achieved
+          )}
+        </p>
+      </div>
+
+      <div className="text-right">
+        <p className="text-[10px] text-gray-500">Not Achieved</p>
+        <p className="text-2xl font-extrabold text-red-600">
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+          ) : (
+            notAchieved
+          )}
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-gray-500">Progress</span>
+        <span className="text-xs font-bold text-gray-700">
+          {progress.toFixed(0)}%
+        </span>
+      </div>
+      <div className="relative h-2 bg-red-500 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="h-full bg-green-500"
+        />
+      </div>
+    </div>
+  </motion.div>
+);
 
 const BDTargetManager = ({ bd, onManage, isActive }) => {
   const hasTarget = bd.totalTarget > 0;
@@ -514,432 +1134,6 @@ const ClientProjectionManager = ({ client, onManage, bdInfo, isActive }) => {
   );
 };
 
-const ManagementModal = ({
-  isOpen,
-  onClose,
-  action,
-  refreshData,
-  month,
-  bdOptions,
-}) => {
-  const [value, setValue] = useState(action.data?.value || 0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [remark, setRemark] = useState(
-    action.data?.projections?.[0]?.remarks || ""
-  );
-
-  const isTarget = action.type.includes("TARGET");
-  const isAdd = action.type.includes("ADD");
-  const isEdit = action.type.includes("EDIT");
-  const isDelete = action.type.includes("DELETE");
-  const isProjection = action.type.includes("PROJECTION");
-
-  useEffect(() => {
-    if (isOpen) {
-      // Set value for Add/Edit, but not for Delete
-      if (isAdd) {
-        setValue(""); // Set to empty string for placeholder
-        setRemark("");
-      } else if (isEdit) {
-        setValue(action.data?.value || 0);
-        setRemark(action.data?.projections?.[0]?.remarks || "");
-      } else {
-        setValue(0); // Reset for delete
-        setRemark("");
-      }
-      setError(null);
-    }
-  }, [isOpen, action.data, isAdd, isEdit]);
-
-  const modalTitle = isTarget
-    ? `${isAdd ? "Add" : isEdit ? "Edit" : "Delete"} BD Target`
-    : `${isAdd ? "Add" : isEdit ? "Edit" : "Delete"} Client Projection`;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-
-    // --- Validation ---
-    if (!isDelete) {
-      const numericValue = parseFloat(value);
-
-      if (value === "" || value === null || value === undefined) {
-        setError("Value cannot be empty. Please enter a valid amount.");
-        return; // Stop submission
-      }
-
-      if (isNaN(numericValue)) {
-        setError("Invalid number. Please enter a valid amount.");
-        return; // Stop submission
-      }
-
-      if (numericValue <= 0) {
-        setError(
-          "Value must be greater than 0. Please enter a positive amount."
-        );
-        return;
-      }
-    }
-
-    setIsLoading(true);
-
-    let apiCall;
-
-    const [year, monthNum] = month.split("-").map(Number);
-
-    const bdObject = bdOptions.find((bd) => bd.bdCode === action.data.bdCode);
-    const bdName = bdObject ? bdObject.label : action.data.bdName;
-
-    try {
-      if (isTarget) {
-        const targetBody = {
-          bdCode: action.data.bdCode,
-          targetVal: Number(value),
-          remarks: action.data?.remarks || "",
-        };
-
-        if (isAdd) {
-          apiCall = createBdTarget(targetBody);
-        } else if (isEdit) {
-          apiCall = updateBdTarget(action.data.id, targetBody);
-        } else if (isDelete) {
-          apiCall = deleteBdTarget(action.data.id);
-        }
-      } else if (isProjection) {
-        if (
-          action.data.projections &&
-          action.data.projections.length > 1 &&
-          (isEdit || isDelete)
-        ) {
-          throw new Error(
-            "Multiple projections exist for this client. Please manage them in the dedicated Projection Manager page."
-          );
-        }
-
-        const projectionBody = {
-          bdCode: action.data.bdCode,
-          clientCode: action.data.clientCode,
-          projval: parseFloat(value),
-          remarks: remark,
-        };
-
-        const projectionId =
-          action.data.projections && action.data.projections.length > 0
-            ? action.data.projections[0].id
-            : null;
-
-        if (isAdd) {
-          apiCall = createBdProjection(projectionBody);
-        } else if (isEdit) {
-          if (!projectionId)
-            throw new Error("Projection ID not found for editing.");
-          apiCall = updateBdProjection(projectionId, projectionBody);
-        } else if (isDelete) {
-          if (!projectionId)
-            throw new Error("Projection ID not found for deletion.");
-          apiCall = deleteBdProjection(projectionId);
-        }
-      } else {
-        throw new Error("Invalid action type.");
-      }
-
-      if (apiCall) await apiCall;
-
-      await refreshData();
-      onClose();
-    } catch (err) {
-      console.error("API Error:", err);
-      setError(
-        err.message ||
-          "An unexpected error occurred during the transaction. Check console for details."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 p-6 relative overflow-hidden">
-          <motion.div
-            className="absolute inset-0 opacity-10"
-            animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              repeatType: "reverse",
-            }}
-            style={{
-              backgroundImage:
-                "radial-gradient(circle, white 1px, transparent 1px)",
-              backgroundSize: "50px 50px",
-            }}
-          />
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="p-2 rounded-lg bg-white/20 backdrop-blur-sm"
-              >
-                <IndianRupee className="w-6 h-6 text-white" />
-              </motion.div>
-              <div>
-                <h2 className="text-xl font-bold text-white">{modalTitle}</h2>
-                <p className="text-blue-100 text-sm">
-                  {action.data.bdName}{" "}
-                  {isProjection && `• ${action.data.clientName}`}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {isDelete ? (
-            <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-red-100">
-                  <AlertCircle className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-red-800 font-semibold mb-1">
-                    Confirm Deletion
-                  </p>
-                  <p className="text-sm text-red-600">
-                    Are you sure you want to delete this{" "}
-                    {isTarget ? "target" : "projection"}? This action cannot be
-                    undone.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <form
-              id="management-form"
-              onSubmit={handleSubmit}
-              className="space-y-4"
-            >
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">
-                  {isTarget ? "Target Value" : "Projected Value"} (₹)
-                </label>
-                <div className="relative">
-                  <MdCurrencyRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600" />
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    required
-                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg font-semibold"
-                    placeholder="e.g., 500000"
-                  />
-                </div>
-              </div>
-
-              {isProjection && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-2">
-                    remarks (Optional)
-                  </label>
-                  <textarea
-                    value={remark}
-                    onChange={(e) => setRemark(e.target.value)}
-                    rows="3"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                    placeholder="Enter any relevant remarks..."
-                  />
-                </div>
-              )}
-            </form>
-          )}
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-3 p-4 bg-red-50 rounded-xl border border-red-200 mb-4"
-            >
-              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-600">{error}</p>
-            </motion.div>
-          )}
-
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={onClose}
-              type="button"
-              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={isDelete ? handleSubmit : undefined}
-              type={isDelete ? "button" : "submit"}
-              form={isDelete ? undefined : "management-form"}
-              disabled={isLoading}
-              className={`flex-1 px-4 py-3 rounded-xl font-medium text-white transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden ${
-                isDelete
-                  ? "bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-lg"
-                  : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:shadow-lg"
-              } disabled:opacity-70 disabled:cursor-not-allowed`}
-            >
-              {!isLoading && (
-                <motion.div
-                  className="absolute inset-0 bg-white opacity-0 hover:opacity-20"
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                />
-              )}
-              {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-              <span className="relative z-10">
-                {isDelete ? "Confirm Delete" : isAdd ? "Add" : "Save Changes"}
-              </span>
-            </motion.button>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-const SummaryCard = ({
-  title,
-  value,
-  icon: Icon,
-  borderColor,
-  bgColor,
-  iconColor,
-  textColor,
-  isLoading,
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-    whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
-    // The key change is adding 'flex flex-col justify-between h-full'
-    className={`bg-white p-6 rounded-xl shadow-lg border-t-4 ${borderColor} transform transition-all duration-300 flex flex-col justify-between h-full`}
-  >
-    {/* Top Section (Title and Icon) */}
-    <div className="flex items-center justify-between mb-3">
-      <span className="text-sm font-medium uppercase text-gray-500">
-        {title}
-      </span>
-      <motion.div
-        whileHover={{ scale: 1.1, rotate: 10 }}
-        className={`p-2 rounded-lg ${bgColor}`}
-      >
-        {Icon && <Icon className={`w-5 h-5 ${iconColor}`} />}
-      </motion.div>
-    </div>
-    
-    {/* Bottom Section (Value - Automatically pushed to bottom by 'justify-between') */}
-    <p
-      className={`text-3xl font-extrabold ${textColor} flex items-center gap-1`}
-    >
-      {isLoading ? (
-        <Loader2 className={`w-5 h-5 animate-spin ${iconColor}`} />
-      ) : (
-        value
-      )}
-    </p>
-  </motion.div>
-);
-
-const BDPerformanceSummaryCard = ({
-  achieved,
-  notAchieved,
-  progress,
-  isLoading,
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3, delay: 0.2 }}
-    whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
-    className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-yellow-500 transform transition-all duration-300"
-  >
-    <div className="flex items-center justify-between mb-3">
-      <span className="text-sm font-medium uppercase text-gray-500">
-        Performance
-      </span>
-      <Trophy className="w-5 h-5 text-yellow-500" />
-    </div>
-
-    <div className="flex justify-between items-end mb-1">
-      <div>
-        <p className="text-[10px] text-gray-500">Achieved</p>
-        <p className="text-2xl font-extrabold text-green-600">
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-          ) : (
-            achieved
-          )}
-        </p>
-      </div>
-
-      <div className="text-right">
-        <p className="text-[10px] text-gray-500">Not Achieved</p>
-        <p className="text-2xl font-extrabold text-red-600">
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
-          ) : (
-            notAchieved
-          )}
-        </p>
-      </div>
-    </div>
-
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-gray-500">Progress</span>
-        <span className="text-xs font-bold text-gray-700">
-          {progress.toFixed(0)}%
-        </span>
-      </div>
-      <div className="relative h-2 bg-red-500 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="h-full bg-green-500"
-        />
-      </div>
-    </div>
-  </motion.div>
-);
-
 const BDPerformanceTableCard = ({
   bd,
   isLoading,
@@ -950,6 +1144,7 @@ const BDPerformanceTableCard = ({
   setActiveBdActionbdCode,
   activeClient,
   setActiveClient,
+  inquiriesData,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isIconHidden, setIsIconHidden] = useState(false);
@@ -972,13 +1167,24 @@ const BDPerformanceTableCard = ({
     setActiveBdActionbdCode(isThisBdActionActive ? null : bd.bdCode);
   };
 
+  const getWeekFromDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const dayOfMonth = date.getDate();
+
+    if (dayOfMonth <= 7) return 1;
+    if (dayOfMonth <= 14) return 2;
+    if (dayOfMonth <= 21) return 3;
+    if (dayOfMonth <= 28) return 4;
+    return 5;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 relative"
     >
-      {/* Header */}
       <div
         className="p-6 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-transparent transition-all duration-200 relative overflow-hidden"
         onClick={handleHeaderClick}
@@ -1012,7 +1218,6 @@ const BDPerformanceTableCard = ({
               isIconHidden ? "-translate-x-10" : ""
             }`}
           >
-            {/* BD Details */}
             <div>
               <h3 className="text-base font-bold text-gray-800 w-44">
                 {bd.bdName}
@@ -1022,7 +1227,6 @@ const BDPerformanceTableCard = ({
               </p>
             </div>
 
-            {/* Target */}
             <div className="text-center mw-20">
               <p className="text-xs text-gray-500 mb-1">Target</p>
               <p className="text-base font-bold text-purple-600">
@@ -1034,7 +1238,6 @@ const BDPerformanceTableCard = ({
               </p>
             </div>
 
-            {/* Projected */}
             <div className="text-center w-20">
               <p className="text-xs text-gray-500 mb-1">Projected</p>
               <p className="text-base font-bold text-blue-600">
@@ -1046,7 +1249,6 @@ const BDPerformanceTableCard = ({
               </p>
             </div>
 
-            {/* Achieved */}
             <div className="text-center w-20">
               <p className="text-xs text-gray-500 mb-1">Achieved</p>
               <p className="text-base font-bold text-green-600">
@@ -1058,7 +1260,6 @@ const BDPerformanceTableCard = ({
               </p>
             </div>
 
-            {/* Progress bar */}
             <div className="w-32 flex-shrink-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-500">vs Target</span>
@@ -1078,7 +1279,6 @@ const BDPerformanceTableCard = ({
               </div>
             </div>
 
-            {/* Status Chip */}
             <div className="w-28 flex justify-center flex-shrink-0 relative">
               <span
                 className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${status.badgeColor}`}
@@ -1106,7 +1306,6 @@ const BDPerformanceTableCard = ({
         </div>
       </div>
 
-      {/* Expanded Table */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -1178,117 +1377,423 @@ const BDPerformanceTableCard = ({
                           activeClient.bdbdCode === bd.bdCode &&
                           activeClient.index === index;
 
-                        return (
-                          <motion.tr
-                            key={client.clientName + index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (active) {
-                                setActiveClient(null);
-                              } else {
-                                setActiveClient({ bdbdCode: bd.bdCode, index });
+                        // Calculate weekly achievements for this client
+                        const weeklyAchievements = {
+                          1: 0,
+                          2: 0,
+                          3: 0,
+                          4: 0,
+                          5: 0,
+                        };
+                        if (inquiriesData && client.clientCode) {
+                          inquiriesData
+                            .filter(
+                              (inq) => inq.clientCode === client.clientCode
+                            )
+                            .forEach((inq) => {
+                              const week = getWeekFromDate(inq.regisDate);
+                              if (week && inq.regisVal) {
+                                weeklyAchievements[week] +=
+                                  parseFloat(inq.regisVal) || 0;
                               }
-                            }}
-                            className={`group transition-all duration-150 relative cursor-pointer ${
-                              isEvenRow ? "bg-white/90" : "bg-gray-50/50"
-                            } hover:bg-gradient-to-r hover:from-blue-50/70 hover:to-indigo-50/70`}
-                          >
-                            {/* Client Name with blue hover bar */}
-                            <td className="px-4 py-3 text-left w-[30%]">
-                              <div className="flex items-center gap-2">
-                                <div className="w-0.5 h-4 bg-gradient-to-b from-cyan-500 to-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <div className="flex items-center gap-2 text-gray-900">
-                                    <span className="font-medium text-sm truncate group-hover:text-blue-900">
-                                      {client.clientName}
+                            });
+                        }
+
+                        // Get weekly projections
+                        const weeklyData =
+                          client.projections && client.projections.length > 0
+                            ? [
+                                {
+                                  week: 1,
+                                  value: client.projections[0].projValWeek1,
+                                  remarks: client.projections[0].remarksWeek1,
+                                  achieved: weeklyAchievements[1],
+                                },
+                                {
+                                  week: 2,
+                                  value: client.projections[0].projValWeek2,
+                                  remarks: client.projections[0].remarksWeek2,
+                                  achieved: weeklyAchievements[2],
+                                },
+                                {
+                                  week: 3,
+                                  value: client.projections[0].projValWeek3,
+                                  remarks: client.projections[0].remarksWeek3,
+                                  achieved: weeklyAchievements[3],
+                                },
+                                {
+                                  week: 4,
+                                  value: client.projections[0].projValWeek4,
+                                  remarks: client.projections[0].remarksWeek4,
+                                  achieved: weeklyAchievements[4],
+                                },
+                                {
+                                  week: 5,
+                                  value: client.projections[0].projValWeek5,
+                                  remarks: client.projections[0].remarksWeek5,
+                                  achieved: weeklyAchievements[5],
+                                },
+                              ]
+                            : [];
+
+                        return (
+                          <>
+                            <motion.tr
+                              key={client.clientName + index}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (active) {
+                                  setActiveClient(null);
+                                } else {
+                                  setActiveClient({
+                                    bdbdCode: bd.bdCode,
+                                    index,
+                                  });
+                                }
+                              }}
+                              className={`group transition-all duration-150 relative cursor-pointer ${
+                                isEvenRow ? "bg-white/90" : "bg-gray-50/50"
+                              } hover:bg-gradient-to-r hover:from-blue-50/70 hover:to-indigo-50/70`}
+                            >
+                              <td className="px-4 py-3 text-left w-[30%]">
+                                <div className="flex items-center gap-2">
+                                  <motion.div
+                                    animate={{ rotate: active ? 90 : 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="p-1.5 rounded-lg bg-gray-100"
+                                  >
+                                    <ChevronRight className="w-3 h-3 text-blue-500" />
+                                  </motion.div>
+                                  <div className="w-0.5 h-4 bg-gradient-to-b from-cyan-500 to-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="flex items-center gap-2 text-gray-900">
+                                      <span className="font-medium text-sm truncate group-hover:text-blue-900">
+                                        {client.clientName}
+                                      </span>
+                                    </div>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-700 transition-all duration-200">
+                                      {client.clientCode}
                                     </span>
                                   </div>
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-700 transition-all duration-200">
-                                    {client.clientCode}
+                                </div>
+                              </td>
+
+                              <td
+                                className={`px-4 py-3 text-center w-[10%] transition-transform duration-300 ${
+                                  active ? SHIFT_CLASS : ""
+                                }`}
+                              >
+                                <span className="text-sm text-blue-600 font-semibold">
+                                  ₹{formatAmount(client.projected)}
+                                </span>
+                              </td>
+
+                              <td
+                                className={`px-4 py-3 text-center w-[10%] transition-transform duration-300 ${
+                                  active ? SHIFT_CLASS : ""
+                                }`}
+                              >
+                                <span className="text-sm text-green-600 font-semibold">
+                                  ₹{formatAmount(client.achieved)}
+                                </span>
+                              </td>
+
+                              <td
+                                className={`px-4 py-3 w-[30%] transition-transform duration-300 ${
+                                  active ? SHIFT_CLASS : ""
+                                }`}
+                              >
+                                <div className="flex items-center justify-center gap-2">
+                                  <div
+                                    className={`relative w-24 h-1.5 ${clientProgressBarBg} rounded-full overflow-hidden`}
+                                  >
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{
+                                        width: `${clientStatus.progress}%`,
+                                      }}
+                                      transition={{
+                                        duration: 1,
+                                        delay: index * 0.05,
+                                      }}
+                                      className={`h-full ${clientStatus.progressColor}`}
+                                    />
+                                  </div>
+                                  <span className="text-xs font-semibold text-gray-700 w-10 text-right">
+                                    {clientStatus.progress.toFixed(0)}%
                                   </span>
                                 </div>
-                              </div>
-                            </td>
+                              </td>
 
-                            {/* The rest of columns shift left when active */}
-                            <td
-                              className={`px-4 py-3 text-center w-[10%] transition-transform duration-300 ${
-                                active ? SHIFT_CLASS : ""
-                              }`}
-                            >
-                              <span className="text-sm text-blue-600 font-semibold">
-                                ₹{formatAmount(client.projected)}
-                              </span>
-                            </td>
-
-                            <td
-                              className={`px-4 py-3 text-center w-[10%] transition-transform duration-300 ${
-                                active ? SHIFT_CLASS : ""
-                              }`}
-                            >
-                              <span className="text-sm text-green-600 font-semibold">
-                                ₹{formatAmount(client.achieved)}
-                              </span>
-                            </td>
-
-                            <td
-                              className={`px-4 py-3 w-[30%] transition-transform duration-300 ${
-                                active ? SHIFT_CLASS : ""
-                              }`}
-                            >
-                              <div className="flex items-center justify-center gap-2">
-                                <div
-                                  className={`relative w-24 h-1.5 ${clientProgressBarBg} rounded-full overflow-hidden`}
-                                >
-                                  <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{
-                                      width: `${clientStatus.progress}%`,
-                                    }}
-                                    transition={{
-                                      duration: 1,
-                                      delay: index * 0.05,
-                                    }}
-                                    className={`h-full ${clientStatus.progressColor}`}
-                                  />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 w-10 text-right">
-                                  {clientStatus.progress.toFixed(0)}%
-                                </span>
-                              </div>
-                            </td>
-
-                            <td
-                              className={`px-2 py-2 text-center w-[20%] transition-transform duration-300 ${
-                                active ? SHIFT_CLASS : ""
-                              }`}
-                            >
-                              <span
-                                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${clientStatus.badgeColor}`}
+                              <td
+                                className={`px-2 py-2 text-center w-[20%] transition-transform duration-300 ${
+                                  active ? SHIFT_CLASS : ""
+                                }`}
                               >
-                                {clientStatus.icon}
-                                {clientStatus.text}
-                              </span>
-                            </td>
+                                <span
+                                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${clientStatus.badgeColor}`}
+                                >
+                                  {clientStatus.icon}
+                                  {clientStatus.text}
+                                </span>
+                              </td>
 
-                            <td className="px-2 py-2 w-[5%] text-center relative">
-                              <ClientProjectionManager
-                                client={client}
-                                onManage={onProjectionManage}
-                                bdInfo={{
-                                  bdName: bd.bdName,
-                                  bdCode: bd.bdCode,
-                                }}
-                                isActive={active}
-                              />
-                            </td>
-                          </motion.tr>
+                              <td className="px-2 py-2 w-[5%] text-center relative">
+                                <ClientProjectionManager
+                                  client={client}
+                                  onManage={onProjectionManage}
+                                  bdInfo={{
+                                    bdName: bd.bdName,
+                                    bdCode: bd.bdCode,
+                                  }}
+                                  isActive={active}
+                                />
+                              </td>
+                            </motion.tr>
+
+                            {/* Weekly breakdown expanded view */}
+                            <AnimatePresence>
+                              {active && (
+                                <motion.tr
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="bg-gradient-to-br from-slate-50 to-blue-50"
+                                >
+                                  <td colSpan="6" className="px-4 py-4">
+                                    <div className="pl-8">
+                                      {client.projections &&
+                                      client.projections.length > 0 ? (
+                                        <div>
+                                          <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md">
+                                                <Calendar className="w-4 h-4 text-white" />
+                                              </div>
+                                              <h4 className="text-sm font-bold text-gray-700">
+                                                Weekly Projection & Achievement
+                                                Analysis
+                                              </h4>
+                                            </div>
+                                          </div>
+
+                                          <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg bg-white">
+                                            <table className="min-w-full border-collapse">
+                                              <thead className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600">
+                                                <tr>
+                                                  <th className="px-4 py-2 text-left text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20">
+                                                    Week
+                                                  </th>
+                                                  <th className="px-4 py-2 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20">
+                                                    Projected
+                                                  </th>
+                                                  <th className="px-4 py-2 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20">
+                                                    Achieved
+                                                  </th>
+                                                  <th className="px-4 py-2 text-center text-[10px] font-bold text-white uppercase tracking-wide border-r border-white/20">
+                                                    Progress
+                                                  </th>
+                                                  <th className="px-4 py-2 text-left text-[10px] font-bold text-white uppercase tracking-wide">
+                                                    Remarks
+                                                  </th>
+                                                </tr>
+                                              </thead>
+                                              <tbody className="divide-y divide-gray-100">
+                                                {weeklyData.map(
+                                                  (week, wIndex) => {
+                                                    const hasValue =
+                                                      week.value &&
+                                                      week.value > 0;
+                                                    const weekStatus =
+                                                      getStatus(
+                                                        week.achieved,
+                                                        week.value,
+                                                        true
+                                                      );
+                                                    const weekProgress =
+                                                      week.value > 0
+                                                        ? Math.min(
+                                                            (week.achieved /
+                                                              week.value) *
+                                                              100,
+                                                            100
+                                                          )
+                                                        : 0;
+
+                                                    return (
+                                                      <tr
+                                                        key={week.week}
+                                                        className={`${
+                                                          wIndex % 2 === 0
+                                                            ? "bg-white"
+                                                            : "bg-gray-50"
+                                                        } ${
+                                                          !hasValue
+                                                            ? "opacity-40"
+                                                            : ""
+                                                        }`}
+                                                      >
+                                                        <td className="px-4 py-2 text-left border-r border-gray-100">
+                                                          <div className="flex items-center gap-2">
+                                                            <Calendar className="w-3 h-3 text-blue-500" />
+                                                            <span className="text-xs font-semibold text-gray-700">
+                                                              Week {week.week}
+                                                            </span>
+                                                          </div>
+                                                        </td>
+                                                        <td className="px-4 py-2 text-center border-r border-gray-100">
+                                                          <span
+                                                            className={`text-sm font-bold ${
+                                                              hasValue
+                                                                ? "text-blue-700"
+                                                                : "text-gray-400"
+                                                            }`}
+                                                          >
+                                                            {hasValue
+                                                              ? `₹${formatAmount(
+                                                                  week.value
+                                                                )}`
+                                                              : "Not Set"}
+                                                          </span>
+                                                        </td>
+                                                        <td className="px-4 py-2 text-center border-r border-gray-100">
+                                                          <span
+                                                            className={`text-sm font-bold ${
+                                                              week.achieved > 0
+                                                                ? "text-green-700"
+                                                                : "text-gray-400"
+                                                            }`}
+                                                          >
+                                                            ₹
+                                                            {formatAmount(
+                                                              week.achieved
+                                                            )}
+                                                          </span>
+                                                        </td>
+                                                        <td className="px-4 py-2 border-r border-gray-100">
+                                                          {hasValue ? (
+                                                            <div className="flex items-center justify-center gap-2">
+                                                              <div className="relative w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                                                <motion.div
+                                                                  initial={{
+                                                                    width: 0,
+                                                                  }}
+                                                                  animate={{
+                                                                    width: `${weekProgress}%`,
+                                                                  }}
+                                                                  transition={{
+                                                                    duration: 1,
+                                                                    delay:
+                                                                      wIndex *
+                                                                      0.1,
+                                                                  }}
+                                                                  className={`h-full ${weekStatus.progressColor}`}
+                                                                />
+                                                              </div>
+                                                              <span className="text-xs font-semibold text-gray-700 w-10 text-right">
+                                                                {weekProgress.toFixed(
+                                                                  0
+                                                                )}
+                                                                %
+                                                              </span>
+                                                            </div>
+                                                          ) : (
+                                                            <span className="text-xs text-gray-400 text-center block">
+                                                              -
+                                                            </span>
+                                                          )}
+                                                        </td>
+                                                        <td className="px-4 py-2 text-left">
+                                                          <span className="text-xs text-gray-600">
+                                                            {week.remarks ||
+                                                              "-"}
+                                                          </span>
+                                                        </td>
+                                                      </tr>
+                                                    );
+                                                  }
+                                                )}
+                                              </tbody>
+                                              <tfoot className="bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-100 border-t-2 border-blue-200">
+                                                <tr>
+                                                  <td className="px-4 py-2 text-left font-bold text-blue-900 text-xs border-r border-blue-200">
+                                                    <div className="flex items-center gap-2">
+                                                      <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
+                                                      <span>Total</span>
+                                                    </div>
+                                                  </td>
+                                                  <td className="px-4 py-2 text-center border-r border-blue-200">
+                                                    <span className="text-sm font-extrabold text-blue-900">
+                                                      ₹
+                                                      {formatAmount(
+                                                        client.projected
+                                                      )}
+                                                    </span>
+                                                  </td>
+                                                  <td className="px-4 py-2 text-center border-r border-blue-200">
+                                                    <span className="text-sm font-extrabold text-green-900">
+                                                      ₹
+                                                      {formatAmount(
+                                                        client.achieved
+                                                      )}
+                                                    </span>
+                                                  </td>
+                                                  <td className="px-4 py-2 border-r border-blue-200">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                      <div className="relative w-20 h-1.5 bg-white rounded-full overflow-hidden">
+                                                        <motion.div
+                                                          initial={{ width: 0 }}
+                                                          animate={{
+                                                            width: `${clientStatus.progress}%`,
+                                                          }}
+                                                          transition={{
+                                                            duration: 1,
+                                                            ease: "easeOut",
+                                                          }}
+                                                          className={`h-full ${clientStatus.progressColor}`}
+                                                        />
+                                                      </div>
+                                                      <span className="text-xs font-bold text-gray-700">
+                                                        {clientStatus.progress.toFixed(
+                                                          0
+                                                        )}
+                                                        %
+                                                      </span>
+                                                    </div>
+                                                  </td>
+                                                  <td className="px-4 py-2 text-center">
+                                                    <span
+                                                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border ${clientStatus.badgeColor}`}
+                                                    >
+                                                      {clientStatus.icon}
+                                                      {clientStatus.text}
+                                                    </span>
+                                                  </td>
+                                                </tr>
+                                              </tfoot>
+                                            </table>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="text-center py-8 text-gray-500 text-sm bg-white rounded-xl border border-gray-200">
+                                          <AlertCircle className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                          No projection data available for this
+                                          client
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                </motion.tr>
+                              )}
+                            </AnimatePresence>
+                          </>
                         );
                       })}
-                      {/* ✅ Fixed BD Total Row */}
+
+                      {/* BD Total Row */}
                       <tr className="bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-100 border-t-2 border-blue-200 w-full">
                         <td className="px-4 py-3 text-left font-bold text-blue-900 w-[20%]">
                           <div className="flex items-center gap-2">
@@ -1419,7 +1924,7 @@ const GraphView = ({ data, bdNames }) => {
     let bdAchieved = 0;
 
     data.forEach((client) => {
-      if (client.bdData[bd.bdCode]) {
+      if (client.bdData && client.bdData[bd.bdCode]) {
         bdProjected += client.bdData[bd.bdCode].projected || 0;
         bdAchieved += client.bdData[bd.bdCode].achieved || 0;
       }
@@ -1579,10 +2084,12 @@ const GraphView = ({ data, bdNames }) => {
 
 export default function BdPerformanceAnalysis({
   onMonthChange,
+  username,
+  designation,
   inquiriesData = [],
 }) {
   const [selectedMonth, setSelectedMonth] = useState(() => {
-    const defaultDate = new Date("2025-10-01");
+    const defaultDate = new Date();
     return `${defaultDate.getFullYear()}-${String(
       defaultDate.getMonth() + 1
     ).padStart(2, "0")}`;
@@ -1643,7 +2150,6 @@ export default function BdPerformanceAnalysis({
     return { fromDate: formatDate(fromDate), toDate: formatDate(toDate) };
   };
 
-  // === Fetching Data ===
   const fetchProjectionsAndTargets = async (monthValue, bdCodes) => {
     if (!bdCodes || bdCodes.length === 0) {
       setProjections([]);
@@ -1652,8 +2158,11 @@ export default function BdPerformanceAnalysis({
     }
     setIsLoading(true);
     try {
-      const { fromDate, toDate } = calculateMonthDateRange(monthValue);
-      const payload = { bdCodes, fromDate, toDate };
+      // --- START FIX: Use projMonth and projYear for payload ---
+      const [projYear, projMonth] = monthValue.split("-");
+      const payload = { bdCodeList: bdCodes, projMonth, projYear };
+      // --- END FIX ---
+
       const [projectionsData, targetsData] = await Promise.all([
         getAllBdProjection(payload),
         getAllBdTargets(payload),
@@ -1665,9 +2174,13 @@ export default function BdPerformanceAnalysis({
           clientCode: p.clientCode,
           clientName: p.clientName,
           ProjDate: p.projDate,
-          ProjVal: parseFloat(p.projVal) || 0,
           BDName: p.bdName,
           remarks: p.remarks,
+          projValWeek1: parseFloat(p.projValWeek1) || 0,
+          projValWeek2: parseFloat(p.projValWeek2) || 0,
+          projValWeek3: parseFloat(p.projValWeek3) || 0,
+          projValWeek4: parseFloat(p.projValWeek4) || 0,
+          projValWeek5: parseFloat(p.projValWeek5) || 0,
         }))
       );
       setTargets(
@@ -1696,7 +2209,6 @@ export default function BdPerformanceAnalysis({
     await fetchProjectionsAndTargets(selectedMonth, effectiveBdCodes);
   };
 
-  // === Effects ===
   useEffect(() => {
     const fetchBDs = async () => {
       setIsLoading(true);
@@ -1775,7 +2287,6 @@ export default function BdPerformanceAnalysis({
     }
   }, [selectedMonth, selectedBDs, excludeBDs, bdOptions.length, onMonthChange]);
 
-  // === PERFORMANCE DATA (core fix here) ===
   const bdPerformanceData = useMemo(() => {
     const effectiveBdCodes = excludeBDs
       ? bdOptions
@@ -1793,19 +2304,30 @@ export default function BdPerformanceAnalysis({
       const bdTarget = targets.find((t) => String(t.bdCode) === bd.bdCode);
       const bdInquiries = inquiriesData.filter((i) => i.bdName === bd.bdName);
 
-      const totalProjected = bdProjections.reduce((s, p) => s + p.ProjVal, 0);
+      // --- START FIX: totalProjected scope fix ---
+      const totalProjected = bdProjections.reduce((sum, proj) => {
+        return sum + 
+          (parseFloat(proj.projValWeek1) || 0) +
+          (parseFloat(proj.projValWeek2) || 0) +
+          (parseFloat(proj.projValWeek3) || 0) +
+          (parseFloat(proj.projValWeek4) || 0) +
+          (parseFloat(proj.projValWeek5) || 0);
+      }, 0);
+      // --- END FIX ---
+
       const totalAchieved = bdInquiries.reduce(
         (s, i) => s + (parseFloat(i.regisVal) || 0),
         0
       );
 
+      // --- START FIX: totalTarget field fix ---
       const totalTarget = bdTarget ? bdTarget.TargetVal : 0;
+      // --- END FIX ---
       const targetId = bdTarget ? bdTarget.id : null;
 
-      // ✅ FIX: group clients by unique clientCode (not by name)
       const uniqueClientCodes = new Set([
-        ...bdProjections.map((p) => p.clientCode || p.ClientName),
-        ...bdInquiries.map((i) => i.clientCode || i.clientName),
+        ...bdProjections.map((p) => p.clientCode),
+        ...bdInquiries.map((i) => i.clientCode),
       ]);
 
       const clientDetails = Array.from(uniqueClientCodes)
@@ -1822,10 +2344,17 @@ export default function BdPerformanceAnalysis({
             clientInquiries[0]?.clientName ||
             "Unknown Client";
 
-          const projected = clientProjections.reduce(
-            (sum, p) => sum + p.ProjVal,
-            0
-          );
+          const projected = clientProjections.reduce((sum, proj) => {
+            return (
+              sum +
+              (parseFloat(proj.projValWeek1) || 0) +
+              (parseFloat(proj.projValWeek2) || 0) +
+              (parseFloat(proj.projValWeek3) || 0) +
+              (parseFloat(proj.projValWeek4) || 0) +
+              (parseFloat(proj.projValWeek5) || 0)
+            );
+          }, 0);
+
           const achieved = clientInquiries.reduce(
             (sum, i) => sum + (parseFloat(i.regisVal) || 0),
             0
@@ -1886,18 +2415,14 @@ export default function BdPerformanceAnalysis({
     let achievedCount = 0;
     let notAchievedCount = 0;
 
-    // Only consider BDs that actually have a target set (totalTarget > 0)
     const bdsWithTarget = bdPerformanceData.filter((bd) => bd.totalTarget > 0);
 
     bdsWithTarget.forEach((bd) => {
-      // Determine the status using the existing logic
       const { text } = getStatus(bd.totalAchieved, bd.totalTarget);
 
       if (text === "Achieved") {
         achievedCount += 1;
-      }
-      // "Partial Achieved" and "Not Achieved" are counted as "Not"
-      else if (text === "Partial Achieved" || text === "Not Achieved") {
+      } else if (text === "Partial Achieved" || text === "Not Achieved") {
         notAchievedCount += 1;
       }
     });
@@ -1910,7 +2435,7 @@ export default function BdPerformanceAnalysis({
       achievedCount,
       notAchievedCount,
       totalBdsWithTarget,
-      progressPercentage: Math.min(progressPercentage, 100), // Cap at 100%
+      progressPercentage: Math.min(progressPercentage, 100),
     };
   }, [bdPerformanceData]);
 
@@ -1919,6 +2444,28 @@ export default function BdPerformanceAnalysis({
       ? !selectedBDs.includes(bd.bdCode)
       : selectedBDs.includes(bd.bdCode)
   );
+
+  const clientComparisonData = useMemo(() => {
+    const dataMap = {};
+
+    bdPerformanceData.forEach((bd) => {
+      bd.clients.forEach((client) => {
+        if (!dataMap[client.clientCode]) {
+          dataMap[client.clientCode] = {
+            clientName: client.clientName,
+            clientCode: client.clientCode,
+            bdData: {},
+          };
+        }
+        dataMap[client.clientCode].bdData[bd.bdCode] = {
+          projected: client.projected,
+          achieved: client.achieved,
+        };
+      });
+    });
+
+    return Object.values(dataMap);
+  }, [bdPerformanceData]);
 
   return (
     <div className="font-sans min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 sm:p-6 lg:p-8">
@@ -1957,8 +2504,20 @@ export default function BdPerformanceAnalysis({
                   BD Performance Analysis
                 </h1>
                 <p className="text-blue-100 text-sm mt-1">
-                  Compare and analyze BD performance across clients month-wise
+                  Compare and analyze BD performance across clients with weekly
+                  projections
                 </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-right flex-shrink-0">
+              <div className="text-white">
+                <p className="text-lg font-semibold leading-snug">{username}</p>
+                <p className="text-blue-200 text-xs font-medium leading-snug">
+                  {designation}
+                </p>
+              </div>
+              <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm shadow-lg">
+                <User className="w-6 h-6 text-white" />
               </div>
             </div>
           </div>
@@ -1985,6 +2544,9 @@ export default function BdPerformanceAnalysis({
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
             <div className="lg:col-span-4">
+              <label className="text-xs font-medium mb-2 text-gray-600 block">
+                  Select Month
+                </label>
               <Dropdown
                 options={MONTH_OPTIONS}
                 selected={selectedMonth}
@@ -1997,7 +2559,7 @@ export default function BdPerformanceAnalysis({
             <div className="lg:col-span-6">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-medium text-gray-600 block">
-                  BD Selection
+                  Select BDs
                 </label>
                 <ExcludeToggle enabled={excludeBDs} onChange={setExcludeBDs} />
               </div>
@@ -2073,8 +2635,7 @@ export default function BdPerformanceAnalysis({
             animate={{ opacity: 1 }}
             className="text-center py-20 bg-white rounded-2xl shadow-xl"
           >
-            {" "}
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />{" "}
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
           </motion.div>
         ) : (
           <>
@@ -2168,12 +2729,10 @@ export default function BdPerformanceAnalysis({
                       onProjectionManage={handleManage}
                       activeBdActionbdCode={activeBdActionbdCode}
                       setActiveBdActionbdCode={(bdCode) => {
-                        // When BD action toggles, also clear activeClient if it's from another BD
                         if (bdCode === null) {
                           setActiveBdActionbdCode(null);
                         } else {
                           setActiveBdActionbdCode(bdCode);
-                          // do not change activeClient unless needed: keep existing active client but if it belongs to another BD, clear it
                           if (
                             activeClient &&
                             activeClient.bdbdCode !== bdCode
@@ -2184,9 +2743,9 @@ export default function BdPerformanceAnalysis({
                       }}
                       activeClient={activeClient}
                       setActiveClient={(val) => {
-                        // ensure single active client across all BDs
                         setActiveClient(val);
                       }}
+                      inquiriesData={inquiriesData}
                     />
                   ))}
                 </motion.div>

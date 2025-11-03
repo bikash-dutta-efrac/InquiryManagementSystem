@@ -17,19 +17,15 @@ import {
 } from "react-icons/md";
 import { IoAnalytics } from "react-icons/io5";
 
-// Removed getInitialBdCode and direct localStorage access
-
 export default function SideMenus({
   activeView,
   onViewChange,
   isMinimized = false,
   onToggleMinimize,
   onLogout,
-  // NEW PROP: BdCode passed from the parent (Dashboard)
+  // BdCode prop for analysis menu logic
   bdCodeProp, 
 }) {
-  // Use a local state derived from the prop for consistency check, 
-  // but direct use of bdCodeProp in logic is safer.
   const bdCode = bdCodeProp;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -39,26 +35,18 @@ export default function SideMenus({
     { key: "regisDate", label: "Registration", icon: MdAppRegistration },
   ];
 
-  // ----------------------------------------------------
-  // FIX: BD Projection is only included if bdCode is present.
-  // bdPerformanceAnalysis, Business Analysis, and Lab Analysis
-  // are included only if bdCode is NOT present (Admin/Superuser view).
-  // ----------------------------------------------------
+  // Analysis menus logic
   const analysisMenus = [
-    // Visible ONLY if bdCode is present (i.e., BD user is logged in/locked)
     bdCode && { key: "bdProjection", label: "BD Projection", icon: MdTrendingUp },
-    
-    // These menus are excluded if bdCode is found (i.e., visible to Admins/non-BD users)
     !bdCode && { key: "bdPerformanceAnalysis", label: "BD Performance", icon: IoAnalytics },
-    !bdCode && { key: "businessAnalysis", label: "Business Analysis", icon: MdBusiness },
+    { key: "businessAnalysis", label: "Business Analysis", icon: MdBusiness },
     !bdCode && { key: "labAnalysis", label: "LAB Analysis", icon: HiBeaker },
-    
-    // Always visible
     { key: "sampleAnalysis", label: "Sample Analysis", icon: TestTube2 },
-  ].filter(Boolean); // Removes null/false entries
+  ].filter(Boolean);
 
   const renderMenuItem = (menu) => (
-    <li key={menu.key} className={isMinimized ? "group relative" : ""}>
+    // 'group relative' is essential here for the tooltip to work
+    <li key={menu.key} className={isMinimized ? "group relative" : ""}> 
       <button
         onClick={() => onViewChange(menu.key)}
         className={`relative flex items-center w-full p-3 rounded-xl transition-all duration-300 ease-in-out ${
@@ -75,7 +63,10 @@ export default function SideMenus({
         </span>
 
         {isMinimized && (
-          <span className="absolute left-full ml-4 p-2 min-w-max bg-gray-800 text-white text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none z-50">
+          <span 
+            // FIX: Added 'top-1/2' and '-translate-y-1/2' for perfect vertical centering.
+            className="absolute top-1/2 -translate-y-1/2 left-full ml-4 p-2 min-w-max bg-gray-800/95 text-white text-xs font-medium rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none z-50"
+          >
             {menu.label}
           </span>
         )}
@@ -138,22 +129,29 @@ export default function SideMenus({
         {/* Logout Button */}
         <div className="mt-auto border-t border-white/20 pt-4">
           <motion.button
+            // FIX: Added 'group relative' class for tooltip and ensured 'justify-center' when minimized
+            className={isMinimized ? "group relative flex items-center w-full p-3 rounded-xl transition-all duration-300 justify-center hover:bg-white/15 text-white" : "flex items-center w-full p-3 rounded-xl transition-all duration-300 hover:bg-white/15 text-white"}
             whileHover={{ scale: 1.05, rotate: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowLogoutConfirm(true)}
-            className={`flex items-center w-full p-3 rounded-xl transition-all duration-300 ${
-              isMinimized ? "justify-center" : ""
-            } hover:bg-white/15 text-white`}
           >
             <LogOut className="w-5 h-5" />
             <span className={`text-sm ${isMinimized ? "hidden" : "ml-3"}`}>
               Logout
             </span>
+            {/* FIX: Added tooltip logic with vertical centering */}
+            {isMinimized && (
+              <span 
+                className="absolute top-1/2 -translate-y-1/2 left-full ml-4 p-2 min-w-max bg-gray-800/95 text-white text-xs font-medium rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none z-50"
+              >
+                Logout
+              </span>
+            )}
           </motion.button>
         </div>
       </div>
 
-      {/* Animated Logout Confirmation Modal */}
+      {/* Animated Logout Confirmation Modal (Included for completeness based on context) */}
       <AnimatePresence>
         {showLogoutConfirm && (
           <>

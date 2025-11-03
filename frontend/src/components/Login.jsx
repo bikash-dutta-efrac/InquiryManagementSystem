@@ -4,16 +4,16 @@ import {
   Lock,
   Eye,
   EyeOff,
-  LogIn as LogInIcon,
   AlertCircle,
   CheckCircle2,
   Loader2,
   Shield,
   Zap,
   TrendingUp,
+  LogIn,
 } from "lucide-react";
 import { login } from "../services/api";
-import { HiKey } from "react-icons/hi2"; // Replaced MdKey with HiKey for consistency
+import { HiKey } from "react-icons/hi2";
 
 // Helper function to decode JWT and store user data
 const decodeAndStoreUserData = (token) => {
@@ -47,7 +47,7 @@ const Login = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   // Renaming 'error' to 'apiError' for clarity
-  const [apiError, setApiError] = useState(null); 
+  const [apiError, setApiError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -68,7 +68,8 @@ const Login = ({ onLoginSuccess }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    // e.preventDefault() is crucial for a form to stop default submission behavior
+    e.preventDefault(); 
     setApiError(null);
     if (!validateForm()) return;
 
@@ -81,7 +82,7 @@ const Login = ({ onLoginSuccess }) => {
 
       if (res && res.token) {
         localStorage.setItem("authToken", res.token);
-        
+
         const isUserDataStored = decodeAndStoreUserData(res.token);
 
         if (isUserDataStored) {
@@ -104,7 +105,7 @@ const Login = ({ onLoginSuccess }) => {
       ) {
         errorMessage = "Invalid Employee ID or Password. Please check your credentials.";
       }
-      
+
       setApiError(errorMessage);
       setSuccess(false);
     } finally {
@@ -113,11 +114,11 @@ const Login = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="h-full w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex items-center justify-center">
-      <div className="w-full bg-white overflow-hidden">
-        <div className="flex flex-col lg:flex-row min-h-[600px]">
-          {/* LEFT SIDE */}
-          <div className="lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-600 p-12 flex flex-col justify-center relative overflow-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
+      <div className="w-full min-h-screen bg-white">
+        <div className="flex flex-col lg:flex-row lg:h-screen">
+          {/* LEFT SIDE - Desktop: Full height fixed | Mobile: Normal flow */}
+          <div className="lg:w-1/2 lg:h-screen bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-600 p-8 lg:p-12 flex flex-col justify-center relative">
             <div
               className="absolute inset-0 opacity-10"
               style={{
@@ -126,23 +127,23 @@ const Login = ({ onLoginSuccess }) => {
               }}
             />
             <div className="relative z-10 text-center lg:text-left">
-              <div className="inline-flex items-center justify-center mb-6 sm:mb-8">
-                <div className="p-3 sm:p-4 rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg">
-                  {/* Using HiKey for the logo icon */}
-                  <HiKey className="w-10 h-10 sm:w-14 sm:h-14 text-white" />
+              <div className="inline-flex items-center justify-center mb-4 lg:mb-8">
+                <div className="p-3 lg:p-4 rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg">
+                  <HiKey className="w-10 h-10 lg:w-14 lg:h-14 text-white" />
                 </div>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">
+              <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 lg:mb-4">
                 Welcome Back!
               </h1>
-              <p className="text-blue-100 text-base sm:text-lg mb-10 sm:mb-12">
+              <p className="text-blue-100 text-sm lg:text-lg mb-6 lg:mb-12">
                 Sign in to access your Business Development Dashboard
               </p>
 
-              <div className="space-y-5 sm:space-y-6">
+              {/* Features - Only show on desktop */}
+              <div className="hidden lg:block space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-white/20 flex-shrink-0">
-                    <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <Shield className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="text-white font-semibold mb-1">Secure Access</h3>
@@ -154,7 +155,7 @@ const Login = ({ onLoginSuccess }) => {
 
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-white/20 flex-shrink-0">
-                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="text-white font-semibold mb-1">Real-time Analytics</h3>
@@ -166,7 +167,7 @@ const Login = ({ onLoginSuccess }) => {
 
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-white/20 flex-shrink-0">
-                    <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <Zap className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="text-white font-semibold mb-1">Fast & Reliable</h3>
@@ -177,27 +178,29 @@ const Login = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-white/20">
-                <p className="text-blue-100 text-xs sm:text-sm">
+              {/* Copyright - Desktop only (inside blue section) */}
+              <div className="hidden lg:block mt-12 pt-8 border-t border-white/20">
+                <p className="text-blue-100 text-sm">
                   © 2025 EFRAC. All rights reserved.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
+          {/* RIGHT SIDE - Form Section */}
+          <div className="lg:w-1/2 lg:h-screen lg:overflow-y-auto p-6 lg:p-12 flex flex-col justify-center">
             <div className="max-w-md mx-auto w-full">
-              <div className="mb-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              <div className="mb-6 lg:mb-8">
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
                   Sign In
                 </h2>
-                <p className="text-gray-600 text-sm sm:text-base">
+                <p className="text-gray-600 text-sm lg:text-base">
                   Enter your credentials to access your account
                 </p>
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
+              
+              {/* === CHANGE 1: Switched div to form and added onSubmit handler === */}
+              <form onSubmit={handleSubmit} className="space-y-5 lg:space-y-6">
                 {/* Employee ID */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -216,6 +219,8 @@ const Login = ({ onLoginSuccess }) => {
                       name="employeeId"
                       value={formData.employeeId}
                       onChange={handleChange}
+                      // Added required attribute for native HTML form validation, though custom validation is also used
+                      required
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
                         validationErrors.employeeId
                           ? "border-red-300 focus:ring-red-500"
@@ -250,6 +255,8 @@ const Login = ({ onLoginSuccess }) => {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
+                      // Added required attribute
+                      required
                       className={`w-full pl-10 pr-12 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
                         validationErrors.password
                           ? "border-red-300 focus:ring-red-500"
@@ -258,7 +265,7 @@ const Login = ({ onLoginSuccess }) => {
                       placeholder="Enter your password"
                     />
                     <button
-                      type="button"
+                      type="button" // Important: Keep this button type="button" to prevent it from submitting the form
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                     >
@@ -294,8 +301,9 @@ const Login = ({ onLoginSuccess }) => {
                 )}
 
                 {/* Button */}
+                {/* === CHANGE 2: Switched type="button" to type="submit" === */}
                 <button
-                  type="submit"
+                  type="submit" 
                   disabled={isLoading || success}
                   className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
                 >
@@ -311,7 +319,7 @@ const Login = ({ onLoginSuccess }) => {
                     </>
                   ) : (
                     <>
-                      <LogInIcon className="w-5 h-5" />
+                      <LogIn className="w-5 h-5" />
                       <span>Sign In</span>
                     </>
                   )}
@@ -327,6 +335,14 @@ const Login = ({ onLoginSuccess }) => {
                   </button>
                 </p>
               </form>
+              {/* === END OF CHANGES === */}
+
+              {/* Copyright - Mobile only (at bottom of form section) */}
+              <div className="lg:hidden mt-8 pt-6 border-t border-gray-200">
+                <p className="text-gray-500 text-xs text-center">
+                  © 2025 EFRAC. All rights reserved.
+                </p>
+              </div>
             </div>
           </div>
         </div>

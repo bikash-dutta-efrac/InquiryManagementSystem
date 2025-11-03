@@ -728,41 +728,148 @@
             },
             "nullable": true
           },
-          "fromDate": {
-            "type": "string",
-            "format": "date-time",
+          "projMonth": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           },
-          "toDate": {
-            "type": "string",
-            "format": "date-time",
+          "projYear": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
       "BdProjectionRequest": {
-        "required": [
-          "bdCode",
-          "clientCode",
-          "projVal"
-        ],
         "type": "object",
         "properties": {
           "bdCode": {
-            "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "clientCode": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "projVal": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "remarks": {
             "type": "string",
+            "nullable": true
+          },
+          "projValWeek1": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "projDateWeek1": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "remarksWeek1": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisedValWeek1": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "reviseDateWeek1": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "projValWeek2": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "projDateWeek2": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "remarksWeek2": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisedValWeek2": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "reviseDateWeek2": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "projValWeek3": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "projDateWeek3": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "remarksWeek3": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisedValWeek3": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "reviseDateWeek3": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "projValWeek4": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "projDateWeek4": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "remarksWeek4": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisedValWeek4": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "reviseDateWeek4": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "projValWeek5": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "projDateWeek5": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "remarksWeek5": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisedValWeek5": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "reviseDateWeek5": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
