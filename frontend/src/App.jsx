@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import Login from "./components/Login";
 import UnauthorizedScreen from "./components/UnauthorizedScreen";
 
-const ROLE_ADMINISTRATOR = ["Administrator", "Management"];
+const ROLE_ADMINISTRATOR = ["Administrator", "Management", "Manager "];
 
 const isTokenExpired = (token) => {
   try {
@@ -54,7 +54,7 @@ export default function App() {
       const bdCode = localStorage.getItem("BdCode");
       const role = localStorage.getItem("Role");
 
-      if (bdCode || ROLE_ADMINISTRATOR.includes(role)) {
+      if (bdCode || ROLE_ADMINISTRATOR.includes(role.trim())) {
         setIsAuthorized(true);
       } else {
         setIsAuthorized(false);
@@ -125,7 +125,8 @@ export default function App() {
         key={sessionKey} 
         onLogout={handleLogout} 
         bdCode={localStorage.getItem("BdCode")}
-        username={localStorage.getItem("Username")} 
+        username={localStorage.getItem("Username")}
+        role={localStorage.getItem("Role")}
         designation={localStorage.getItem("Designation")}
         />
         

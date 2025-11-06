@@ -24,7 +24,8 @@ export default function SideMenus({
   onToggleMinimize,
   onLogout,
   // BdCode prop for analysis menu logic
-  bdCodeProp, 
+  bdCodeProp,
+  role
 }) {
   const bdCode = bdCodeProp;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -40,7 +41,7 @@ export default function SideMenus({
     bdCode && { key: "bdProjection", label: "BD Projection", icon: MdTrendingUp },
     !bdCode && { key: "bdPerformanceAnalysis", label: "BD Performance", icon: IoAnalytics },
     { key: "businessAnalysis", label: "Business Analysis", icon: MdBusiness },
-    !bdCode && { key: "labAnalysis", label: "LAB Analysis", icon: HiBeaker },
+    role === 'Administrator' && { key: "labAnalysis", label: "LAB Analysis", icon: HiBeaker },
     { key: "sampleAnalysis", label: "Sample Analysis", icon: TestTube2 },
   ].filter(Boolean);
 

@@ -2214,7 +2214,7 @@ export default function BdPerformanceAnalysis({
       setIsLoading(true);
       try {
         const { fromDate, toDate } = calculateMonthDateRange(selectedMonth);
-        const bds = await getBdNames({ fromDate, toDate });
+        const bds = await getBdNames();
         const normalized = bds.map((bd) => ({
           value: String(bd.bdCode),
           label: bd.bdName,

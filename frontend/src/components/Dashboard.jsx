@@ -22,6 +22,7 @@ export default function Dashboard({
   bdCode: initialBdCode,
   username,
   designation,
+  role,
   onLogout,
 }) {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -496,6 +497,7 @@ export default function Dashboard({
         onToggleMinimize={handleToggleMinimize}
         onLogout={handleLogout}
         bdCodeProp={bdCode} // Pass the centralized bdCode state (which holds the username)
+        role={role}
       />
 
       <main

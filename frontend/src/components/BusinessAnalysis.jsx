@@ -723,6 +723,7 @@ const FilterPanel = ({
   setFilters,
   bdNameOptions,
   isBdLocked = false,
+  username
 }) => {
   const {
     timeRangeType,
@@ -778,7 +779,7 @@ const FilterPanel = ({
       timeRangeType: "relative",
       timeRangeValue: RELATIVE_TIME_OPTIONS[0].value,
       timeRangeValue2: null,
-      selectedBDs: [],
+      selectedBDs: isBdLocked ? [username] : [],
       excludeBDs: false,
     });
   }, [setFilters]);
@@ -1999,6 +2000,7 @@ export default function BusinessAnalysis({ bdCode, username, designation }) {
             setFilters={setFilters}
             bdNameOptions={availableBdNames}
             isBdLocked={isBdLocked}
+            username={username}
           />
         </div>
 
