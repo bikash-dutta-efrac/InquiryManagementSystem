@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HiBeaker } from "react-icons/hi2";
+import { HiBeaker, HiCurrencyRupee, HiDocument } from "react-icons/hi2";
 import {
   ChevronsLeft,
   ChevronsRight,
@@ -12,7 +12,6 @@ import {
 import {
   MdAppRegistration,
   MdAssignment,
-  MdBusiness,
   MdTrendingUp,
 } from "react-icons/md";
 import { IoAnalytics } from "react-icons/io5";
@@ -39,8 +38,9 @@ export default function SideMenus({
   const analysisMenus = [
     bdCode && { key: "bdProjection", label: "BD Projection", icon: MdTrendingUp },
     !bdCode && { key: "bdPerformanceAnalysis", label: "BD Performance", icon: IoAnalytics },
-    { key: "businessAnalysis", label: "Business Analysis", icon: MdBusiness },
+    { key: "businessAnalysis", label: "Business Analysis", icon: HiCurrencyRupee },
     !bdCode && { key: "labAnalysis", label: "LAB Analysis", icon: HiBeaker },
+    { key: "pendingQuotations", label: "Pnd. Quotations", icon: HiDocument },
     { key: "sampleAnalysis", label: "Sample Analysis", icon: TestTube2 },
   ].filter(Boolean);
 

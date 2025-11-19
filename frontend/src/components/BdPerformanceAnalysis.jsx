@@ -1975,7 +1975,7 @@ const GraphView = ({ data, bdNames }) => {
           angle={-45}
           textAnchor="end"
           height={100}
-          fontSize={12}
+          fontSize={0}
           stroke="#6b7280"
         />
         <YAxis

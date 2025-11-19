@@ -698,6 +698,68 @@
           }
         }
       }
+    },
+    "/api/quotations/pending": {
+      "post": {
+        "tags": [
+          "Quotation"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuotationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuotationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuotationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/quotations/update-status": {
+      "patch": {
+        "tags": [
+          "Quotation"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuotationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuotationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuotationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -998,6 +1060,37 @@
         },
         "additionalProperties": false
       },
+      "QuotationRequest": {
+        "type": "object",
+        "properties": {
+          "fromDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "toDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "ageFilter": {
+            "type": "string",
+            "nullable": true
+          },
+          "quotNo": {
+            "type": "string",
+            "nullable": true
+          },
+          "bdCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SampleSummaryRequest": {
         "type": "object",
         "properties": {
@@ -1030,6 +1123,20 @@
           },
           "excludeLabs": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateQuotationRequest": {
+        "type": "object",
+        "properties": {
+          "quotNo": {
+            "type": "string",
+            "nullable": true
+          },
+          "closeYn": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

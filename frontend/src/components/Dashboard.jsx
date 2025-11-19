@@ -15,6 +15,7 @@ import { startOfMonth, endOfMonth, format } from "date-fns";
 
 import useInquiries from "../hooks/useInquiries";
 import useLabAnalysis from "../hooks/useLabAnalysis";
+import PendingQuotations from "./PendingQuotations";
 
 const GraphicalAnalysis = React.lazy(() => import("./GraphicalAnalysis"));
 
@@ -541,6 +542,7 @@ export default function Dashboard({
             {queryType !== "sampleAnalysis" &&
               queryType !== "bdProjection" &&
               queryType !== "bdPerformanceAnalysis" &&
+              queryType !== "pendingQuotations" &&
               queryType !== "businessAnalysis" && (
                 <Filters
                   onChange={onFiltersChange}
@@ -612,6 +614,14 @@ export default function Dashboard({
                   // Pass bdCode (username) to analysis for API calls
                   bdCodeProp={bdCode}
                   isBdLocked={isBdLocked}
+                />
+              </div>
+            ) : queryType === "pendingQuotations" ? (
+              <div className="max-w-7xl mx-auto px-2 -mt-4 relative">
+                <PendingQuotations
+                  username={username}
+                  designation={designation}
+                  bdCode={initialBdCode}
                 />
               </div>
             ) : (

@@ -455,7 +455,6 @@ WHERE
     AND (@RegNo IS NULL OR t1.TRN1REFNO = @RegNo)
 ORDER BY 
     t1.TRN1REFNO, t2.TRN2PRODALIAS;
-
             ";
 
             using (var connection = new SqlConnection(_connectionString))

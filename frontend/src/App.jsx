@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 // FIX: Corrected import paths, assuming components are in the same directory as App.jsx
 import Dashboard from "./components/Dashboard"; 
 import { Loader2 } from "lucide-react";
-import Login from "./components/Login";
+import Login from "./components/LogIn";
 import UnauthorizedScreen from "./components/UnauthorizedScreen";
 
 const ROLE_ADMINISTRATOR = ["Administrator", "Management"];

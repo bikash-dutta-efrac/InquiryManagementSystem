@@ -1,0 +1,6 @@
+D:\LimsDashboard\services\appsettings.Development.json
+D:\LimsDashboard\services\appsettings.json
+D:\LimsDashboard\services\InquiryManagementWebService.pdb
+D:\LimsDashboard\services\aspnetcorev2_inprocess.dll
+D:\LimsDashboard\services\Microsoft.Data.SqlClient.SNI.dll
+D:\LimsDashboard\services\InquiryManagementWebService.exe

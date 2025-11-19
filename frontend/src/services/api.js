@@ -249,3 +249,27 @@ export async function login(filters = {}) {
   console.log(response.data)
   return response.data;
 }
+
+// ===================================================================
+// ============================ QUOTATIONS =============================
+// ===================================================================
+
+export async function getPendingQuotations(filters = {}) {
+  console.log(filters)
+  const response = await axios.post(`${API_BASE_URL}/quotations/pending`, filters, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return response.data;
+}
+
+export async function updateQuotationStatus(quotNo, closeYn = null) {
+
+  let body = { quotNo: quotNo, closeYn: closeYn}
+
+  const response = await axios.patch(`${API_BASE_URL}/quotations/update-status`, body, {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  return response.data;
+}
+

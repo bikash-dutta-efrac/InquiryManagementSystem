@@ -293,6 +293,38 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "InquiryManagementWebService.Controllers.QuotationController",
+    "Method": "GetPendingQuotations",
+    "RelativePath": "api/quotations/pending",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.QuotationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InquiryManagementWebService.Controllers.QuotationController",
+    "Method": "UpdateQuotation",
+    "RelativePath": "api/quotations/update-status",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InquiryManagementWebService.Models.UpdateQuotationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "InquiryManagementWebService.Controllers.ProjectionController",
     "Method": "CreateTarget",
     "RelativePath": "api/target/create",
